@@ -386,23 +386,23 @@ const SidebarContent = ({ user, logout }) => {
   const navigate = useNavigate();
   const location = window.location.pathname;
   
+  const [openSubmenus, setOpenSubmenus] = useState({
+    project: false,
+    finance: false,
+    sales: false
+  });
+
+  const toggleSubmenu = (menu) => {
+    setOpenSubmenus({
+      ...openSubmenus,
+      [menu]: !openSubmenus[menu]
+    });
+  };
+  
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-
-  const navItems = [
-    { name: "Dashboard", path: "/", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    { name: "Khách hàng", path: "/clients", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
-    { name: "Dự án", path: "/projects", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" },
-    { name: "Công việc", path: "/tasks", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
-    { name: "Hợp đồng", path: "/contracts", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
-    { name: "Hóa đơn", path: "/invoices", icon: "M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" },
-  ];
-
-  if (user.role === "admin") {
-    navItems.push({ name: "Cài đặt", path: "/settings", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" });
-  }
 
   return (
     <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
@@ -411,12 +411,306 @@ const SidebarContent = ({ user, logout }) => {
       </div>
       <div className="mt-5 flex-1 flex flex-col">
         <nav className="flex-1 px-2 bg-indigo-700 space-y-1">
-          {navItems.map((item) => (
+          {/* Dashboard */}
+          <button
+            onClick={() => navigate("/")}
+            className={`${
+              location === "/"
+                ? "bg-indigo-800 text-white"
+                : "text-indigo-100 hover:bg-indigo-600"
+            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+          >
+            <svg
+              className="mr-3 h-6 w-6 text-indigo-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Dashboard
+          </button>
+
+          {/* Client */}
+          <button
+            onClick={() => navigate("/clients")}
+            className={`${
+              location.startsWith("/clients")
+                ? "bg-indigo-800 text-white"
+                : "text-indigo-100 hover:bg-indigo-600"
+            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+          >
+            <svg
+              className="mr-3 h-6 w-6 text-indigo-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            Client
+          </button>
+
+          {/* Công việc */}
+          <button
+            onClick={() => navigate("/tasks")}
+            className={`${
+              location.startsWith("/tasks")
+                ? "bg-indigo-800 text-white"
+                : "text-indigo-100 hover:bg-indigo-600"
+            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+          >
+            <svg
+              className="mr-3 h-6 w-6 text-indigo-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Công việc
+          </button>
+
+          {/* Dự án (với submenu) */}
+          <div>
             <button
-              key={item.name}
-              onClick={() => navigate(item.path)}
+              onClick={() => toggleSubmenu("project")}
               className={`${
-                location === item.path
+                location.startsWith("/projects")
+                  ? "bg-indigo-800 text-white"
+                  : "text-indigo-100 hover:bg-indigo-600"
+              } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
+            >
+              <div className="flex items-center">
+                <svg
+                  className="mr-3 h-6 w-6 text-indigo-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Dự án
+              </div>
+              <svg
+                className={`${openSubmenus.project ? "transform rotate-180" : ""} h-5 w-5 text-indigo-300`}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            {openSubmenus.project && (
+              <div className="pl-8 space-y-1">
+                <button
+                  onClick={() => navigate("/projects")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Danh sách dự án
+                </button>
+                <button
+                  onClick={() => navigate("/service-templates")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Mẫu dịch vụ
+                </button>
+                <button
+                  onClick={() => navigate("/task-templates")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Template nhiệm vụ
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Tài chính (với submenu) */}
+          <div>
+            <button
+              onClick={() => toggleSubmenu("finance")}
+              className={`${
+                location.startsWith("/invoices") || location.startsWith("/contracts") || location.startsWith("/finance-reports")
+                  ? "bg-indigo-800 text-white"
+                  : "text-indigo-100 hover:bg-indigo-600"
+              } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
+            >
+              <div className="flex items-center">
+                <svg
+                  className="mr-3 h-6 w-6 text-indigo-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Tài chính
+              </div>
+              <svg
+                className={`${openSubmenus.finance ? "transform rotate-180" : ""} h-5 w-5 text-indigo-300`}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            {openSubmenus.finance && (
+              <div className="pl-8 space-y-1">
+                <button
+                  onClick={() => navigate("/invoices")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Hóa đơn
+                </button>
+                <button
+                  onClick={() => navigate("/contracts")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Hợp đồng
+                </button>
+                <button
+                  onClick={() => navigate("/finance-reports")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Báo cáo tài chính
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Bán hàng (với submenu) */}
+          <div>
+            <button
+              onClick={() => toggleSubmenu("sales")}
+              className={`${
+                location.startsWith("/sales")
+                  ? "bg-indigo-800 text-white"
+                  : "text-indigo-100 hover:bg-indigo-600"
+              } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
+            >
+              <div className="flex items-center">
+                <svg
+                  className="mr-3 h-6 w-6 text-indigo-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Bán hàng
+              </div>
+              <svg
+                className={`${openSubmenus.sales ? "transform rotate-180" : ""} h-5 w-5 text-indigo-300`}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            {openSubmenus.sales && (
+              <div className="pl-8 space-y-1">
+                <button
+                  onClick={() => navigate("/sales/customers")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Khách hàng
+                </button>
+                <button
+                  onClick={() => navigate("/sales/opportunities")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Cơ hội
+                </button>
+                <button
+                  onClick={() => navigate("/sales/reports")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Báo cáo
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Tài liệu */}
+          <button
+            onClick={() => navigate("/documents")}
+            className={`${
+              location.startsWith("/documents")
+                ? "bg-indigo-800 text-white"
+                : "text-indigo-100 hover:bg-indigo-600"
+            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+          >
+            <svg
+              className="mr-3 h-6 w-6 text-indigo-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Tài liệu
+          </button>
+
+          {/* Báo cáo */}
+          <button
+            onClick={() => navigate("/reports")}
+            className={`${
+              location.startsWith("/reports")
+                ? "bg-indigo-800 text-white"
+                : "text-indigo-100 hover:bg-indigo-600"
+            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+          >
+            <svg
+              className="mr-3 h-6 w-6 text-indigo-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Báo cáo
+          </button>
+
+          {/* Tài khoản */}
+          <button
+            onClick={() => navigate("/account")}
+            className={`${
+              location.startsWith("/account")
+                ? "bg-indigo-800 text-white"
+                : "text-indigo-100 hover:bg-indigo-600"
+            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+          >
+            <svg
+              className="mr-3 h-6 w-6 text-indigo-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Tài khoản
+          </button>
+
+          {/* Cài đặt */}
+          {user.role === "admin" && (
+            <button
+              onClick={() => navigate("/settings")}
+              className={`${
+                location.startsWith("/settings")
                   ? "bg-indigo-800 text-white"
                   : "text-indigo-100 hover:bg-indigo-600"
               } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
@@ -427,13 +721,13 @@ const SidebarContent = ({ user, logout }) => {
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                aria-hidden="true"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {item.name}
+              Cài đặt
             </button>
-          ))}
+          )}
         </nav>
       </div>
       <div className="flex-shrink-0 flex border-t border-indigo-800 p-4">
@@ -456,6 +750,7 @@ const SidebarContent = ({ user, logout }) => {
       </div>
     </div>
   );
+};
 };
 
 // Các component cho từng trang
