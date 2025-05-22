@@ -1975,7 +1975,479 @@ const Tasks = () => {
 };
 
 const Contracts = () => {
-  return <div>Danh sách hợp đồng (đang phát triển)</div>;
+  const [contracts, setContracts] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    client_id: "",
+    project_id: "",
+    title: "",
+    start_date: "",
+    end_date: "",
+    value: "",
+    status: "draft",
+    terms: ""
+  });
+
+  useEffect(() => {
+    fetchContracts();
+    fetchClients();
+    fetchProjects();
+  }, []);
+
+  const fetchContracts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/contracts/`);
+      setContracts(response.data);
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      toast.error("Không thể tải danh sách hợp đồng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const response = await axios.get(`${API}/clients/`);
+      setClients(response.data);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      toast.error("Không thể tải danh sách khách hàng");
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`${API}/projects/`);
+      setProjects(response.data);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Không thể tải danh sách dự án");
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/contracts/`, formData);
+      toast.success("Thêm hợp đồng thành công!");
+      setIsModalOpen(false);
+      resetForm();
+      fetchContracts();
+    } catch (error) {
+      console.error("Error creating contract:", error);
+      toast.error("Không thể tạo hợp đồng mới");
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      client_id: "",
+      project_id: "",
+      title: "",
+      start_date: "",
+      end_date: "",
+      value: "",
+      status: "draft",
+      terms: ""
+    });
+  };
+
+  const getClientName = (clientId) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? client.name : "Không xác định";
+  };
+
+  const getProjectName = (projectId) => {
+    if (!projectId) return "Không có";
+    const project = projects.find(p => p.id === projectId);
+    return project ? project.name : "Không xác định";
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "sent":
+        return "bg-blue-100 text-blue-800";
+      case "signed":
+        return "bg-green-100 text-green-800";
+      case "active":
+        return "bg-indigo-100 text-indigo-800";
+      case "expired":
+        return "bg-yellow-100 text-yellow-800";
+      case "terminated":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "draft":
+        return "Dự thảo";
+      case "sent":
+        return "Đã gửi";
+      case "signed":
+        return "Đã ký";
+      case "active":
+        return "Đang hiệu lực";
+      case "expired":
+        return "Hết hạn";
+      case "terminated":
+        return "Đã chấm dứt";
+      default:
+        return status;
+    }
+  };
+
+  // Hàm xử lý cập nhật trạng thái hợp đồng
+  const handleUpdateStatus = async (contractId, newStatus) => {
+    try {
+      const contract = contracts.find(c => c.id === contractId);
+      if (!contract) {
+        toast.error("Không tìm thấy hợp đồng");
+        return;
+      }
+      
+      await axios.put(`${API}/contracts/${contractId}`, {
+        ...contract,
+        status: newStatus
+      });
+      
+      toast.success("Cập nhật trạng thái thành công!");
+      fetchContracts();
+    } catch (error) {
+      console.error("Error updating contract status:", error);
+      toast.error("Không thể cập nhật trạng thái hợp đồng");
+    }
+  };
+
+  // Kiểm tra xem hợp đồng đã sắp hết hạn chưa (trong vòng 30 ngày)
+  const isNearExpiry = (endDate) => {
+    if (!endDate) return false;
+    const today = new Date();
+    const expiryDate = new Date(endDate);
+    const diffTime = expiryDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 && diffDays <= 30;
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Hợp đồng</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Thêm hợp đồng
+        </button>
+      </div>
+
+      {/* Danh sách hợp đồng */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        {contracts.length > 0 ? (
+          <ul className="divide-y divide-gray-200">
+            {contracts.map((contract) => (
+              <li key={contract.id}>
+                <div className="block hover:bg-gray-50">
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-indigo-600 truncate">
+                        {contract.title}
+                      </p>
+                      <div className="ml-2 flex-shrink-0 flex">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(contract.status)}`}>
+                          {getStatusText(contract.status)}
+                        </span>
+                        {isNearExpiry(contract.end_date) && contract.status === "active" && (
+                          <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                            Sắp hết hạn
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-2 sm:flex sm:justify-between">
+                      <div className="sm:flex">
+                        <p className="flex items-center text-sm text-gray-500">
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                          </svg>
+                          {getClientName(contract.client_id)}
+                        </p>
+                        {contract.project_id && (
+                          <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                            <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {getProjectName(contract.project_id)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        <p>
+                          {new Date(contract.start_date).toLocaleDateString('vi-VN')} - {new Date(contract.end_date).toLocaleDateString('vi-VN')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex justify-between items-center">
+                      <p className="text-sm text-gray-700 font-medium">
+                        Giá trị: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(contract.value)}
+                      </p>
+                      <div className="flex space-x-2">
+                        {contract.status === "draft" && (
+                          <button
+                            onClick={() => handleUpdateStatus(contract.id, "sent")}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            Gửi hợp đồng
+                          </button>
+                        )}
+                        {contract.status === "sent" && (
+                          <button
+                            onClick={() => handleUpdateStatus(contract.id, "signed")}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                          >
+                            Đánh dấu đã ký
+                          </button>
+                        )}
+                        {contract.status === "signed" && (
+                          <button
+                            onClick={() => handleUpdateStatus(contract.id, "active")}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          >
+                            Kích hoạt
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-center py-10 text-gray-500">
+            Chưa có hợp đồng nào. Bắt đầu bằng cách thêm hợp đồng mới.
+          </div>
+        )}
+      </div>
+
+      {/* Modal thêm hợp đồng */}
+      {isModalOpen && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <form onSubmit={handleSubmit}>
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Thêm hợp đồng mới
+                      </h3>
+                      <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div className="sm:col-span-6">
+                          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                            Tiêu đề hợp đồng
+                          </label>
+                          <div className="mt-1">
+                            <input
+                              type="text"
+                              name="title"
+                              id="title"
+                              required
+                              value={formData.title}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="client_id" className="block text-sm font-medium text-gray-700">
+                            Khách hàng
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="client_id"
+                              name="client_id"
+                              required
+                              value={formData.client_id}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="">Chọn khách hàng</option>
+                              {clients.map((client) => (
+                                <option key={client.id} value={client.id}>
+                                  {client.name} - {client.company}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">
+                            Dự án (tùy chọn)
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="project_id"
+                              name="project_id"
+                              value={formData.project_id}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="">Không liên kết với dự án</option>
+                              {projects.filter(p => p.client_id === formData.client_id).map((project) => (
+                                <option key={project.id} value={project.id}>
+                                  {project.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
+                            Ngày bắt đầu
+                          </label>
+                          <div className="mt-1">
+                            <input
+                              type="date"
+                              name="start_date"
+                              id="start_date"
+                              required
+                              value={formData.start_date}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
+                            Ngày kết thúc
+                          </label>
+                          <div className="mt-1">
+                            <input
+                              type="date"
+                              name="end_date"
+                              id="end_date"
+                              required
+                              value={formData.end_date}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="value" className="block text-sm font-medium text-gray-700">
+                            Giá trị hợp đồng (VND)
+                          </label>
+                          <div className="mt-1">
+                            <input
+                              type="number"
+                              name="value"
+                              id="value"
+                              required
+                              value={formData.value}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                            Trạng thái
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="status"
+                              name="status"
+                              value={formData.status}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="draft">Dự thảo</option>
+                              <option value="sent">Đã gửi</option>
+                              <option value="signed">Đã ký</option>
+                              <option value="active">Đang hiệu lực</option>
+                              <option value="expired">Hết hạn</option>
+                              <option value="terminated">Đã chấm dứt</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="terms" className="block text-sm font-medium text-gray-700">
+                            Điều khoản
+                          </label>
+                          <div className="mt-1">
+                            <textarea
+                              id="terms"
+                              name="terms"
+                              rows="3"
+                              value={formData.terms}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            ></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="submit"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Thêm hợp đồng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const Invoices = () => {
