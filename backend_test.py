@@ -13,6 +13,7 @@ class CRMAPITester:
         self.user_id = None
         self.client_id = None
         self.project_id = None
+        self.task_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
         """Run a single API test"""
@@ -160,6 +161,46 @@ class CRMAPITester:
     def test_get_projects(self):
         """Test getting all projects"""
         return self.run_test("Get All Projects", "GET", "projects/", 200)
+    
+    def test_create_task(self):
+        """Test creating a new task"""
+        if not self.project_id:
+            print("❌ Cannot test create_task: No project_id available")
+            return False, {}
+            
+        task_data = {
+            "title": f"Test Task {datetime.now().strftime('%H%M%S')}",
+            "project_id": self.project_id,
+            "description": "This is a test task",
+            "assigned_to": self.user_id,
+            "due_date": (datetime.now()).isoformat(),
+            "priority": "medium",
+            "status": "to_do"
+        }
+        
+        success, response = self.run_test("Create Task", "POST", "tasks/", 200, task_data)
+        if success:
+            self.task_id = response.get('id')
+        return success, response
+    
+    def test_get_tasks(self):
+        """Test getting all tasks"""
+        return self.run_test("Get All Tasks", "GET", "tasks/", 200)
+    
+    def test_update_task_status(self):
+        """Test updating a task status"""
+        if not self.task_id:
+            print("❌ Cannot test update_task_status: No task_id available")
+            return False, {}
+            
+        # First get the current task data
+        success, task = self.run_test("Get Task", "GET", f"tasks/{self.task_id}", 200)
+        if not success:
+            return False, {}
+            
+        # Update the status to in_progress
+        task["status"] = "in_progress"
+        return self.run_test("Update Task Status", "PUT", f"tasks/{self.task_id}", 200, task)
 
     def test_get_dashboard(self):
         """Test getting dashboard data"""
@@ -195,6 +236,11 @@ def main():
     # Test project operations
     tester.test_create_project()
     tester.test_get_projects()
+    
+    # Test task operations
+    tester.test_create_task()
+    tester.test_get_tasks()
+    tester.test_update_task_status()
     
     # Test dashboard
     tester.test_get_dashboard()
