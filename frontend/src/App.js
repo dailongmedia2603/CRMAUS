@@ -178,15 +178,13 @@ function App() {
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
-      <BrowserRouter>
-        <div className="App">
-          <ToastContainer position="top-right" autoClose={3000} />
-          <Routes>
-            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-            <Route path="/*" element={user ? <MainLayout /> : <Navigate to="/login" />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
+      <div className="App">
+        <ToastContainer position="top-right" autoClose={3000} />
+        <Routes>
+          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+          <Route path="/*" element={user ? <MainLayout /> : <Navigate to="/login" />} />
+        </Routes>
+      </div>
     </AuthContext.Provider>
   );
 }
