@@ -751,7 +751,6 @@ const SidebarContent = ({ user, logout }) => {
     </div>
   );
 };
-};
 
 // Các component cho từng trang
 const Dashboard = () => {
