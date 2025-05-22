@@ -414,18 +414,14 @@ const SidebarContent = ({ user, logout }) => {
       <div className="mt-5 flex-1 flex flex-col">
         <nav className="flex-1 px-2 bg-indigo-700 space-y-1">
           {navItems.map((item) => (
-            <a
+            <button
               key={item.name}
-              href={item.path}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(item.path);
-              }}
+              onClick={() => navigate(item.path)}
               className={`${
                 location === item.path
                   ? "bg-indigo-800 text-white"
                   : "text-indigo-100 hover:bg-indigo-600"
-              } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
+              } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
             >
               <svg
                 className="mr-3 h-6 w-6 text-indigo-300"
@@ -438,7 +434,7 @@ const SidebarContent = ({ user, logout }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
               </svg>
               {item.name}
-            </a>
+            </button>
           ))}
         </nav>
       </div>
