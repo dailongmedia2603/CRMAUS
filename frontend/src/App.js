@@ -1508,7 +1508,470 @@ const ProjectDetail = () => {
 };
 
 const Tasks = () => {
-  return <div>Danh sách công việc (đang phát triển)</div>;
+  const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    project_id: "",
+    description: "",
+    assigned_to: "",
+    due_date: "",
+    priority: "medium",
+    status: "to_do"
+  });
+
+  useEffect(() => {
+    fetchTasks();
+    fetchProjects();
+    fetchUsers();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/tasks/`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast.error("Không thể tải danh sách công việc");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`${API}/projects/`);
+      setProjects(response.data);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Không thể tải danh sách dự án");
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/users/`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      console.log("Hiện tại không thể tải danh sách người dùng. Sẽ sử dụng danh sách trống.");
+      setUsers([]);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/tasks/`, formData);
+      toast.success("Thêm công việc thành công!");
+      setIsModalOpen(false);
+      resetForm();
+      fetchTasks();
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast.error("Không thể tạo công việc mới");
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      project_id: "",
+      description: "",
+      assigned_to: "",
+      due_date: "",
+      priority: "medium",
+      status: "to_do"
+    });
+  };
+
+  const getProjectName = (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    return project ? project.name : "Không xác định";
+  };
+
+  const getUserName = (userId) => {
+    if (!userId) return "Chưa phân công";
+    const user = users.find(u => u.id === userId);
+    return user ? user.full_name : "Không xác định";
+  };
+
+  const getPriorityBadgeClass = (priority) => {
+    switch (priority) {
+      case "high":
+        return "bg-red-100 text-red-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "to_do":
+        return "bg-gray-100 text-gray-800";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "review":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityText = (priority) => {
+    switch (priority) {
+      case "high":
+        return "Cao";
+      case "medium":
+        return "Trung bình";
+      case "low":
+        return "Thấp";
+      default:
+        return priority;
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "to_do":
+        return "Cần làm";
+      case "in_progress":
+        return "Đang làm";
+      case "review":
+        return "Đang xem xét";
+      case "completed":
+        return "Hoàn thành";
+      default:
+        return status;
+    }
+  };
+
+  // Hàm xử lý cập nhật trạng thái công việc
+  const handleUpdateStatus = async (taskId, newStatus) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) {
+        toast.error("Không tìm thấy công việc");
+        return;
+      }
+      
+      await axios.put(`${API}/tasks/${taskId}`, {
+        ...task,
+        status: newStatus
+      });
+      
+      toast.success("Cập nhật trạng thái thành công!");
+      fetchTasks();
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      toast.error("Không thể cập nhật trạng thái công việc");
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Công việc</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Thêm công việc
+        </button>
+      </div>
+
+      {/* Danh sách công việc */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        {tasks.length > 0 ? (
+          <ul className="divide-y divide-gray-200">
+            {tasks.map((task) => (
+              <li key={task.id}>
+                <div className="block hover:bg-gray-50">
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-indigo-600 truncate">
+                        {task.title}
+                      </p>
+                      <div className="ml-2 flex-shrink-0 flex">
+                        <span className={`mr-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityBadgeClass(task.priority)}`}>
+                          {getPriorityText(task.priority)}
+                        </span>
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(task.status)}`}>
+                          {getStatusText(task.status)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 sm:flex sm:justify-between">
+                      <div className="sm:flex">
+                        <p className="flex items-center text-sm text-gray-500">
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                          </svg>
+                          {getProjectName(task.project_id)}
+                        </p>
+                        <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                          {getUserName(task.assigned_to)}
+                        </p>
+                      </div>
+                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        {task.due_date ? (
+                          <p>
+                            Đến hạn: {new Date(task.due_date).toLocaleDateString('vi-VN')}
+                          </p>
+                        ) : (
+                          <p>Chưa có thời hạn</p>
+                        )}
+                      </div>
+                    </div>
+                    {task.description && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-700">{task.description}</p>
+                      </div>
+                    )}
+                    <div className="mt-3 flex justify-end space-x-2">
+                      {task.status !== "completed" && (
+                        <button
+                          onClick={() => handleUpdateStatus(task.id, "completed")}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        >
+                          Hoàn thành
+                        </button>
+                      )}
+                      
+                      {task.status === "to_do" && (
+                        <button
+                          onClick={() => handleUpdateStatus(task.id, "in_progress")}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          Bắt đầu
+                        </button>
+                      )}
+                      
+                      {task.status === "in_progress" && (
+                        <button
+                          onClick={() => handleUpdateStatus(task.id, "review")}
+                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                        >
+                          Gửi xem xét
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-center py-10 text-gray-500">
+            Chưa có công việc nào. Bắt đầu bằng cách thêm công việc mới.
+          </div>
+        )}
+      </div>
+
+      {/* Modal thêm công việc */}
+      {isModalOpen && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <form onSubmit={handleSubmit}>
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Thêm công việc mới
+                      </h3>
+                      <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div className="sm:col-span-6">
+                          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                            Tiêu đề
+                          </label>
+                          <div className="mt-1">
+                            <input
+                              type="text"
+                              name="title"
+                              id="title"
+                              required
+                              value={formData.title}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">
+                            Dự án
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="project_id"
+                              name="project_id"
+                              required
+                              value={formData.project_id}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="">Chọn dự án</option>
+                              {projects.map((project) => (
+                                <option key={project.id} value={project.id}>
+                                  {project.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                            Mô tả
+                          </label>
+                          <div className="mt-1">
+                            <textarea
+                              id="description"
+                              name="description"
+                              rows="3"
+                              value={formData.description}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
+                            Người phụ trách
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="assigned_to"
+                              name="assigned_to"
+                              value={formData.assigned_to}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="">Chưa phân công</option>
+                              {users.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                  {user.full_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label htmlFor="due_date" className="block text-sm font-medium text-gray-700">
+                            Thời hạn
+                          </label>
+                          <div className="mt-1">
+                            <input
+                              type="date"
+                              name="due_date"
+                              id="due_date"
+                              value={formData.due_date}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                            Độ ưu tiên
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="priority"
+                              name="priority"
+                              value={formData.priority}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="low">Thấp</option>
+                              <option value="medium">Trung bình</option>
+                              <option value="high">Cao</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-6">
+                          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                            Trạng thái
+                          </label>
+                          <div className="mt-1">
+                            <select
+                              id="status"
+                              name="status"
+                              value={formData.status}
+                              onChange={handleInputChange}
+                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            >
+                              <option value="to_do">Cần làm</option>
+                              <option value="in_progress">Đang làm</option>
+                              <option value="review">Đang xem xét</option>
+                              <option value="completed">Hoàn thành</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="submit"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Thêm công việc
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const Contracts = () => {
