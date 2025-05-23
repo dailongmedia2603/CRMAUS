@@ -1007,10 +1007,26 @@ const Clients = () => {
   const [viewArchived, setViewArchived] = useState(false);
   const [selectedClients, setSelectedClients] = useState([]);
   const [statusFilter, setStatusFilter] = useState("active"); // active, archived, all
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [statsData, setStatsData] = useState({
     totalClients: 0,
     activeClients: 0,
     newClientsThisMonth: 0
+  });
+  const [formData, setFormData] = useState({
+    name: "",
+    company: "",
+    industry: "",
+    size: "",
+    website: "",
+    phone: "",
+    contact_name: "",
+    contact_email: "",
+    contact_phone: "",
+    notes: "",
+    address: "",
+    tags: []
   });
   const [filterData, setFilterData] = useState({
     tags: [],
@@ -1128,6 +1144,92 @@ const Clients = () => {
 
   const toggleBulkActionMenu = () => {
     setBulkActionMenuOpen(!bulkActionMenuOpen);
+  };
+  
+  // Xử lý upload avatar
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Xử lý thay đổi input trong form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+  
+  // Xử lý lựa chọn tag
+  const handleTagSelect = (e) => {
+    const tag = e.target.value;
+    if (tag && !formData.tags.includes(tag)) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, tag]
+      });
+    }
+  };
+  
+  // Xử lý xóa tag
+  const removeTag = (tagToRemove) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(tag => tag !== tagToRemove)
+    });
+  };
+  
+  // Xử lý submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Đảm bảo có tên công ty
+      const clientData = {
+        ...formData,
+        company: formData.name // Sử dụng tên client làm tên công ty nếu không có
+      };
+
+      // Gửi thông tin client lên server
+      const response = await axios.post(`${API}/clients/`, clientData);
+      
+      // TODO: Xử lý upload avatar trong môi trường thực tế
+      // Trong môi trường thực tế, bạn sẽ cần upload file lên server riêng
+      // và lưu URL vào database
+      
+      toast.success("Thêm khách hàng thành công!");
+      setIsModalOpen(false);
+      resetForm();
+      fetchClients();
+      fetchStats();
+    } catch (error) {
+      console.error("Error creating client:", error);
+      toast.error("Không thể tạo khách hàng mới");
+    }
+  };
+  
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      company: "",
+      industry: "",
+      size: "",
+      website: "",
+      phone: "",
+      contact_name: "",
+      contact_email: "",
+      contact_phone: "",
+      notes: "",
+      address: "",
+      tags: []
+    });
+    setAvatarPreview(null);
+    setAvatarFile(null);
   };
 
   const handleArchiveClient = async (clientId) => {
