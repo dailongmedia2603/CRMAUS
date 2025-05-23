@@ -2243,7 +2243,8 @@ const ClientDetail = () => {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview"); // overview, projects, tasks, contracts
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   useEffect(() => {
     fetchClientDetails();
@@ -2261,21 +2262,40 @@ const ClientDetail = () => {
       setLoading(false);
     }
   };
+
+  const handleEditClient = () => {
+    setIsEditModalOpen(true);
+  };
+  
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
   
   if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="spinner"></div>
+        <p className="ml-2 text-gray-600">Đang tải thông tin...</p>
+      </div>
+    );
   }
   
   if (!client) {
     return (
-      <div className="text-center py-10 text-red-500">
-        Không tìm thấy thông tin khách hàng. 
-        <button 
-          onClick={() => navigate("/clients")}
-          className="ml-2 text-indigo-600 hover:text-indigo-800"
-        >
-          Quay lại
-        </button>
+      <div className="text-center py-10">
+        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 className="mt-2 text-lg font-medium text-gray-900">Không tìm thấy thông tin khách hàng</h3>
+        <p className="mt-1 text-gray-500">Khách hàng này có thể đã bị xóa hoặc không tồn tại.</p>
+        <div className="mt-6">
+          <button 
+            onClick={() => navigate("/clients")}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+          >
+            Quay lại danh sách
+          </button>
+        </div>
       </div>
     );
   }
@@ -2289,180 +2309,477 @@ const ClientDetail = () => {
     .toUpperCase();
   
   return (
-    <div className="mb-6">
+    <div className="bg-gray-50 min-h-screen">
       {/* Header với nút quay lại và tiêu đề */}
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => navigate("/clients")}
-          className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
-        >
-          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="ml-1">Quay lại</span>
-        </button>
-        <h1 className="text-2xl font-semibold text-gray-900">Chi tiết Client</h1>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Phần thông tin chi tiết client - bên trái */}
-        <div className="w-full md:w-1/3 bg-white rounded-lg shadow-sm p-6">
-          <div className="flex flex-col items-center mb-6">
-            <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 mb-4">
-              {avatarText}
-            </div>
-            <h2 className="text-xl font-bold text-center">{client.name}</h2>
-            <p className="text-gray-600 text-center">{client.contact_name || "Chưa có tên liên hệ"}</p>
-            <div className="mt-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Đang hoạt động
-              </span>
-            </div>
-          </div>
-          
-          <div className="border-t pt-4">
-            <div className="flex justify-between items-center mb-4">
-              <button 
-                className="flex items-center text-gray-700 hover:text-indigo-600"
-                onClick={() => setIsModalOpen(true)}
-              >
-                <svg className="h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                Chỉnh sửa
-              </button>
-              <button className="text-gray-400 hover:text-gray-600">
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="space-y-3 text-sm">
-              {client.contact_email && (
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <a href={`mailto:${client.contact_email}`} className="text-gray-700 hover:text-indigo-600">
-                    {client.contact_email}
-                  </a>
-                </div>
-              )}
-              
-              {client.contact_phone && (
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <a href={`tel:${client.contact_phone}`} className="text-gray-700 hover:text-indigo-600">
-                    {client.contact_phone}
-                  </a>
-                </div>
-              )}
-              
-              {client.website && (
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                  </svg>
-                  <a href={client.website.startsWith('http') ? client.website : `https://${client.website}`} 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     className="text-gray-700 hover:text-indigo-600"
-                  >
-                    {client.website}
-                  </a>
-                </div>
-              )}
-              
-              {client.address && (
-                <div className="flex items-start">
-                  <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-gray-700">{client.address}</span>
-                </div>
-              )}
-            </div>
-            
-            {client.tags && client.tags.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {client.tags.map((tag, index) => (
-                    <span key={index} className="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {client.notes && (
-              <div className="mt-4 pt-4 border-t">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Ghi chú</h3>
-                <p className="text-sm text-gray-600">{client.notes}</p>
-              </div>
-            )}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate("/clients")}
+              className="flex items-center text-gray-500 hover:text-gray-700 mr-4 focus:outline-none"
+            >
+              <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="ml-1 text-sm font-medium">Quay lại</span>
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">Chi tiết Client</h1>
           </div>
         </div>
-        
-        {/* Phần tab nội dung - bên phải */}
-        <div className="w-full md:w-2/3 bg-white rounded-lg shadow-sm">
-          {/* Tab navigation */}
-          <div className="border-b">
-            <nav className="flex -mb-px">
-              <button
-                onClick={() => setActiveTab("overview")}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === "overview"
-                    ? "border-b-2 border-indigo-500 text-indigo-600"
-                    : "border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Tổng quan
-              </button>
-              <button
-                onClick={() => setActiveTab("projects")}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === "projects"
-                    ? "border-b-2 border-indigo-500 text-indigo-600"
-                    : "border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Dự án
-              </button>
-              <button
-                onClick={() => setActiveTab("tasks")}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === "tasks"
-                    ? "border-b-2 border-indigo-500 text-indigo-600"
-                    : "border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Công việc
-              </button>
-              <button
-                onClick={() => setActiveTab("contracts")}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === "contracts"
-                    ? "border-b-2 border-indigo-500 text-indigo-600"
-                    : "border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                Hợp đồng
-              </button>
-            </nav>
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Phần thông tin chi tiết client - bên trái */}
+          <div className="w-full md:w-1/3">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex flex-col items-center mb-6">
+                <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 mb-4">
+                  {avatarText}
+                </div>
+                <h2 className="text-xl font-bold text-center">{client.name}</h2>
+                <p className="text-gray-600 text-center">{client.contact_name || "Chưa có tên liên hệ"}</p>
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {client.archived ? "Đã lưu trữ" : "Đang hoạt động"}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <button 
+                    className="flex items-center text-gray-700 hover:text-indigo-600"
+                    onClick={handleEditClient}
+                  >
+                    <svg className="h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Chỉnh sửa
+                  </button>
+                  <div className="relative">
+                    <button 
+                      className="text-gray-400 hover:text-gray-600"
+                      onClick={toggleMenu}
+                    >
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                      </svg>
+                    </button>
+                    {menuOpen && (
+                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                        <div className="py-1">
+                          <button 
+                            onClick={() => {
+                              // Handle archive action
+                              setMenuOpen(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {client.archived ? "Khôi phục" : "Lưu trữ"}
+                          </button>
+                          <button 
+                            onClick={() => {
+                              // Handle delete action
+                              if (window.confirm("Bạn có chắc chắn muốn xóa client này?")) {
+                                // Delete logic
+                              }
+                              setMenuOpen(false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                          >
+                            Xóa client
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-3 text-sm">
+                  {client.contact_email && (
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <a href={`mailto:${client.contact_email}`} className="text-gray-700 hover:text-indigo-600">
+                        {client.contact_email}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {client.contact_phone && (
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <a href={`tel:${client.contact_phone}`} className="text-gray-700 hover:text-indigo-600">
+                        {client.contact_phone}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {client.website && (
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      </svg>
+                      <a 
+                        href={client.website.startsWith('http') ? client.website : `https://${client.website}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-gray-700 hover:text-indigo-600"
+                      >
+                        {client.website}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {client.address && (
+                    <div className="flex items-start">
+                      <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-gray-700">{client.address}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {client.tags && client.tags.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {client.tags.map((tag, index) => (
+                        <span key={index} className="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {client.notes && (
+                  <div className="mt-4 pt-4 border-t">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Ghi chú</h3>
+                    <div className="bg-gray-50 rounded p-3 max-h-40 overflow-y-auto">
+                      <p className="text-sm text-gray-600">{client.notes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
-          {/* Tab content */}
-          <div className="p-6">
-            {activeTab === "overview" && <ClientOverviewTab clientId={id} />}
-            {activeTab === "projects" && <ClientProjectsTab clientId={id} />}
-            {activeTab === "tasks" && <ClientTasksTab clientId={id} />}
-            {activeTab === "contracts" && <ClientContractsTab clientId={id} />}
+          {/* Phần tab nội dung - bên phải */}
+          <div className="w-full md:w-2/3">
+            <div className="bg-white rounded-lg shadow-sm">
+              {/* Tab navigation */}
+              <div className="border-b">
+                <nav className="flex -mb-px">
+                  <button
+                    onClick={() => setActiveTab("overview")}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                      activeTab === "overview"
+                        ? "border-indigo-500 text-indigo-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } focus:outline-none transition duration-150 ease-in-out`}
+                  >
+                    Tổng quan
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("projects")}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                      activeTab === "projects"
+                        ? "border-indigo-500 text-indigo-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } focus:outline-none transition duration-150 ease-in-out`}
+                  >
+                    Dự án
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("tasks")}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                      activeTab === "tasks"
+                        ? "border-indigo-500 text-indigo-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } focus:outline-none transition duration-150 ease-in-out`}
+                  >
+                    Công việc
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("contracts")}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                      activeTab === "contracts"
+                        ? "border-indigo-500 text-indigo-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } focus:outline-none transition duration-150 ease-in-out`}
+                  >
+                    Hợp đồng
+                  </button>
+                </nav>
+              </div>
+              
+              {/* Tab content */}
+              <div className="p-6">
+                {activeTab === "overview" && <ClientOverviewTab clientId={id} />}
+                {activeTab === "projects" && <ClientProjectsTab clientId={id} />}
+                {activeTab === "tasks" && <ClientTasksTab clientId={id} />}
+                {activeTab === "contracts" && <ClientContractsTab clientId={id} />}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Modal chỉnh sửa client */}
+      {isEditModalOpen && (
+        <EditClientModal 
+          client={client} 
+          onClose={() => setIsEditModalOpen(false)} 
+          onUpdate={() => {
+            fetchClientDetails();
+            setIsEditModalOpen(false);
+          }} 
+        />
+      )}
+    </div>
+  );
+};
+
+// Modal chỉnh sửa client
+const EditClientModal = ({ client, onClose, onUpdate }) => {
+  const [formData, setFormData] = useState({
+    name: client.name || "",
+    company: client.company || "",
+    contact_name: client.contact_name || "",
+    contact_email: client.contact_email || "",
+    contact_phone: client.contact_phone || "",
+    website: client.website || "",
+    address: client.address || "",
+    notes: client.notes || "",
+    tags: client.tags || []
+  });
+  const [tagInput, setTagInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleTagInputKeyDown = (e) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      if (!formData.tags.includes(tagInput.trim())) {
+        setFormData({
+          ...formData,
+          tags: [...formData.tags, tagInput.trim()]
+        });
+      }
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(tag => tag !== tagToRemove)
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await axios.put(`${API}/clients/${client.id}`, formData);
+      toast.success("Cập nhật khách hàng thành công!");
+      onUpdate();
+    } catch (error) {
+      console.error("Error updating client:", error);
+      toast.error("Không thể cập nhật thông tin khách hàng");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed z-10 inset-0 overflow-y-auto">
+      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="sm:flex sm:items-start">
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Chỉnh sửa thông tin client
+                </h3>
+                <form onSubmit={handleSubmit} className="mt-2">
+                  <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div className="sm:col-span-6">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                        Tên <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        required
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-6">
+                      <label htmlFor="contact_name" className="block text-sm font-medium text-gray-700">
+                        Tên người liên hệ
+                      </label>
+                      <input
+                        type="text"
+                        name="contact_name"
+                        id="contact_name"
+                        value={formData.contact_name}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="contact_email"
+                        id="contact_email"
+                        value={formData.contact_email}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700">
+                        Số điện thoại
+                      </label>
+                      <input
+                        type="text"
+                        name="contact_phone"
+                        id="contact_phone"
+                        value={formData.contact_phone}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-6">
+                      <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+                        Website
+                      </label>
+                      <input
+                        type="text"
+                        name="website"
+                        id="website"
+                        value={formData.website}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-6">
+                      <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                        Địa chỉ
+                      </label>
+                      <textarea
+                        name="address"
+                        id="address"
+                        rows="2"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      ></textarea>
+                    </div>
+
+                    <div className="sm:col-span-6">
+                      <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
+                        Tags
+                      </label>
+                      <div className="mt-1">
+                        <input
+                          type="text"
+                          name="tags"
+                          id="tags"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleTagInputKeyDown}
+                          placeholder="Nhập tag và nhấn Enter"
+                          className="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        />
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {formData.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                            >
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => removeTag(tag)}
+                                className="ml-1.5 text-indigo-400 hover:text-indigo-600 focus:outline-none"
+                              >
+                                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-6">
+                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                        Ghi chú
+                      </label>
+                      <textarea
+                        name="notes"
+                        id="notes"
+                        rows="3"
+                        value={formData.notes}
+                        onChange={handleInputChange}
+                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      ></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Hủy
+            </button>
           </div>
         </div>
       </div>
