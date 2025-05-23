@@ -1596,7 +1596,10 @@ const Clients = () => {
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div 
+                          className="text-sm font-medium text-indigo-600 cursor-pointer hover:text-indigo-800"
+                          onClick={() => navigate(`/clients/${client.id}`)}
+                        >
                           {client.name}
                         </div>
                         <div className="text-sm text-gray-500">
