@@ -1643,7 +1643,14 @@ const Clients = () => {
                       </svg>
                     </button>
                     {actionMenuOpen === client.id && (
-                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50" style={{right: '20px'}}>
+                      <div 
+                        className="origin-top-right absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                        style={{
+                          right: 'auto',
+                          left: 'auto',
+                          transform: 'translateX(-90%)'
+                        }}
+                      >
                         <div className="py-1">
                           <button
                             onClick={() => {
