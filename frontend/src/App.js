@@ -1187,6 +1187,32 @@ const Clients = () => {
     });
   };
   
+  // Xử lý chỉnh sửa client
+  const handleEditClient = (client) => {
+    // Thiết lập trạng thái chỉnh sửa
+    setIsEditing(true);
+    setCurrentClientId(client.id);
+    
+    // Điền dữ liệu vào form
+    setFormData({
+      name: client.name || "",
+      company: client.company || "",
+      industry: client.industry || "",
+      size: client.size || "",
+      website: client.website || "",
+      phone: client.phone || "",
+      contact_name: client.contact_name || "",
+      contact_email: client.contact_email || "",
+      contact_phone: client.contact_phone || "",
+      notes: client.notes || "",
+      address: client.address || "",
+      tags: client.tags || []
+    });
+    
+    // Mở modal
+    setIsModalOpen(true);
+  };
+  
   // Xử lý submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1194,28 +1220,35 @@ const Clients = () => {
       // Đảm bảo có tên công ty
       const clientData = {
         ...formData,
-        company: formData.name // Sử dụng tên client làm tên công ty nếu không có
+        company: formData.company || formData.name // Sử dụng tên client làm tên công ty nếu không có
       };
 
-      // Gửi thông tin client lên server
-      const response = await axios.post(`${API}/clients/`, clientData);
+      let response;
+      if (isEditing) {
+        // Cập nhật client hiện có
+        response = await axios.put(`${API}/clients/${currentClientId}`, clientData);
+        toast.success("Cập nhật khách hàng thành công!");
+      } else {
+        // Tạo client mới
+        response = await axios.post(`${API}/clients/`, clientData);
+        toast.success("Thêm khách hàng thành công!");
+      }
       
       // TODO: Xử lý upload avatar trong môi trường thực tế
       // Trong môi trường thực tế, bạn sẽ cần upload file lên server riêng
       // và lưu URL vào database
       
-      toast.success("Thêm khách hàng thành công!");
       setIsModalOpen(false);
       resetForm();
       fetchClients();
       fetchStats();
     } catch (error) {
-      console.error("Error creating client:", error);
-      toast.error("Không thể tạo khách hàng mới");
+      console.error("Error saving client:", error);
+      toast.error(isEditing ? "Không thể cập nhật khách hàng" : "Không thể tạo khách hàng mới");
     }
   };
   
-  // Reset form
+  // Reset form và trạng thái chỉnh sửa
   const resetForm = () => {
     setFormData({
       name: "",
@@ -1233,6 +1266,8 @@ const Clients = () => {
     });
     setAvatarPreview(null);
     setAvatarFile(null);
+    setIsEditing(false);
+    setCurrentClientId(null);
   };
 
   const handleArchiveClient = async (clientId) => {
