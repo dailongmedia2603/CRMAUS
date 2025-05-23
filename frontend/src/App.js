@@ -1597,8 +1597,222 @@ const Clients = () => {
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              {/* Modal content đã có từ trước, giữ nguyên */}
-              {/* ... */}
+              <div className="px-4 pt-5 pb-4 sm:p-6">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Thêm client mới
+                  </h3>
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-gray-500"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    <span className="sr-only">Đóng</span>
+                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="mt-6">
+                  {/* Avatar */}
+                  <div className="flex justify-center mb-6">
+                    <div className="relative">
+                      <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-2xl font-medium text-gray-500">
+                            {formData.name ? formData.name.substring(0, 2).toUpperCase() : "CL"}
+                          </span>
+                        )}
+                      </div>
+                      <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-indigo-600 rounded-full p-1 cursor-pointer">
+                        <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                      </label>
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tên client */}
+                  <div className="mb-4">
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tên client <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      id="name"
+                      placeholder="Nhập tên client"
+                      required
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  {/* Tên người liên hệ */}
+                  <div className="mb-4">
+                    <label htmlFor="contact_name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tên người liên hệ
+                    </label>
+                    <input
+                      type="text"
+                      name="contact_name"
+                      id="contact_name"
+                      placeholder="Nhập tên người liên hệ"
+                      value={formData.contact_name || ""}
+                      onChange={handleInputChange}
+                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  {/* Email và SĐT */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="contact_email"
+                        id="contact_email"
+                        placeholder="Email"
+                        value={formData.contact_email || ""}
+                        onChange={handleInputChange}
+                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700 mb-1">
+                        Số điện thoại
+                      </label>
+                      <input
+                        type="text"
+                        name="contact_phone"
+                        id="contact_phone"
+                        placeholder="Số điện thoại"
+                        value={formData.contact_phone || ""}
+                        onChange={handleInputChange}
+                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Website */}
+                  <div className="mb-4">
+                    <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
+                      Website
+                    </label>
+                    <input
+                      type="text"
+                      name="website"
+                      id="website"
+                      placeholder="www.example.com"
+                      value={formData.website || ""}
+                      onChange={handleInputChange}
+                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  {/* Tags */}
+                  <div className="mb-4">
+                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
+                      Tag
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="tags"
+                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        value=""
+                        onChange={handleTagSelect}
+                      >
+                        <option value="" disabled>Chọn tag</option>
+                        {availableTags.map(tag => (
+                          <option key={tag} value={tag} disabled={formData.tags.includes(tag)}>
+                            {tag}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {formData.tags.map(tag => (
+                          <span 
+                            key={tag} 
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
+                          >
+                            {tag}
+                            <button 
+                              type="button" 
+                              className="ml-1.5 inline-flex text-indigo-400 hover:text-indigo-600"
+                              onClick={() => removeTag(tag)}
+                            >
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Địa chỉ */}
+                  <div className="mb-4">
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                      Địa chỉ
+                    </label>
+                    <textarea
+                      id="address"
+                      name="address"
+                      rows="3"
+                      placeholder="Địa chỉ"
+                      value={formData.address || ""}
+                      onChange={handleInputChange}
+                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    ></textarea>
+                  </div>
+
+                  {/* Ghi chú */}
+                  <div className="mb-4">
+                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                      Ghi chú
+                    </label>
+                    <textarea
+                      id="notes"
+                      name="notes"
+                      rows="3"
+                      placeholder="Ghi chú"
+                      value={formData.notes || ""}
+                      onChange={handleInputChange}
+                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    ></textarea>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                    >
+                      Thêm mới
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
