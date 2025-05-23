@@ -1010,6 +1010,8 @@ const Clients = () => {
   const [statusFilter, setStatusFilter] = useState("active"); // active, archived, all
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [isEditing, setIsEditing] = useState(false); // Thêm state để kiểm tra đang chỉnh sửa hay thêm mới
+  const [currentClientId, setCurrentClientId] = useState(null); // Lưu ID của client đang chỉnh sửa
   const [statsData, setStatsData] = useState({
     totalClients: 0,
     activeClients: 0,
