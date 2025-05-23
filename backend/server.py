@@ -86,6 +86,7 @@ class ClientBase(BaseModel):
     contact_email: Optional[EmailStr] = None
     contact_phone: Optional[str] = None
     notes: Optional[str] = None
+    address: Optional[str] = None
     tags: List[str] = []
     archived: bool = False
 
