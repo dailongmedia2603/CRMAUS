@@ -1598,11 +1598,11 @@ const Clients = () => {
                       </svg>
                     </button>
                     {actionMenuOpen === client.id && (
-                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50" style={{right: '20px'}}>
                         <div className="py-1">
                           <button
                             onClick={() => {
-                              window.location.href = `/clients/${client.id}`;
+                              navigate(`/clients/${client.id}`);
                               setActionMenuOpen(null);
                             }}
                             className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -1615,7 +1615,7 @@ const Clients = () => {
                           </button>
                           <button
                             onClick={() => {
-                              setIsModalOpen(true);
+                              handleEditClient(client);
                               setActionMenuOpen(null);
                             }}
                             className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
