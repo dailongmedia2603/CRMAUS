@@ -2172,6 +2172,7 @@ const ClientDetail = () => {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview"); // overview, projects, tasks, contracts
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   useEffect(() => {
     fetchClientDetails();
