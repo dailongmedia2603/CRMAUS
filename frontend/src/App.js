@@ -1634,93 +1634,118 @@ const Clients = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                    <button
-                      onClick={() => toggleActionMenu(client.id)}
-                      className="text-gray-400 hover:text-gray-500"
-                    >
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                    {actionMenuOpen === client.id && (
-                      <div 
-                        className="origin-top-right absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                        style={{
-                          right: 'auto',
-                          left: 'auto',
-                          transform: 'translateX(-90%)'
-                        }}
+                    <div className="relative">
+                      <button
+                        onClick={() => toggleActionMenu(client.id)}
+                        className="text-gray-400 hover:text-gray-500"
                       >
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              navigate(`/clients/${client.id}`);
-                              setActionMenuOpen(null);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Xem chi tiết
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleEditClient(client);
-                              setActionMenuOpen(null);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                            Chỉnh sửa
-                          </button>
-                          {!client.archived ? (
-                            <button
-                              onClick={() => {
-                                handleArchiveClient(client.id);
-                                setActionMenuOpen(null);
-                              }}
-                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                              </svg>
-                              Lưu trữ
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                handleRestoreClient(client.id);
-                                setActionMenuOpen(null);
-                              }}
-                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                              </svg>
-                              Khôi phục
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              if (window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
-                                handleDeleteClient(client.id);
+                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+                      {actionMenuOpen === client.id && (
+                        <div 
+                          className="fixed origin-top-right z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                          style={{
+                            top: 'auto',
+                            right: 'auto',
+                            left: 'auto'
+                          }}
+                          ref={(node) => {
+                            if (node) {
+                              const rect = node.getBoundingClientRect();
+                              const buttonRect = node.parentElement.getBoundingClientRect();
+                              
+                              // Tính toán vị trí tốt nhất
+                              let left = buttonRect.left - rect.width + 20;
+                              
+                              // Đảm bảo không vượt quá bên trái màn hình
+                              if (left < 10) {
+                                left = 10;
                               }
-                              setActionMenuOpen(null);
-                            }}
-                            className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            <svg className="mr-3 h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Xóa
-                          </button>
+                              
+                              // Đảm bảo không vượt quá bên phải màn hình
+                              if (left + rect.width > window.innerWidth - 10) {
+                                left = window.innerWidth - rect.width - 10;
+                              }
+                              
+                              node.style.position = 'fixed';
+                              node.style.top = `${buttonRect.bottom + window.scrollY}px`;
+                              node.style.left = `${left}px`;
+                            }
+                          }}
+                        >
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                navigate(`/clients/${client.id}`);
+                                setActionMenuOpen(null);
+                              }}
+                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              Xem chi tiết
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleEditClient(client);
+                                setActionMenuOpen(null);
+                              }}
+                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                              Chỉnh sửa
+                            </button>
+                            {!client.archived ? (
+                              <button
+                                onClick={() => {
+                                  handleArchiveClient(client.id);
+                                  setActionMenuOpen(null);
+                                }}
+                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                                Lưu trữ
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  handleRestoreClient(client.id);
+                                  setActionMenuOpen(null);
+                                }}
+                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                </svg>
+                                Khôi phục
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                if (window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
+                                  handleDeleteClient(client.id);
+                                }
+                                setActionMenuOpen(null);
+                              }}
+                              className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
+                              <svg className="mr-3 h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Xóa
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
