@@ -999,6 +999,7 @@ const Dashboard = () => {
 
 // Component Clients
 const Clients = () => {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
