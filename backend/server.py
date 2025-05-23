@@ -87,6 +87,7 @@ class ClientBase(BaseModel):
     contact_phone: Optional[str] = None
     notes: Optional[str] = None
     tags: List[str] = []
+    archived: bool = False
 
 class ClientCreate(ClientBase):
     pass
