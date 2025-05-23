@@ -1660,7 +1660,7 @@ const Clients = () => {
                           </button>
                           <button
                             onClick={() => {
-                              setIsModalOpen(true);
+                              handleEditClient(client);
                               setActionMenuOpen(null);
                             }}
                             className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
