@@ -1507,7 +1507,7 @@ const Clients = () => {
                 value={searchTerm}
                 onChange={handleSearch}
                 placeholder="Tìm kiếm theo tên, email, website..."
-                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2"
+                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 sm:text-sm border-gray-300 rounded-md py-2"
               />
             </div>
           </div>
