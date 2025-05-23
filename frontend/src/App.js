@@ -1949,7 +1949,10 @@ const Clients = () => {
                   <div className="flex justify-end space-x-3 mt-6">
                     <button
                       type="button"
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        resetForm();
+                      }}
                       className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                     >
                       Hủy
@@ -1958,7 +1961,7 @@ const Clients = () => {
                       type="submit"
                       className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
                     >
-                      Thêm mới
+                      {isEditing ? "Cập nhật" : "Thêm mới"}
                     </button>
                   </div>
                 </form>
