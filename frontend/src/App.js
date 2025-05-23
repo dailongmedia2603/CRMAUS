@@ -1747,12 +1747,15 @@ const Clients = () => {
               <div className="px-4 pt-5 pb-4 sm:p-6">
                 <div className="flex justify-between items-start">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Thêm client mới
+                    {isEditing ? "Chỉnh sửa client" : "Thêm client mới"}
                   </h3>
                   <button
                     type="button"
                     className="text-gray-400 hover:text-gray-500"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      resetForm();
+                    }}
                   >
                     <span className="sr-only">Đóng</span>
                     <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
