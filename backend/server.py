@@ -768,6 +768,21 @@ class TaskDetailComponent(TaskDetailComponentBase):
 
 # Service Template API Endpoints
 
+# Categories API (must be before parameterized routes)
+@api_router.get("/service-templates/categories")
+async def get_service_categories(current_user: User = Depends(get_current_user)):
+    """Lấy danh sách categories từ database"""
+    pipeline = [
+        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+        {"$match": {"_id": {"$ne": None}}},
+        {"$sort": {"count": -1}}
+    ]
+    
+    categories_cursor = db.service_templates.aggregate(pipeline)
+    categories = await categories_cursor.to_list(length=None)
+    
+    return [{"name": cat["_id"], "count": cat["count"]} for cat in categories]
+
 # Service Templates CRUD
 @api_router.get("/service-templates", response_model=List[ServiceTemplate])
 async def get_service_templates(
