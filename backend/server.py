@@ -666,6 +666,27 @@ async def setup_initial_admin():
     
     return {"message": "Initial admin user created", "email": "admin@example.com", "password": "admin123"}
 
+# Upload avatar endpoint
+@api_router.post("/upload-avatar/")
+async def upload_avatar(file: UploadFile = File(...)):
+    try:
+        # Tạo thư mục nếu chưa tồn tại
+        os.makedirs("public/uploads", exist_ok=True)
+        
+        # Tạo tên file duy nhất
+        file_extension = file.filename.split(".")[-1]
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
+        file_location = f"public/uploads/{unique_filename}"
+        
+        # Lưu file
+        with open(file_location, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Trả về đường dẫn file
+        return {"avatar_url": f"/public/uploads/{unique_filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Root endpoint
 @api_router.get("/")
 async def root():
