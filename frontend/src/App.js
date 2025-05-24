@@ -2338,8 +2338,12 @@ const ClientDetail = () => {
           <div className="w-full md:w-1/3">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex flex-col items-center mb-6">
-                <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 mb-4">
-                  {avatarText}
+                <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 mb-4 overflow-hidden">
+                  {client.avatar_url ? (
+                    <img src={client.avatar_url} alt={client.name} className="h-full w-full object-cover" />
+                  ) : (
+                    avatarText
+                  )}
                 </div>
                 <h2 className="text-xl font-bold text-center">{client.name}</h2>
                 <p className="text-gray-600 text-center">{client.contact_name || "Chưa có tên liên hệ"}</p>
