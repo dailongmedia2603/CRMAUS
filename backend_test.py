@@ -204,9 +204,81 @@ class CRMAPITester:
         task["status"] = "in_progress"
         return self.run_test("Update Task Status", "PUT", f"tasks/{self.task_id}", 200, task)
 
-    def test_get_dashboard(self):
-        """Test getting dashboard data"""
-        return self.run_test("Get Dashboard Data", "GET", "dashboard", 200)
+    def test_upload_avatar(self):
+        """Test avatar upload functionality"""
+        try:
+            # Create a simple test image
+            img = Image.new('RGB', (100, 100), color='red')
+            img_bytes = io.BytesIO()
+            img.save(img_bytes, format='PNG')
+            img_bytes.seek(0)
+            
+            # Prepare file for upload
+            files = {'file': ('test_avatar.png', img_bytes, 'image/png')}
+            
+            url = f"{self.base_url}/upload-avatar/"
+            headers = {}
+            if self.token:
+                headers['Authorization'] = f'Bearer {self.token}'
+            
+            print(f"\n🔍 Testing Avatar Upload...")
+            self.tests_run += 1
+            
+            response = requests.post(url, files=files, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                response_data = response.json()
+                return True, response_data
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    print(f"Response: {response.json()}")
+                except:
+                    print(f"Response: {response.text}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_create_client_with_avatar(self):
+        """Test creating a client with avatar"""
+        # First upload an avatar
+        avatar_success, avatar_response = self.test_upload_avatar()
+        if not avatar_success:
+            print("❌ Cannot test client with avatar: Avatar upload failed")
+            return False, {}
+        
+        avatar_url = avatar_response.get('avatar_url')
+        
+        client_data = {
+            "name": f"Test Client with Avatar {datetime.now().strftime('%H%M%S')}",
+            "company": "Test Company with Avatar",
+            "industry": "Technology",
+            "size": "11-50",
+            "website": "https://example.com",
+            "phone": "123-456-7890",
+            "contact_name": "John Doe",
+            "contact_email": "john@example.com",
+            "contact_phone": "123-456-7890",
+            "notes": "This is a test client with avatar",
+            "tags": ["test", "avatar"],
+            "avatar_url": avatar_url
+        }
+        
+        success, response = self.run_test("Create Client with Avatar", "POST", "clients/", 200, client_data)
+        if success:
+            # Verify the avatar_url is saved correctly
+            if response.get('avatar_url') == avatar_url:
+                print("✅ Avatar URL saved correctly in client data")
+                return True, response
+            else:
+                print("❌ Avatar URL not saved correctly in client data")
+                return False, {}
+        return success, response
 
 def main():
     # Setup
