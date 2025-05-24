@@ -701,6 +701,12 @@ async def health_check():
 # Include router
 app.include_router(api_router)
 
+# Tạo thư mục public nếu chưa tồn tại
+os.makedirs("public/uploads", exist_ok=True)
+
+# Mount thư mục public để phục vụ file tĩnh
+app.mount("/public", StaticFiles(directory="public"), name="public")
+
 # Shutdown event
 @app.on_event("shutdown")
 async def shutdown_db_client():
