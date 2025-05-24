@@ -1154,16 +1154,23 @@ async def delete_task_detail_component(
     
     return {"message": "Task detail component deleted successfully"}
 
+class ComponentReorderItem(BaseModel):
+    id: str
+    order_index: int
+
+class ComponentReorderRequest(BaseModel):
+    items: List[ComponentReorderItem]
+
 @api_router.put("/task-detail-components/reorder")
 async def reorder_task_detail_components(
-    component_orders: List[Dict[str, Union[str, int]]],
+    request: ComponentReorderRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Sắp xếp lại thứ tự các components"""
-    for item in component_orders:
+    for item in request.items:
         await db.task_detail_components.update_one(
-            {"id": item["id"]},
-            {"$set": {"order_index": item["order_index"], "updated_at": datetime.utcnow()}}
+            {"id": item.id},
+            {"$set": {"order_index": item.order_index, "updated_at": datetime.utcnow()}}
         )
     
     return {"message": "Components reordered successfully"}
