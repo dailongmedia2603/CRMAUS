@@ -7,7 +7,7 @@ import io
 from PIL import Image
 
 class CRMAPITester:
-    def __init__(self, base_url="https://d8ed86ec-97a1-4265-a186-38851d95fc5a.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://17a1f9e1-95d0-488e-8748-8fd2444151c2.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
