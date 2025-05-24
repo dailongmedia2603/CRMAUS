@@ -588,6 +588,53 @@ def main():
     # Test dashboard
     tester.test_get_dashboard()
     
+    print("\n" + "="*60)
+    print("🔧 TESTING SERVICE TEMPLATE API ENDPOINTS")
+    print("="*60)
+    
+    # Test Service Template CRUD operations
+    print("\n📋 Testing Service Template CRUD...")
+    tester.test_create_service_template()
+    tester.test_get_service_templates()
+    tester.test_get_service_templates_with_filters()
+    tester.test_get_service_template()
+    tester.test_update_service_template()
+    
+    # Test Service CRUD operations
+    print("\n🔧 Testing Service CRUD...")
+    tester.test_create_service()
+    tester.test_get_services_by_template()
+    tester.test_update_service()
+    
+    # Test Task Template CRUD operations
+    print("\n📝 Testing Task Template CRUD...")
+    tester.test_create_task_template()
+    tester.test_get_task_templates_by_service()
+    tester.test_update_task_template()
+    
+    # Test Task Detail Component CRUD operations
+    print("\n🧩 Testing Task Detail Component CRUD...")
+    tester.test_create_task_detail_component()
+    tester.test_get_task_detail_components()
+    tester.test_update_task_detail_component()
+    tester.test_reorder_task_detail_components()
+    
+    # Test additional APIs
+    print("\n🌐 Testing Additional APIs...")
+    tester.test_get_template_hierarchy()
+    tester.test_get_service_categories()
+    
+    # Test clone functionality
+    print("\n📋 Testing Clone Functionality...")
+    tester.test_clone_service_template()
+    
+    # Test cascade deletion (in reverse order)
+    print("\n🗑️ Testing Cascade Deletion...")
+    tester.test_delete_task_detail_component()
+    tester.test_delete_task_template()
+    tester.test_delete_service()
+    tester.test_delete_service_template()
+    
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
     return 0 if tester.tests_passed == tester.tests_run else 1
