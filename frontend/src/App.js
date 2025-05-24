@@ -586,7 +586,11 @@ const SidebarContent = ({ user, logout }) => {
                 </button>
                 <button
                   onClick={() => navigate("/service-templates")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                  className={`${
+                    location.startsWith("/service-templates")
+                      ? "bg-indigo-800 text-white"
+                      : "text-indigo-100 hover:bg-indigo-600"
+                  } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
                 >
                   Mẫu dịch vụ
                 </button>
