@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import { ServiceTemplates, ServiceTemplateDetail } from './ServiceTemplateComponents';
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
