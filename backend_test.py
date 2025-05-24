@@ -16,6 +16,11 @@ class CRMAPITester:
         self.client_id = None
         self.project_id = None
         self.task_id = None
+        # Service Template related IDs
+        self.service_template_id = None
+        self.service_id = None
+        self.task_template_id = None
+        self.task_detail_component_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
         """Run a single API test"""
