@@ -1202,20 +1202,38 @@ async def get_template_hierarchy(
     if not template:
         raise HTTPException(status_code=404, detail="Service template not found")
     
+    # Remove MongoDB _id field to avoid serialization issues
+    if "_id" in template:
+        del template["_id"]
+    
     # Lấy services
     services_cursor = db.services.find({"template_id": template_id}).sort("order_index", 1)
     services = await services_cursor.to_list(length=None)
     
     # Lấy tasks và components cho mỗi service
     for service in services:
+        # Remove MongoDB _id field
+        if "_id" in service:
+            del service["_id"]
+            
         # Lấy tasks
         tasks_cursor = db.task_templates.find({"service_id": service["id"]}).sort("order_index", 1)
         tasks = await tasks_cursor.to_list(length=None)
         
         # Lấy components cho mỗi task
         for task in tasks:
+            # Remove MongoDB _id field
+            if "_id" in task:
+                del task["_id"]
+                
             components_cursor = db.task_detail_components.find({"task_template_id": task["id"]}).sort("order_index", 1)
             components = await components_cursor.to_list(length=None)
+            
+            # Remove MongoDB _id fields from components
+            for component in components:
+                if "_id" in component:
+                    del component["_id"]
+            
             task["components"] = components
         
         service["tasks"] = tasks
