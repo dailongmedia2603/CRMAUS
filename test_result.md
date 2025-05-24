@@ -275,15 +275,18 @@ backend:
 
   - task: "Task Detail Component Reorder API"
     implemented: true
-    working: false
+    working: true
     file: "backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "low"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Reorder API has implementation issue - FastAPI expects Pydantic model but endpoint accepts List directly, causing 422 validation error"
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Issue was route conflict - /task-detail-components/reorder was being matched by /task-detail-components/{component_id} route. Fixed by moving specific route before parameterized route. Also fixed test data format to use proper ComponentReorderRequest model. API now working correctly with proper Pydantic validation."
 
   - task: "Service Template Hierarchy API"
     implemented: true
