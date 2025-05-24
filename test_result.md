@@ -201,6 +201,114 @@ backend:
           agent: "main"
           comment: "Avatar upload system for clients with file storage"
 
+  - task: "Service Template CRUD API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Service Template CRUD operations working correctly - create, read, update, delete, and filtering by search, category, and status all functional"
+
+  - task: "Service CRUD API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Service CRUD operations working correctly - create, read, update, delete services within templates"
+
+  - task: "Task Template CRUD API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Task Template CRUD operations working correctly - create, read, update, delete task templates within services"
+
+  - task: "Task Detail Component CRUD API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Task Detail Component CRUD operations working correctly - create, read, update, delete components within task templates"
+
+  - task: "Service Template Clone API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Service Template cloning functionality working correctly"
+
+  - task: "Service Template Cascade Deletion"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Cascade deletion working correctly - deleting service template removes all related services, task templates, and components"
+
+  - task: "Task Detail Component Reorder API"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Reorder API has implementation issue - FastAPI expects Pydantic model but endpoint accepts List directly, causing 422 validation error"
+
+  - task: "Service Template Hierarchy API"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Hierarchy API returns 500 error due to MongoDB ObjectId serialization issues - ObjectId objects are not JSON serializable"
+
+  - task: "Service Categories API"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "Categories API has routing conflict - /api/service-templates/categories is interpreted as /api/service-templates/{template_id} where template_id='categories'"
+
 frontend:
   - task: "Authentication Interface"
     implemented: true
