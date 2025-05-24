@@ -1224,21 +1224,6 @@ async def get_template_hierarchy(
     
     return template
 
-# Categories API
-@api_router.get("/service-templates/categories")
-async def get_service_categories(current_user: User = Depends(get_current_user)):
-    """Lấy danh sách categories từ database"""
-    pipeline = [
-        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
-        {"$match": {"_id": {"$ne": None}}},
-        {"$sort": {"count": -1}}
-    ]
-    
-    categories_cursor = db.service_templates.aggregate(pipeline)
-    categories = await categories_cursor.to_list(length=None)
-    
-    return [{"name": cat["_id"], "count": cat["count"]} for cat in categories]
-
 # Include router
 app.include_router(api_router)
 
