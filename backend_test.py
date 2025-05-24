@@ -503,9 +503,11 @@ class CRMAPITester:
             print("❌ Cannot test reorder_task_detail_components: No task_detail_component_id available")
             return False, {}
             
-        reorder_data = [
-            {"id": self.task_detail_component_id, "order_index": 2}
-        ]
+        reorder_data = {
+            "component_orders": [
+                {"id": self.task_detail_component_id, "order_index": 2}
+            ]
+        }
         
         return self.run_test("Reorder Task Detail Components", "PUT", "task-detail-components/reorder", 200, reorder_data)
 
