@@ -1135,6 +1135,27 @@ async def create_task_detail_component(
         return new_component
     raise HTTPException(status_code=400, detail="Failed to create task detail component")
 
+class ComponentReorderItem(BaseModel):
+    id: str
+    order_index: int
+
+class ComponentReorderRequest(BaseModel):
+    items: List[ComponentReorderItem]
+
+@api_router.put("/task-detail-components/reorder")
+async def reorder_task_detail_components(
+    request: ComponentReorderRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Sắp xếp lại thứ tự các components"""
+    for item in request.items:
+        await db.task_detail_components.update_one(
+            {"id": item.id},
+            {"$set": {"order_index": item.order_index, "updated_at": datetime.utcnow()}}
+        )
+    
+    return {"message": "Components reordered successfully"}
+
 @api_router.put("/task-detail-components/{component_id}", response_model=TaskDetailComponent)
 async def update_task_detail_component(
     component_id: str,
@@ -1168,27 +1189,6 @@ async def delete_task_detail_component(
         raise HTTPException(status_code=404, detail="Task detail component not found")
     
     return {"message": "Task detail component deleted successfully"}
-
-class ComponentReorderItem(BaseModel):
-    id: str
-    order_index: int
-
-class ComponentReorderRequest(BaseModel):
-    items: List[ComponentReorderItem]
-
-@api_router.put("/task-detail-components/reorder")
-async def reorder_task_detail_components(
-    request: ComponentReorderRequest,
-    current_user: User = Depends(get_current_user)
-):
-    """Sắp xếp lại thứ tự các components"""
-    for item in request.items:
-        await db.task_detail_components.update_one(
-            {"id": item.id},
-            {"$set": {"order_index": item.order_index, "updated_at": datetime.utcnow()}}
-        )
-    
-    return {"message": "Components reordered successfully"}
 
 # Template Hierarchy API
 @api_router.get("/service-templates/{template_id}/hierarchy")
