@@ -305,15 +305,18 @@ backend:
 
   - task: "Service Categories API"
     implemented: true
-    working: false
+    working: true
     file: "backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "low"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Categories API has routing conflict - /api/service-templates/categories is interpreted as /api/service-templates/{template_id} where template_id='categories'"
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: Routing conflict resolved. Categories endpoint (/service-templates/categories) was moved before the parameterized route (/service-templates/{template_id}) in the route definitions. API now correctly returns list of unique categories from service templates."
 
 frontend:
   - task: "Authentication Interface"
