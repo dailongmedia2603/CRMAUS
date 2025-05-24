@@ -1658,10 +1658,14 @@ const Clients = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-500">
-                          {client.name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()}
-                        </span>
+                      <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        {client.avatar_url ? (
+                          <img src={client.avatar_url} alt={client.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-medium text-gray-500">
+                            {client.name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()}
+                          </span>
+                        )}
                       </div>
                       <div className="ml-4">
                         <div 
