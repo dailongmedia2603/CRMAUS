@@ -1343,10 +1343,10 @@ const Clients = () => {
       address: "",
       tags: []
     });
-    setAvatarPreview(null);
-    setAvatarFile(null);
     setIsEditing(false);
     setCurrentClientId(null);
+    setAvatarFile(null);
+    setAvatarPreview(null);
   };
 
   const handleArchiveClient = async (clientId) => {
