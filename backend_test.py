@@ -3,6 +3,8 @@ import requests
 import sys
 from datetime import datetime
 import time
+import io
+from PIL import Image
 
 class CRMAPITester:
     def __init__(self, base_url="https://d8ed86ec-97a1-4265-a186-38851d95fc5a.preview.emergentagent.com/api"):
