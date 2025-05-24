@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import os
 import uuid
 import logging
+import shutil
 from pathlib import Path
 
 # Thiết lập cơ bản
