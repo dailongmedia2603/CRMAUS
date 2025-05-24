@@ -698,6 +698,525 @@ async def root():
 async def health_check():
     return {"status": "ok", "timestamp": datetime.utcnow()}
 
+# Service Template Models
+class ServiceTemplateBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    category: Optional[str] = None
+    status: str = "active"  # active, inactive
+    estimated_duration: Optional[int] = None  # days
+    base_price: Optional[float] = None
+
+class ServiceTemplateCreate(ServiceTemplateBase):
+    pass
+
+class ServiceTemplate(ServiceTemplateBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ServiceBase(BaseModel):
+    template_id: str
+    name: str
+    description: Optional[str] = None
+    order_index: int = 0
+    estimated_hours: Optional[float] = None
+    required_skills: List[str] = []
+    dependencies: List[str] = []  # List of service IDs
+
+class ServiceCreate(ServiceBase):
+    pass
+
+class Service(ServiceBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class TaskTemplateBase(BaseModel):
+    service_id: str
+    name: str
+    description: Optional[str] = None
+    order_index: int = 0
+    estimated_hours: Optional[float] = None
+    priority: str = "medium"  # low, medium, high
+    task_type: Optional[str] = None  # design, development, review, etc.
+    required_deliverables: List[str] = []
+
+class TaskTemplateCreate(TaskTemplateBase):
+    pass
+
+class TaskTemplate(TaskTemplateBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class TaskDetailComponentBase(BaseModel):
+    task_template_id: str
+    component_type: str  # text, checklist, file_upload, approval, etc.
+    component_data: Dict[str, Any] = {}
+    order_index: int = 0
+    required: bool = False
+
+class TaskDetailComponentCreate(TaskDetailComponentBase):
+    pass
+
+class TaskDetailComponent(TaskDetailComponentBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Service Template API Endpoints
+
+# Service Templates CRUD
+@api_router.get("/service-templates", response_model=List[ServiceTemplate])
+async def get_service_templates(
+    current_user: User = Depends(get_current_user),
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    status: Optional[str] = None
+):
+    """Lấy danh sách mẫu dịch vụ với tìm kiếm và lọc"""
+    query = {}
+    
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    
+    if category:
+        query["category"] = category
+        
+    if status:
+        query["status"] = status
+    
+    templates_cursor = db.service_templates.find(query).sort("created_at", -1)
+    templates = await templates_cursor.to_list(length=None)
+    
+    return [ServiceTemplate(**template) for template in templates]
+
+@api_router.post("/service-templates", response_model=ServiceTemplate)
+async def create_service_template(
+    template: ServiceTemplateCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo mẫu dịch vụ mới"""
+    new_template = ServiceTemplate(**template.dict(), created_by=current_user.id)
+    
+    result = await db.service_templates.insert_one(new_template.dict())
+    if result.inserted_id:
+        return new_template
+    raise HTTPException(status_code=400, detail="Failed to create service template")
+
+@api_router.get("/service-templates/{template_id}", response_model=ServiceTemplate)
+async def get_service_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy thông tin chi tiết mẫu dịch vụ"""
+    template = await db.service_templates.find_one({"id": template_id})
+    if not template:
+        raise HTTPException(status_code=404, detail="Service template not found")
+    return ServiceTemplate(**template)
+
+@api_router.put("/service-templates/{template_id}", response_model=ServiceTemplate)
+async def update_service_template(
+    template_id: str,
+    template_update: ServiceTemplateCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật mẫu dịch vụ"""
+    update_data = template_update.dict()
+    update_data["updated_at"] = datetime.utcnow()
+    
+    result = await db.service_templates.update_one(
+        {"id": template_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Service template not found")
+    
+    updated_template = await db.service_templates.find_one({"id": template_id})
+    return ServiceTemplate(**updated_template)
+
+@api_router.delete("/service-templates/{template_id}")
+async def delete_service_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa mẫu dịch vụ và tất cả dữ liệu liên quan"""
+    # Xóa tất cả task detail components trước
+    services_cursor = db.services.find({"template_id": template_id})
+    services = await services_cursor.to_list(length=None)
+    
+    for service in services:
+        # Xóa task detail components
+        tasks_cursor = db.task_templates.find({"service_id": service["id"]})
+        tasks = await tasks_cursor.to_list(length=None)
+        
+        for task in tasks:
+            await db.task_detail_components.delete_many({"task_template_id": task["id"]})
+        
+        # Xóa task templates
+        await db.task_templates.delete_many({"service_id": service["id"]})
+    
+    # Xóa services
+    await db.services.delete_many({"template_id": template_id})
+    
+    # Xóa template
+    result = await db.service_templates.delete_one({"id": template_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service template not found")
+    
+    return {"message": "Service template deleted successfully"}
+
+@api_router.post("/service-templates/{template_id}/clone", response_model=ServiceTemplate)
+async def clone_service_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Sao chép mẫu dịch vụ"""
+    # Lấy template gốc
+    original_template = await db.service_templates.find_one({"id": template_id})
+    if not original_template:
+        raise HTTPException(status_code=404, detail="Service template not found")
+    
+    # Tạo template mới
+    new_template = ServiceTemplate(
+        name=f"{original_template['name']} (Copy)",
+        description=original_template.get('description'),
+        category=original_template.get('category'),
+        status=original_template.get('status', 'active'),
+        estimated_duration=original_template.get('estimated_duration'),
+        base_price=original_template.get('base_price'),
+        created_by=current_user.id
+    )
+    
+    result = await db.service_templates.insert_one(new_template.dict())
+    if not result.inserted_id:
+        raise HTTPException(status_code=400, detail="Failed to clone template")
+    
+    # Copy services
+    services_cursor = db.services.find({"template_id": template_id})
+    services = await services_cursor.to_list(length=None)
+    
+    service_id_mapping = {}
+    
+    for service in services:
+        old_service_id = service["id"]
+        new_service = Service(
+            template_id=new_template.id,
+            name=service["name"],
+            description=service.get("description"),
+            order_index=service.get("order_index", 0),
+            estimated_hours=service.get("estimated_hours"),
+            required_skills=service.get("required_skills", []),
+            dependencies=[]  # Will update later
+        )
+        
+        await db.services.insert_one(new_service.dict())
+        service_id_mapping[old_service_id] = new_service.id
+        
+        # Copy task templates
+        tasks_cursor = db.task_templates.find({"service_id": old_service_id})
+        tasks = await tasks_cursor.to_list(length=None)
+        
+        for task in tasks:
+            old_task_id = task["id"]
+            new_task = TaskTemplate(
+                service_id=new_service.id,
+                name=task["name"],
+                description=task.get("description"),
+                order_index=task.get("order_index", 0),
+                estimated_hours=task.get("estimated_hours"),
+                priority=task.get("priority", "medium"),
+                task_type=task.get("task_type"),
+                required_deliverables=task.get("required_deliverables", [])
+            )
+            
+            await db.task_templates.insert_one(new_task.dict())
+            
+            # Copy task detail components
+            components_cursor = db.task_detail_components.find({"task_template_id": old_task_id})
+            components = await components_cursor.to_list(length=None)
+            
+            for component in components:
+                new_component = TaskDetailComponent(
+                    task_template_id=new_task.id,
+                    component_type=component["component_type"],
+                    component_data=component.get("component_data", {}),
+                    order_index=component.get("order_index", 0),
+                    required=component.get("required", False)
+                )
+                
+                await db.task_detail_components.insert_one(new_component.dict())
+    
+    # Update dependencies with new service IDs
+    for service in services:
+        if service.get("dependencies"):
+            new_dependencies = [service_id_mapping.get(dep_id, dep_id) for dep_id in service["dependencies"]]
+            await db.services.update_one(
+                {"template_id": new_template.id, "name": service["name"]},
+                {"$set": {"dependencies": new_dependencies}}
+            )
+    
+    return new_template
+
+# Services CRUD
+@api_router.get("/service-templates/{template_id}/services", response_model=List[Service])
+async def get_services_by_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách dịch vụ theo template"""
+    services_cursor = db.services.find({"template_id": template_id}).sort("order_index", 1)
+    services = await services_cursor.to_list(length=None)
+    return [Service(**service) for service in services]
+
+@api_router.post("/services", response_model=Service)
+async def create_service(
+    service: ServiceCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo dịch vụ mới trong template"""
+    new_service = Service(**service.dict())
+    
+    result = await db.services.insert_one(new_service.dict())
+    if result.inserted_id:
+        return new_service
+    raise HTTPException(status_code=400, detail="Failed to create service")
+
+@api_router.put("/services/{service_id}", response_model=Service)
+async def update_service(
+    service_id: str,
+    service_update: ServiceCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật dịch vụ"""
+    update_data = service_update.dict()
+    update_data["updated_at"] = datetime.utcnow()
+    
+    result = await db.services.update_one(
+        {"id": service_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    updated_service = await db.services.find_one({"id": service_id})
+    return Service(**updated_service)
+
+@api_router.delete("/services/{service_id}")
+async def delete_service(
+    service_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa dịch vụ và tất cả task templates liên quan"""
+    # Xóa task detail components trước
+    tasks_cursor = db.task_templates.find({"service_id": service_id})
+    tasks = await tasks_cursor.to_list(length=None)
+    
+    for task in tasks:
+        await db.task_detail_components.delete_many({"task_template_id": task["id"]})
+    
+    # Xóa task templates
+    await db.task_templates.delete_many({"service_id": service_id})
+    
+    # Xóa service
+    result = await db.services.delete_one({"id": service_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return {"message": "Service deleted successfully"}
+
+# Task Templates CRUD
+@api_router.get("/services/{service_id}/tasks", response_model=List[TaskTemplate])
+async def get_task_templates_by_service(
+    service_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách task templates theo service"""
+    tasks_cursor = db.task_templates.find({"service_id": service_id}).sort("order_index", 1)
+    tasks = await tasks_cursor.to_list(length=None)
+    return [TaskTemplate(**task) for task in tasks]
+
+@api_router.post("/task-templates", response_model=TaskTemplate)
+async def create_task_template(
+    task: TaskTemplateCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo task template mới"""
+    new_task = TaskTemplate(**task.dict())
+    
+    result = await db.task_templates.insert_one(new_task.dict())
+    if result.inserted_id:
+        return new_task
+    raise HTTPException(status_code=400, detail="Failed to create task template")
+
+@api_router.put("/task-templates/{task_id}", response_model=TaskTemplate)
+async def update_task_template(
+    task_id: str,
+    task_update: TaskTemplateCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật task template"""
+    update_data = task_update.dict()
+    update_data["updated_at"] = datetime.utcnow()
+    
+    result = await db.task_templates.update_one(
+        {"id": task_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Task template not found")
+    
+    updated_task = await db.task_templates.find_one({"id": task_id})
+    return TaskTemplate(**updated_task)
+
+@api_router.delete("/task-templates/{task_id}")
+async def delete_task_template(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa task template và tất cả components liên quan"""
+    # Xóa task detail components trước
+    await db.task_detail_components.delete_many({"task_template_id": task_id})
+    
+    # Xóa task template
+    result = await db.task_templates.delete_one({"id": task_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task template not found")
+    
+    return {"message": "Task template deleted successfully"}
+
+# Task Detail Components CRUD
+@api_router.get("/task-templates/{task_id}/components", response_model=List[TaskDetailComponent])
+async def get_task_detail_components(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách components theo task template"""
+    components_cursor = db.task_detail_components.find({"task_template_id": task_id}).sort("order_index", 1)
+    components = await components_cursor.to_list(length=None)
+    return [TaskDetailComponent(**component) for component in components]
+
+@api_router.post("/task-detail-components", response_model=TaskDetailComponent)
+async def create_task_detail_component(
+    component: TaskDetailComponentCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo task detail component mới"""
+    new_component = TaskDetailComponent(**component.dict())
+    
+    result = await db.task_detail_components.insert_one(new_component.dict())
+    if result.inserted_id:
+        return new_component
+    raise HTTPException(status_code=400, detail="Failed to create task detail component")
+
+@api_router.put("/task-detail-components/{component_id}", response_model=TaskDetailComponent)
+async def update_task_detail_component(
+    component_id: str,
+    component_update: TaskDetailComponentCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật task detail component"""
+    update_data = component_update.dict()
+    update_data["updated_at"] = datetime.utcnow()
+    
+    result = await db.task_detail_components.update_one(
+        {"id": component_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Task detail component not found")
+    
+    updated_component = await db.task_detail_components.find_one({"id": component_id})
+    return TaskDetailComponent(**updated_component)
+
+@api_router.delete("/task-detail-components/{component_id}")
+async def delete_task_detail_component(
+    component_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa task detail component"""
+    result = await db.task_detail_components.delete_one({"id": component_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task detail component not found")
+    
+    return {"message": "Task detail component deleted successfully"}
+
+@api_router.put("/task-detail-components/reorder")
+async def reorder_task_detail_components(
+    component_orders: List[Dict[str, Union[str, int]]],
+    current_user: User = Depends(get_current_user)
+):
+    """Sắp xếp lại thứ tự các components"""
+    for item in component_orders:
+        await db.task_detail_components.update_one(
+            {"id": item["id"]},
+            {"$set": {"order_index": item["order_index"], "updated_at": datetime.utcnow()}}
+        )
+    
+    return {"message": "Components reordered successfully"}
+
+# Template Hierarchy API
+@api_router.get("/service-templates/{template_id}/hierarchy")
+async def get_template_hierarchy(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy cấu trúc phân cấp đầy đủ của template"""
+    # Lấy template
+    template = await db.service_templates.find_one({"id": template_id})
+    if not template:
+        raise HTTPException(status_code=404, detail="Service template not found")
+    
+    # Lấy services
+    services_cursor = db.services.find({"template_id": template_id}).sort("order_index", 1)
+    services = await services_cursor.to_list(length=None)
+    
+    # Lấy tasks và components cho mỗi service
+    for service in services:
+        # Lấy tasks
+        tasks_cursor = db.task_templates.find({"service_id": service["id"]}).sort("order_index", 1)
+        tasks = await tasks_cursor.to_list(length=None)
+        
+        # Lấy components cho mỗi task
+        for task in tasks:
+            components_cursor = db.task_detail_components.find({"task_template_id": task["id"]}).sort("order_index", 1)
+            components = await components_cursor.to_list(length=None)
+            task["components"] = components
+        
+        service["tasks"] = tasks
+    
+    template["services"] = services
+    
+    return template
+
+# Categories API
+@api_router.get("/service-templates/categories")
+async def get_service_categories(current_user: User = Depends(get_current_user)):
+    """Lấy danh sách categories từ database"""
+    pipeline = [
+        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+        {"$match": {"_id": {"$ne": None}}},
+        {"$sort": {"count": -1}}
+    ]
+    
+    categories_cursor = db.service_templates.aggregate(pipeline)
+    categories = await categories_cursor.to_list(length=None)
+    
+    return [{"name": cat["_id"], "count": cat["count"]} for cat in categories]
+
 # Include router
 app.include_router(api_router)
 
