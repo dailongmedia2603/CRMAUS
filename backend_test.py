@@ -280,6 +280,10 @@ class CRMAPITester:
                 return False, {}
         return success, response
 
+    def test_get_dashboard(self):
+        """Test getting dashboard data"""
+        return self.run_test("Get Dashboard Data", "GET", "dashboard", 200)
+
 def main():
     # Setup
     tester = CRMAPITester()
