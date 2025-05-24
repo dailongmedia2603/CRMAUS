@@ -1291,6 +1291,21 @@ const Clients = () => {
         company: formData.company || formData.name // Sử dụng tên client làm tên công ty nếu không có
       };
 
+      // Xử lý upload avatar nếu có
+      if (avatarFile) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', avatarFile);
+        
+        const uploadResponse = await axios.post(`${API}/upload-avatar/`, formDataUpload, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        // Thêm avatar_url vào clientData
+        clientData.avatar_url = uploadResponse.data.avatar_url;
+      }
+
       let response;
       if (isEditing) {
         // Cập nhật client hiện có
@@ -1301,10 +1316,6 @@ const Clients = () => {
         response = await axios.post(`${API}/clients/`, clientData);
         toast.success("Thêm khách hàng thành công!");
       }
-      
-      // TODO: Xử lý upload avatar trong môi trường thực tế
-      // Trong môi trường thực tế, bạn sẽ cần upload file lên server riêng
-      // và lưu URL vào database
       
       setIsModalOpen(false);
       resetForm();
