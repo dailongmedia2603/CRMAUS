@@ -289,6 +289,266 @@ class CRMAPITester:
         """Test getting dashboard data"""
         return self.run_test("Get Dashboard Data", "GET", "dashboard", 200)
 
+    # ===== SERVICE TEMPLATE API TESTS =====
+    
+    def test_create_service_template(self):
+        """Test creating a new service template"""
+        template_data = {
+            "name": f"Test Service Template {datetime.now().strftime('%H%M%S')}",
+            "description": "This is a test service template for API testing",
+            "category": "Web Development",
+            "status": "active",
+            "estimated_duration": 30,
+            "base_price": 5000.0
+        }
+        
+        success, response = self.run_test("Create Service Template", "POST", "service-templates", 200, template_data)
+        if success:
+            self.service_template_id = response.get('id')
+        return success, response
+
+    def test_get_service_templates(self):
+        """Test getting all service templates"""
+        return self.run_test("Get All Service Templates", "GET", "service-templates", 200)
+
+    def test_get_service_templates_with_filters(self):
+        """Test getting service templates with filters"""
+        # Test with search filter
+        success1, _ = self.run_test("Get Service Templates with Search", "GET", "service-templates?search=Test", 200)
+        
+        # Test with category filter
+        success2, _ = self.run_test("Get Service Templates with Category", "GET", "service-templates?category=Web Development", 200)
+        
+        # Test with status filter
+        success3, _ = self.run_test("Get Service Templates with Status", "GET", "service-templates?status=active", 200)
+        
+        return success1 and success2 and success3, {}
+
+    def test_get_service_template(self):
+        """Test getting a specific service template"""
+        if not self.service_template_id:
+            print("❌ Cannot test get_service_template: No service_template_id available")
+            return False, {}
+        return self.run_test("Get Service Template", "GET", f"service-templates/{self.service_template_id}", 200)
+
+    def test_update_service_template(self):
+        """Test updating a service template"""
+        if not self.service_template_id:
+            print("❌ Cannot test update_service_template: No service_template_id available")
+            return False, {}
+            
+        update_data = {
+            "name": f"Updated Test Service Template {datetime.now().strftime('%H%M%S')}",
+            "description": "This is an updated test service template",
+            "category": "Web Development",
+            "status": "active",
+            "estimated_duration": 45,
+            "base_price": 7500.0
+        }
+        
+        return self.run_test("Update Service Template", "PUT", f"service-templates/{self.service_template_id}", 200, update_data)
+
+    def test_clone_service_template(self):
+        """Test cloning a service template"""
+        if not self.service_template_id:
+            print("❌ Cannot test clone_service_template: No service_template_id available")
+            return False, {}
+        return self.run_test("Clone Service Template", "POST", f"service-templates/{self.service_template_id}/clone", 200)
+
+    def test_create_service(self):
+        """Test creating a new service in a template"""
+        if not self.service_template_id:
+            print("❌ Cannot test create_service: No service_template_id available")
+            return False, {}
+            
+        service_data = {
+            "template_id": self.service_template_id,
+            "name": f"Test Service {datetime.now().strftime('%H%M%S')}",
+            "description": "This is a test service",
+            "order_index": 1,
+            "estimated_hours": 40.0,
+            "required_skills": ["JavaScript", "React", "Node.js"],
+            "dependencies": []
+        }
+        
+        success, response = self.run_test("Create Service", "POST", "services", 200, service_data)
+        if success:
+            self.service_id = response.get('id')
+        return success, response
+
+    def test_get_services_by_template(self):
+        """Test getting services by template"""
+        if not self.service_template_id:
+            print("❌ Cannot test get_services_by_template: No service_template_id available")
+            return False, {}
+        return self.run_test("Get Services by Template", "GET", f"service-templates/{self.service_template_id}/services", 200)
+
+    def test_update_service(self):
+        """Test updating a service"""
+        if not self.service_id:
+            print("❌ Cannot test update_service: No service_id available")
+            return False, {}
+            
+        update_data = {
+            "template_id": self.service_template_id,
+            "name": f"Updated Test Service {datetime.now().strftime('%H%M%S')}",
+            "description": "This is an updated test service",
+            "order_index": 1,
+            "estimated_hours": 50.0,
+            "required_skills": ["JavaScript", "React", "Node.js", "MongoDB"],
+            "dependencies": []
+        }
+        
+        return self.run_test("Update Service", "PUT", f"services/{self.service_id}", 200, update_data)
+
+    def test_create_task_template(self):
+        """Test creating a new task template"""
+        if not self.service_id:
+            print("❌ Cannot test create_task_template: No service_id available")
+            return False, {}
+            
+        task_data = {
+            "service_id": self.service_id,
+            "name": f"Test Task Template {datetime.now().strftime('%H%M%S')}",
+            "description": "This is a test task template",
+            "order_index": 1,
+            "estimated_hours": 8.0,
+            "priority": "high",
+            "task_type": "development",
+            "required_deliverables": ["Code", "Documentation", "Tests"]
+        }
+        
+        success, response = self.run_test("Create Task Template", "POST", "task-templates", 200, task_data)
+        if success:
+            self.task_template_id = response.get('id')
+        return success, response
+
+    def test_get_task_templates_by_service(self):
+        """Test getting task templates by service"""
+        if not self.service_id:
+            print("❌ Cannot test get_task_templates_by_service: No service_id available")
+            return False, {}
+        return self.run_test("Get Task Templates by Service", "GET", f"services/{self.service_id}/tasks", 200)
+
+    def test_update_task_template(self):
+        """Test updating a task template"""
+        if not self.task_template_id:
+            print("❌ Cannot test update_task_template: No task_template_id available")
+            return False, {}
+            
+        update_data = {
+            "service_id": self.service_id,
+            "name": f"Updated Test Task Template {datetime.now().strftime('%H%M%S')}",
+            "description": "This is an updated test task template",
+            "order_index": 1,
+            "estimated_hours": 12.0,
+            "priority": "medium",
+            "task_type": "development",
+            "required_deliverables": ["Code", "Documentation", "Tests", "Review"]
+        }
+        
+        return self.run_test("Update Task Template", "PUT", f"task-templates/{self.task_template_id}", 200, update_data)
+
+    def test_create_task_detail_component(self):
+        """Test creating a new task detail component"""
+        if not self.task_template_id:
+            print("❌ Cannot test create_task_detail_component: No task_template_id available")
+            return False, {}
+            
+        component_data = {
+            "task_template_id": self.task_template_id,
+            "component_type": "checklist",
+            "component_data": {
+                "title": "Development Checklist",
+                "items": ["Setup environment", "Write code", "Write tests", "Code review"]
+            },
+            "order_index": 1,
+            "required": True
+        }
+        
+        success, response = self.run_test("Create Task Detail Component", "POST", "task-detail-components", 200, component_data)
+        if success:
+            self.task_detail_component_id = response.get('id')
+        return success, response
+
+    def test_get_task_detail_components(self):
+        """Test getting task detail components by task template"""
+        if not self.task_template_id:
+            print("❌ Cannot test get_task_detail_components: No task_template_id available")
+            return False, {}
+        return self.run_test("Get Task Detail Components", "GET", f"task-templates/{self.task_template_id}/components", 200)
+
+    def test_update_task_detail_component(self):
+        """Test updating a task detail component"""
+        if not self.task_detail_component_id:
+            print("❌ Cannot test update_task_detail_component: No task_detail_component_id available")
+            return False, {}
+            
+        update_data = {
+            "task_template_id": self.task_template_id,
+            "component_type": "checklist",
+            "component_data": {
+                "title": "Updated Development Checklist",
+                "items": ["Setup environment", "Write code", "Write tests", "Code review", "Deploy"]
+            },
+            "order_index": 1,
+            "required": True
+        }
+        
+        return self.run_test("Update Task Detail Component", "PUT", f"task-detail-components/{self.task_detail_component_id}", 200, update_data)
+
+    def test_reorder_task_detail_components(self):
+        """Test reordering task detail components"""
+        if not self.task_detail_component_id:
+            print("❌ Cannot test reorder_task_detail_components: No task_detail_component_id available")
+            return False, {}
+            
+        reorder_data = [
+            {"id": self.task_detail_component_id, "order_index": 2}
+        ]
+        
+        return self.run_test("Reorder Task Detail Components", "PUT", "task-detail-components/reorder", 200, reorder_data)
+
+    def test_get_template_hierarchy(self):
+        """Test getting full template hierarchy"""
+        if not self.service_template_id:
+            print("❌ Cannot test get_template_hierarchy: No service_template_id available")
+            return False, {}
+        return self.run_test("Get Template Hierarchy", "GET", f"service-templates/{self.service_template_id}/hierarchy", 200)
+
+    def test_get_service_categories(self):
+        """Test getting service categories"""
+        return self.run_test("Get Service Categories", "GET", "service-templates/categories", 200)
+
+    # Test cascade deletion
+    def test_delete_task_detail_component(self):
+        """Test deleting a task detail component"""
+        if not self.task_detail_component_id:
+            print("❌ Cannot test delete_task_detail_component: No task_detail_component_id available")
+            return False, {}
+        return self.run_test("Delete Task Detail Component", "DELETE", f"task-detail-components/{self.task_detail_component_id}", 200)
+
+    def test_delete_task_template(self):
+        """Test deleting a task template"""
+        if not self.task_template_id:
+            print("❌ Cannot test delete_task_template: No task_template_id available")
+            return False, {}
+        return self.run_test("Delete Task Template", "DELETE", f"task-templates/{self.task_template_id}", 200)
+
+    def test_delete_service(self):
+        """Test deleting a service"""
+        if not self.service_id:
+            print("❌ Cannot test delete_service: No service_id available")
+            return False, {}
+        return self.run_test("Delete Service", "DELETE", f"services/{self.service_id}", 200)
+
+    def test_delete_service_template(self):
+        """Test deleting a service template and all related data"""
+        if not self.service_template_id:
+            print("❌ Cannot test delete_service_template: No service_template_id available")
+            return False, {}
+        return self.run_test("Delete Service Template", "DELETE", f"service-templates/{self.service_template_id}", 200)
+
 def main():
     # Setup
     tester = CRMAPITester()
