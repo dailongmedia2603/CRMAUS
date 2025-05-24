@@ -290,15 +290,18 @@ backend:
 
   - task: "Service Template Hierarchy API"
     implemented: true
-    working: false
+    working: true
     file: "backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "Hierarchy API returns 500 error due to MongoDB ObjectId serialization issues - ObjectId objects are not JSON serializable"
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED: ObjectId serialization issue resolved. API now properly removes '_id' fields from all nested objects (templates, services, tasks, components) before returning JSON response. Returns clean hierarchical structure without MongoDB ObjectId serialization errors."
 
   - task: "Service Categories API"
     implemented: true
