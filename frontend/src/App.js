@@ -1277,6 +1277,9 @@ const Clients = () => {
       tags: client.tags || []
     });
     
+    // Thiết lập avatar preview
+    setAvatarPreview(client.avatar_url || null);
+    
     // Mở modal
     setIsModalOpen(true);
   };
