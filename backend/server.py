@@ -14,7 +14,6 @@ import logging
 import shutil
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
-import os
 
 # Thiết lập cơ bản
 ROOT_DIR = Path(__file__).parent
