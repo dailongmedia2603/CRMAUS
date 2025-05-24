@@ -88,6 +88,7 @@ class ClientBase(BaseModel):
     notes: Optional[str] = None
     address: Optional[str] = None
     tags: List[str] = []
+    avatar_url: Optional[str] = None
     archived: bool = False
 
 class ClientCreate(ClientBase):
