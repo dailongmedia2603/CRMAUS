@@ -388,3 +388,5 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "CRM AUS system analyzed - comprehensive CRM with authentication, client management, projects, tasks, contracts, invoices, and dashboard. Vietnamese language interface. System is running on preview.emergentagent.com. Ready for next development phase."
+    - agent: "testing"
+      message: "Service Template API endpoints tested comprehensively. 35/38 tests passed. Core functionality working: Service Template CRUD, Service CRUD, Task Template CRUD, Task Detail Component CRUD, Clone functionality, and Cascade deletion. 3 backend issues identified: 1) Reorder API validation error (low priority), 2) Hierarchy API ObjectId serialization error (medium priority), 3) Categories API routing conflict (low priority). Authentication working correctly with admin@example.com credentials."
