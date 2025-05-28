@@ -970,7 +970,7 @@ const SidebarContent = ({ user, logout }) => {
   );
 };
 
-// Các component cho từng trang
+// Các component cho từng trang - Modern Corporate Theme
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -992,114 +992,127 @@ const Dashboard = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+    return (
+      <div className="p-8">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!dashboardData) {
-    return <div className="text-center py-10">Không thể tải dữ liệu Dashboard</div>;
+    return <div className="text-center py-10 text-gray-600">Không thể tải dữ liệu Dashboard</div>;
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      
-      {/* Thống kê */}
-      <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Thẻ thống kê khách hàng */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 text-white">
+        <div className="px-8 py-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <h1 className="text-4xl font-bold mb-4">
+                  Dashboard Corporate
+                  <span className="block text-emerald-200 text-2xl font-normal mt-2">
+                    Chào mừng trở lại với CRM Marketing
+                  </span>
+                </h1>
+                <p className="text-emerald-100 text-lg mb-6">
+                  Theo dõi hiệu quả kinh doanh và quản lý khách hàng của bạn một cách chuyên nghiệp
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg px-4 py-2">
+                    <span className="text-emerald-200 text-sm">Cập nhật lần cuối</span>
+                    <div className="text-white font-semibold">{new Date().toLocaleDateString('vi-VN')}</div>
+                  </div>
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Tổng số khách hàng
-                  </dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900">
-                      {dashboardData.client_count}
-                    </div>
-                  </dd>
-                </dl>
+              <div className="hidden lg:block">
+                <img 
+                  src="https://images.unsplash.com/photo-1596524430615-b46475ddff6e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwyfHxidXNpbmVzcyUyMGdyb3d0aHxlbnwwfHx8Z3JlZW58MTc0ODQyNTIwM3ww&ixlib=rb-4.1.0&q=85" 
+                  alt="Business Growth Dashboard" 
+                  className="w-full h-64 object-cover rounded-2xl shadow-2xl opacity-90"
+                />
               </div>
-            </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <a href="/clients" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Xem tất cả khách hàng
-              </a>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Thẻ thống kê dự án */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
+      {/* Statistics Cards */}
+      <div className="px-8 -mt-8 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Thẻ thống kê khách hàng */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-emerald-500 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center">
+                <div className="bg-emerald-100 p-3 rounded-xl">
+                  <svg className="h-8 w-8 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900">{dashboardData.client_count}</h3>
+                  <p className="text-gray-600 font-medium">Tổng số khách hàng</p>
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Dự án đang chạy
-                  </dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900">
-                      {dashboardData.projects_by_status.in_progress}
-                    </div>
-                  </dd>
-                </dl>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <a href="/clients" className="text-emerald-600 hover:text-emerald-700 font-semibold text-sm flex items-center">
+                  Xem tất cả khách hàng
+                  <svg className="h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
               </div>
             </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <a href="/projects" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Xem tất cả dự án
-              </a>
-            </div>
-          </div>
-        </div>
 
-        {/* Thẻ thống kê tài chính */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-red-500 rounded-md p-3">
-                <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+            {/* Thẻ thống kê dự án */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center">
+                <div className="bg-blue-100 p-3 rounded-xl">
+                  <svg className="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900">{dashboardData.projects_by_status.in_progress}</h3>
+                  <p className="text-gray-600 font-medium">Dự án đang chạy</p>
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Hóa đơn chờ thanh toán
-                  </dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900">
-                      {dashboardData.invoices_by_status.sent}
-                    </div>
-                  </dd>
-                </dl>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <a href="/projects" className="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center">
+                  Xem tất cả dự án
+                  <svg className="h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
               </div>
             </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <a href="/invoices" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Xem tất cả hóa đơn
-              </a>
+
+            {/* Thẻ thống kê tài chính */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center">
+                <div className="bg-orange-100 p-3 rounded-xl">
+                  <svg className="h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4 flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900">{dashboardData.invoices_by_status.sent}</h3>
+                  <p className="text-gray-600 font-medium">Hóa đơn chờ thanh toán</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <a href="/invoices" className="text-orange-600 hover:text-orange-700 font-semibold text-sm flex items-center">
+                  Xem tất cả hóa đơn
+                  <svg className="h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
             </div>
-          </div>
-        </div>
       </div>
 
       {/* Công việc gần đến hạn */}
