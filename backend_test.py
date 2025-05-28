@@ -135,6 +135,7 @@ def test_authentication():
         )
         response.raise_for_status()
         token_data = response.json()
+        print(f"Login response: {token_data}")
         access_token = token_data.get("access_token")
         
         log_test("Login", True if access_token else False, 
@@ -142,9 +143,11 @@ def test_authentication():
         
         # Test get current user
         if access_token:
+            headers = get_auth_header(access_token)
+            print(f"Auth headers: {headers}")
             response = requests.get(
-                f"{API_URL}/users/me",
-                headers=get_auth_header(access_token)
+                f"{API_URL}/users/me/",
+                headers=headers
             )
             response.raise_for_status()
             user_data = response.json()
@@ -156,6 +159,7 @@ def test_authentication():
         
     except requests.exceptions.RequestException as e:
         log_test("Authentication", False, str(e))
+        print(f"Authentication error details: {e}")
         return None
 
 def test_dashboard(token):
