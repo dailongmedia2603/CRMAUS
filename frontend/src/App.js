@@ -1325,7 +1325,7 @@ const Clients = () => {
         toast.success("Thêm khách hàng thành công!");
       }
       
-      setIsModalOpen(false);
+      setIsAddModalOpen(false);
       resetForm();
       fetchClients();
       fetchStats();
