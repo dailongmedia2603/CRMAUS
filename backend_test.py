@@ -691,10 +691,30 @@ def main():
     tester.test_create_project()
     tester.test_get_projects()
     
+    print("\n" + "="*60)
+    print("🔧 TESTING TASK MANAGEMENT API ENDPOINTS")
+    print("="*60)
+    
     # Test task operations
+    print("\n📋 Testing Task CRUD Operations...")
     tester.test_create_task()
+    tester.test_create_task_with_rich_content()
     tester.test_get_tasks()
     tester.test_update_task_status()
+    
+    # Test task statistics
+    print("\n📊 Testing Task Statistics...")
+    tester.test_task_statistics()
+    
+    # Test task filtering
+    print("\n🔍 Testing Task Filtering...")
+    tester.test_task_filtering()
+    
+    # Test task feedback
+    print("\n💬 Testing Task Feedback System...")
+    tester.test_create_task_feedback()
+    tester.test_get_task_feedback()
+    tester.test_delete_task_feedback()
     
     # Test dashboard
     tester.test_get_dashboard()
