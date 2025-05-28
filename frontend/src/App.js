@@ -943,22 +943,27 @@ const SidebarContent = ({ user, logout }) => {
           )}
         </nav>
       </div>
-      <div className="flex-shrink-0 flex border-t border-indigo-800 p-4">
-        <div className="flex items-center">
-          <div>
-            <div className="h-9 w-9 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+      <div className="flex-shrink-0 flex border-t border-emerald-600 border-opacity-50 p-4 bg-emerald-800">
+        <div className="flex items-center w-full">
+          <div className="relative">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 flex items-center justify-center text-white font-semibold shadow-lg">
               {user.full_name.charAt(0)}
             </div>
+            <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-400 rounded-full border-2 border-emerald-800"></div>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-white">{user.full_name}</p>
-            <button
-              onClick={handleLogout}
-              className="text-xs font-medium text-indigo-200 hover:text-white"
-            >
-              Đăng xuất
-            </button>
+          <div className="ml-3 flex-1">
+            <p className="text-sm font-semibold text-white truncate">{user.full_name}</p>
+            <p className="text-xs text-emerald-200 capitalize">{user.role}</p>
           </div>
+          <button
+            onClick={handleLogout}
+            className="ml-2 p-2 text-emerald-200 hover:text-white hover:bg-emerald-600 rounded-lg transition-all duration-200 transform hover:scale-105"
+            title="Đăng xuất"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
