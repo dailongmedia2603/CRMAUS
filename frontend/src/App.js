@@ -3852,15 +3852,35 @@ const WorkManagement = () => {
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [stats, setStats] = useState({
+    urgent: 0,
+    todo: 0,
+    in_progress: 0,
+    due_today: 0,
+    overdue: 0
+  });
+  
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
+  
+  // Form states
   const [formData, setFormData] = useState({
     title: "",
     project_id: "",
     description: "",
+    rich_content: "",
+    task_type: "",
     assigned_to: "",
     due_date: "",
     priority: "medium",
-    status: "to_do"
+    status: "todo"
   });
 
   useEffect(() => {
