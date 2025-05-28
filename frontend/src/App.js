@@ -454,10 +454,10 @@ const MainLayout = () => {
       {/* Sidebar for mobile */}
       <div className={`md:hidden ${sidebarOpen ? "block" : "hidden"} fixed inset-0 flex z-40`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-indigo-700">
+        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-gradient-to-b from-emerald-700 to-emerald-800 shadow-xl">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
-              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white bg-emerald-600 hover:bg-emerald-500 transition-colors duration-200"
               onClick={() => setSidebarOpen(false)}
             >
               <span className="sr-only">Đóng sidebar</span>
