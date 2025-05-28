@@ -16,6 +16,8 @@ class CRMAPITester:
         self.client_id = None
         self.project_id = None
         self.task_id = None
+        self.rich_task_id = None
+        self.feedback_id = None
         # Service Template related IDs
         self.service_template_id = None
         self.service_id = None
