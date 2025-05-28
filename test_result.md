@@ -152,6 +152,9 @@ backend:
         - working: true
           agent: "main"
           comment: "Task management linked to projects and users with status tracking"
+        - working: true
+          agent: "testing"
+          comment: "✅ Task Management APIs tested successfully. All features working correctly: 1) Task statistics endpoint returns correct counts for urgent, todo, in_progress, due_today, and overdue tasks. 2) Creating tasks with new fields (rich_content, task_type, priority='urgent') works properly. 3) Task filtering by status, priority, and search functionality works as expected. 4) Task feedback system (create/read/delete) is fully functional. 5) All CRUD operations work with the updated task model."
 
   - task: "Contract Management System"
     implemented: true
