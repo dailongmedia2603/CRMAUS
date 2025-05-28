@@ -3599,7 +3599,12 @@ const ProjectDetail = () => {
   return <div>Chi tiết dự án (đang phát triển)</div>;
 };
 
+// Component Quản lý Công việc mới
 const Tasks = () => {
+  return <WorkManagement />;
+};
+
+const WorkManagement = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
