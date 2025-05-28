@@ -473,7 +473,7 @@ const MainLayout = () => {
       {/* Static sidebar for desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex flex-col h-0 flex-1 bg-indigo-700">
+          <div className="flex flex-col h-0 flex-1 bg-gradient-to-b from-emerald-700 to-emerald-800 shadow-xl">
             <SidebarContent user={user} logout={logout} />
           </div>
         </div>
@@ -481,9 +481,9 @@ const MainLayout = () => {
 
       {/* Main content */}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow-sm border-b border-gray-200">
           <button
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
+            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500 md:hidden hover:bg-gray-50 transition-colors duration-200"
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
@@ -491,39 +491,49 @@ const MainLayout = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="flex-1 px-4 flex justify-between">
+          
+          <div className="flex-1 px-4 flex justify-between items-center">
             <div className="flex-1 flex">
               <form className="w-full flex md:ml-0" action="#" method="GET">
                 <label htmlFor="search-field" className="sr-only">
                   Tìm kiếm
                 </label>
-                <div className="relative w-full text-gray-400 focus-within:text-gray-600">
-                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
+                <div className="relative w-full max-w-lg text-gray-400 focus-within:text-gray-600">
+                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none pl-3">
                     <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <input
                     id="search-field"
-                    className="block w-full h-full pl-8 pr-3 py-2 border-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-0 focus:border-transparent sm:text-sm"
-                    placeholder="Tìm kiếm"
+                    className="block w-full h-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-colors duration-200"
+                    placeholder="Tìm kiếm khách hàng, dự án..."
                     type="search"
                     name="search"
                   />
                 </div>
               </form>
             </div>
-            <div className="ml-4 flex items-center md:ml-6">
+            
+            <div className="ml-4 flex items-center md:ml-6 space-x-4">
+              {/* Notifications */}
+              <button className="bg-white p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200">
+                <span className="sr-only">Xem thông báo</span>
+                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-3.5-3.5-1.5-1.5V9a6 6 0 10-12 0v2.5l-1.5 1.5L5 17h5m5 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+
               {/* Profile dropdown */}
               <div className="ml-3 relative">
                 <div>
                   <button
-                    className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 hover:shadow-md transition-all duration-200"
                     id="user-menu"
                     aria-haspopup="true"
                   >
                     <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 flex items-center justify-center text-white font-semibold shadow-lg">
                       {user.full_name.charAt(0)}
                     </div>
                   </button>
