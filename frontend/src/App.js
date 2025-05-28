@@ -1115,14 +1115,114 @@ const Dashboard = () => {
             </div>
       </div>
 
+        {/* Main Content Grid */}
+        <div className="px-8 py-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Recent Projects */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">Dự án gần đây</h3>
+                    <button className="text-emerald-600 hover:text-emerald-700 font-semibold text-sm">
+                      Xem tất cả →
+                    </button>
+                  </div>
+                  
+                  {dashboardData.recent_projects && dashboardData.recent_projects.length > 0 ? (
+                    <div className="space-y-4">
+                      {dashboardData.recent_projects.map((project, index) => (
+                        <div key={index} className="flex items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+                          <div className="bg-emerald-100 p-2 rounded-lg mr-4">
+                            <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{project.name}</h4>
+                            <p className="text-gray-600 text-sm">{project.client_name}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              project.status === 'active' ? 'bg-green-100 text-green-800' :
+                              project.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {project.status === 'active' ? 'Hoạt động' :
+                               project.status === 'completed' ? 'Hoàn thành' : 'Tạm dừng'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                        <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Chưa có dự án nào</h4>
+                      <p className="text-gray-600">Bắt đầu bằng cách tạo dự án đầu tiên của bạn</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Actions & Growth Image */}
+              <div className="space-y-6">
+                {/* Growth Visual */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Tăng trưởng</h3>
+                  <img 
+                    src="https://images.pexels.com/photos/2926581/pexels-photo-2926581.jpeg" 
+                    alt="Business Growth" 
+                    className="w-full h-32 object-cover rounded-xl mb-4"
+                  />
+                  <p className="text-gray-600 text-sm">
+                    Theo dõi sự tăng trưởng và phát triển của doanh nghiệp qua từng giai đoạn.
+                  </p>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Thao tác nhanh</h3>
+                  <div className="space-y-3">
+                    <button className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 text-left flex items-center">
+                      <svg className="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Thêm khách hàng mới
+                    </button>
+                    <button className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 text-left flex items-center">
+                      <svg className="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      Tạo dự án mới
+                    </button>
+                    <button className="w-full bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 text-left flex items-center">
+                      <svg className="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                      Thêm công việc
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Công việc gần đến hạn */}
-      <div className="mt-8">
-        <h2 className="text-lg leading-6 font-medium text-gray-900">
-          Công việc sắp đến hạn
-        </h2>
-        <div className="mt-2 bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {dashboardData.upcoming_tasks && dashboardData.upcoming_tasks.length > 0 ? (
+      <div className="mt-8 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">
+              Công việc sắp đến hạn
+            </h2>
+            <div className="space-y-4">
+              {dashboardData.upcoming_tasks && dashboardData.upcoming_tasks.length > 0 ? (
               dashboardData.upcoming_tasks.map((task) => (
                 <li key={task.id}>
                   <a href={`/tasks/${task.id}`} className="block hover:bg-gray-50">
