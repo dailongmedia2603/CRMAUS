@@ -394,10 +394,11 @@ async def delete_project(project_id: str, current_user: User = Depends(get_curre
 # Task routes
 @api_router.post("/tasks/", response_model=Task)
 async def create_task(task: TaskCreate, current_user: User = Depends(get_current_active_user)):
-    # Kiểm tra project tồn tại
-    project = await db.projects.find_one({"id": task.project_id})
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    # Kiểm tra project tồn tại (nếu có project_id)
+    if task.project_id:
+        project = await db.projects.find_one({"id": task.project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
     
     task_data = task.dict()
     task_obj = Task(**task_data, created_by=current_user.id)
@@ -405,9 +406,62 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
     return task_obj
 
 @api_router.get("/tasks/", response_model=List[Task])
-async def read_tasks(skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_active_user)):
-    tasks = await db.tasks.find().skip(skip).limit(limit).to_list(length=limit)
+async def read_tasks(
+    skip: int = 0, 
+    limit: int = 100, 
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    filter_query = {}
+    
+    if status:
+        filter_query["status"] = status
+    if priority:
+        filter_query["priority"] = priority
+    if search:
+        filter_query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"rich_content": {"$regex": search, "$options": "i"}}
+        ]
+    
+    tasks = await db.tasks.find(filter_query).skip(skip).limit(limit).to_list(length=limit)
     return tasks
+
+@api_router.get("/tasks/stats")
+async def get_task_stats(current_user: User = Depends(get_current_active_user)):
+    """Lấy thống kê task cho dashboard"""
+    from datetime import datetime, timedelta
+    
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow = today + timedelta(days=1)
+    
+    # Đếm theo trạng thái
+    urgent_count = await db.tasks.count_documents({"priority": "urgent"})
+    todo_count = await db.tasks.count_documents({"status": "todo"})
+    in_progress_count = await db.tasks.count_documents({"status": "in_progress"})
+    
+    # Đếm deadline hôm nay
+    due_today_count = await db.tasks.count_documents({
+        "due_date": {"$gte": today, "$lt": tomorrow},
+        "status": {"$ne": "completed"}
+    })
+    
+    # Đếm quá hạn
+    overdue_count = await db.tasks.count_documents({
+        "due_date": {"$lt": today},
+        "status": {"$ne": "completed"}
+    })
+    
+    return {
+        "urgent": urgent_count,
+        "todo": todo_count,
+        "in_progress": in_progress_count,
+        "due_today": due_today_count,
+        "overdue": overdue_count
+    }
 
 @api_router.get("/tasks/project/{project_id}", response_model=List[Task])
 async def read_project_tasks(project_id: str, current_user: User = Depends(get_current_active_user)):
@@ -447,10 +501,57 @@ async def update_task(task_id: str, task: TaskCreate, current_user: User = Depen
 
 @api_router.delete("/tasks/{task_id}")
 async def delete_task(task_id: str, current_user: User = Depends(get_current_active_user)):
+    # Xóa task feedback trước
+    await db.task_feedbacks.delete_many({"task_id": task_id})
+    
     result = await db.tasks.delete_one({"id": task_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"detail": "Task deleted successfully"}
+
+# Task Feedback routes
+@api_router.post("/tasks/{task_id}/feedback", response_model=TaskFeedback)
+async def create_task_feedback(
+    task_id: str, 
+    feedback: TaskFeedbackCreate, 
+    current_user: User = Depends(get_current_active_user)
+):
+    # Kiểm tra task tồn tại
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    feedback_data = feedback.dict()
+    feedback_obj = TaskFeedback(
+        **feedback_data, 
+        created_by=current_user.id,
+        user_name=current_user.full_name or current_user.username
+    )
+    result = await db.task_feedbacks.insert_one(feedback_obj.dict())
+    return feedback_obj
+
+@api_router.get("/tasks/{task_id}/feedback", response_model=List[TaskFeedback])
+async def get_task_feedback(
+    task_id: str, 
+    current_user: User = Depends(get_current_active_user)
+):
+    feedback = await db.task_feedbacks.find({"task_id": task_id}).sort("created_at", 1).to_list(length=100)
+    return feedback
+
+@api_router.delete("/feedback/{feedback_id}")
+async def delete_task_feedback(feedback_id: str, current_user: User = Depends(get_current_active_user)):
+    feedback = await db.task_feedbacks.find_one({"id": feedback_id})
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    
+    # Chỉ admin hoặc người tạo mới có thể xóa
+    if feedback["created_by"] != current_user.id and current_user.role not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.task_feedbacks.delete_one({"id": feedback_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    return {"detail": "Feedback deleted successfully"}
 
 # Contract routes
 @api_router.post("/contracts/", response_model=Contract)
