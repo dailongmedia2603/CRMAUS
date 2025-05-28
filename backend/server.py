@@ -122,12 +122,14 @@ class Project(ProjectBase):
 
 class TaskBase(BaseModel):
     title: str
-    project_id: str
+    project_id: Optional[str] = None  # Cho phép task không thuộc project nào
     description: Optional[str] = None
+    rich_content: Optional[str] = None  # Rich text content
     assigned_to: Optional[str] = None
     due_date: Optional[datetime] = None
-    priority: str = "medium"  # low, medium, high
-    status: str = "to_do"  # to_do, in_progress, review, completed
+    priority: str = "medium"  # low, medium, high, urgent
+    status: str = "todo"  # todo, in_progress, review, completed
+    task_type: Optional[str] = None  # Type of task for categorization
 
 class TaskCreate(TaskBase):
     pass
@@ -138,6 +140,21 @@ class Task(TaskBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
     completion_date: Optional[datetime] = None
+
+# Task Feedback Models
+class TaskFeedbackBase(BaseModel):
+    task_id: str
+    message: str
+    feedback_type: str = "comment"  # comment, file, approval, etc.
+    
+class TaskFeedbackCreate(TaskFeedbackBase):
+    pass
+
+class TaskFeedback(TaskFeedbackBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+    user_name: Optional[str] = None  # Cache user name for performance
 
 class ContractBase(BaseModel):
     client_id: str
