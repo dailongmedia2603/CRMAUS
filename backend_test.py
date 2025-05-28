@@ -182,7 +182,7 @@ class CRMAPITester:
             "assigned_to": self.user_id,
             "due_date": (datetime.now()).isoformat(),
             "priority": "medium",
-            "status": "to_do"
+            "status": "todo"
         }
         
         success, response = self.run_test("Create Task", "POST", "tasks/", 200, task_data)
@@ -190,9 +190,118 @@ class CRMAPITester:
             self.task_id = response.get('id')
         return success, response
     
+    def test_create_task_with_rich_content(self):
+        """Test creating a task with rich content, task type, and urgent priority"""
+        if not self.project_id:
+            print("❌ Cannot test create_task_with_rich_content: No project_id available")
+            return False, {}
+            
+        task_data = {
+            "title": f"Rich Content Task {datetime.now().strftime('%H%M%S')}",
+            "project_id": self.project_id,
+            "description": "This is a task with rich content",
+            "rich_content": "<p>This is <strong>rich</strong> content with <em>formatting</em></p>",
+            "task_type": "development",
+            "assigned_to": self.user_id,
+            "due_date": (datetime.now()).isoformat(),
+            "priority": "urgent",
+            "status": "todo"
+        }
+        
+        success, response = self.run_test("Create Task with Rich Content", "POST", "tasks/", 200, task_data)
+        if success:
+            self.rich_task_id = response.get('id')
+            # Verify the new fields were saved correctly
+            if (response.get('rich_content') == task_data['rich_content'] and 
+                response.get('task_type') == task_data['task_type'] and
+                response.get('priority') == task_data['priority']):
+                print("✅ New task fields (rich_content, task_type, urgent priority) saved correctly")
+            else:
+                print("❌ New task fields not saved correctly")
+                return False, response
+        return success, response
+    
     def test_get_tasks(self):
         """Test getting all tasks"""
         return self.run_test("Get All Tasks", "GET", "tasks/", 200)
+    
+    def test_task_filtering(self):
+        """Test filtering tasks by status, priority, and search"""
+        # Test filtering by status
+        success1, response1 = self.run_test("Filter Tasks by Status", "GET", "tasks/?status=todo", 200)
+        if success1:
+            print(f"✅ Found {len(response1)} tasks with status 'todo'")
+        
+        # Test filtering by priority
+        success2, response2 = self.run_test("Filter Tasks by Priority", "GET", "tasks/?priority=urgent", 200)
+        if success2:
+            print(f"✅ Found {len(response2)} tasks with priority 'urgent'")
+        
+        # Test search functionality
+        success3, response3 = self.run_test("Search Tasks", "GET", "tasks/?search=Rich", 200)
+        if success3:
+            print(f"✅ Found {len(response3)} tasks matching search term 'Rich'")
+        
+        # Test combined filters
+        success4, response4 = self.run_test("Combined Task Filters", "GET", "tasks/?status=todo&priority=urgent", 200)
+        if success4:
+            print(f"✅ Found {len(response4)} tasks with status 'todo' and priority 'urgent'")
+        
+        return success1 and success2 and success3 and success4, {}
+    
+    def test_task_statistics(self):
+        """Test the task statistics endpoint for dashboard"""
+        success, response = self.run_test("Task Statistics", "GET", "tasks/stats", 200)
+        if success:
+            # Verify the response contains the expected statistics
+            expected_keys = ["urgent", "todo", "in_progress", "due_today", "overdue"]
+            missing_keys = [key for key in expected_keys if key not in response]
+            
+            if not missing_keys:
+                print("✅ Task statistics response contains all expected keys")
+            else:
+                print(f"❌ Task statistics response missing keys: {missing_keys}")
+                return False, response
+        return success, response
+    
+    def test_create_task_feedback(self):
+        """Test creating feedback for a task"""
+        if not self.task_id:
+            print("❌ Cannot test create_task_feedback: No task_id available")
+            return False, {}
+            
+        feedback_data = {
+            "task_id": self.task_id,
+            "message": f"Test feedback at {datetime.now().strftime('%H:%M:%S')}",
+            "feedback_type": "comment"
+        }
+        
+        success, response = self.run_test("Create Task Feedback", "POST", f"tasks/{self.task_id}/feedback", 200, feedback_data)
+        if success:
+            self.feedback_id = response.get('id')
+        return success, response
+    
+    def test_get_task_feedback(self):
+        """Test getting feedback for a task"""
+        if not self.task_id:
+            print("❌ Cannot test get_task_feedback: No task_id available")
+            return False, {}
+            
+        success, response = self.run_test("Get Task Feedback", "GET", f"tasks/{self.task_id}/feedback", 200)
+        if success:
+            if len(response) > 0:
+                print(f"✅ Found {len(response)} feedback items for the task")
+            else:
+                print("⚠️ No feedback found for the task")
+        return success, response
+    
+    def test_delete_task_feedback(self):
+        """Test deleting feedback for a task"""
+        if not self.feedback_id:
+            print("❌ Cannot test delete_task_feedback: No feedback_id available")
+            return False, {}
+            
+        return self.run_test("Delete Task Feedback", "DELETE", f"feedback/{self.feedback_id}", 200)
     
     def test_update_task_status(self):
         """Test updating a task status"""
