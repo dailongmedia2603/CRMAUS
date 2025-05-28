@@ -4021,7 +4021,6 @@ const WorkManagement = () => {
     }
   };
 
-  // Hàm xử lý cập nhật trạng thái công việc
   const handleUpdateStatus = async (taskId, newStatus) => {
     try {
       const task = tasks.find(t => t.id === taskId);
@@ -4037,6 +4036,7 @@ const WorkManagement = () => {
       
       toast.success("Cập nhật trạng thái thành công!");
       fetchTasks();
+      fetchStats();
     } catch (error) {
       console.error("Error updating task status:", error);
       toast.error("Không thể cập nhật trạng thái công việc");
