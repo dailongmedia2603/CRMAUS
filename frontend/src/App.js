@@ -190,7 +190,7 @@ function App() {
   );
 }
 
-// Component đăng nhập
+// Component đăng nhập - Modern Corporate Theme
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -208,42 +208,115 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Phần bên trái - nền xanh với logo và hình ảnh */}
-      <div className="hidden md:flex md:w-1/2 bg-blue-500 text-white flex-col p-12">
-        <div className="flex items-center mb-8">
-          <svg className="h-10 w-10 text-white mr-3" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14 10a4 4 0 100-8 4 4 0 000 8zm-8.5 3a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19 21h-8.5v-2.1c0-2.2 1.8-4 4-4h1c2.2 0 4 1.8 4 4V21z" />
-            <path d="M3 21h7v-2.1c0-1.7-1.1-3.2-2.8-3.7-1.5-.5-3.2-.5-4.8.1-1.2.5-2 1.8-1.9 3.1V21h2.5z" />
-          </svg>
-          <span className="text-xl font-bold">CRM Marketing</span>
+      {/* Phần bên trái - Modern Corporate với màu xanh lá */}
+      <div className="hidden md:flex md:w-3/5 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white flex-col relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m0 40 40-40h-40v40zm40 0v-40h-40l40 40z'/%3E%3C/g%3E%3C/svg%3E")`,
+          }}></div>
         </div>
         
-        <div className="flex-grow flex flex-col justify-center mb-10">
-          <h2 className="text-4xl font-bold mb-4">Your place to work</h2>
-          <h3 className="text-3xl font-bold mb-8">Plan. Create. Control.</h3>
+        <div className="relative z-10 p-12 flex flex-col h-full">
+          {/* Logo and Brand */}
+          <div className="flex items-center mb-12">
+            <div className="bg-white bg-opacity-20 p-3 rounded-xl mr-4">
+              <svg className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">CRM Corporate</h1>
+              <p className="text-emerald-100 text-sm">Marketing Agency Solution</p>
+            </div>
+          </div>
           
-          <div className="relative mt-6">
+          {/* Hero Content */}
+          <div className="flex-grow flex flex-col justify-center mb-12">
+            <div className="space-y-6">
+              <h2 className="text-5xl font-bold leading-tight">
+                Nơi làm việc
+                <span className="block text-emerald-200">hiện đại của bạn</span>
+              </h2>
+              <p className="text-xl text-emerald-100 font-medium">
+                Quản lý • Sáng tạo • Kiểm soát
+              </p>
+              <p className="text-emerald-200 text-lg max-w-lg">
+                Hệ thống CRM chuyên nghiệp dành cho các agency marketing, 
+                giúp tối ưu hóa quy trình làm việc và tăng hiệu quả kinh doanh.
+              </p>
+            </div>
+            
+            {/* Features */}
+            <div className="mt-12 grid grid-cols-2 gap-6">
+              <div className="flex items-center space-x-3">
+                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                  <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <span className="text-emerald-100">Quản lý khách hàng</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                  <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                <span className="text-emerald-100">Theo dõi dự án</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                  <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd"/>
+                  </svg>
+                </div>
+                <span className="text-emerald-100">Quản lý tài chính</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="bg-white bg-opacity-20 p-2 rounded-lg">
+                  <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/>
+                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/>
+                  </svg>
+                </div>
+                <span className="text-emerald-100">Báo cáo chi tiết</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Professional Image */}
+          <div className="relative">
             <img 
-              src="https://cdn.pixabay.com/photo/2022/05/20/13/29/project-management-7209803_1280.png" 
-              alt="Workflow illustration" 
-              className="w-full max-w-md mx-auto"
+              src="https://images.pexels.com/photos/30535624/pexels-photo-30535624.jpeg" 
+              alt="Professional corporate workspace" 
+              className="w-full h-48 object-cover rounded-2xl shadow-2xl opacity-90"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-900 to-transparent rounded-2xl"></div>
           </div>
         </div>
       </div>
       
-      {/* Phần bên phải - form đăng nhập */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-6">
+      {/* Phần bên phải - form đăng nhập với thiết kế corporate */}
+      <div className="w-full md:w-2/5 flex items-center justify-center bg-gray-50 relative">
+        <div className="absolute inset-0 bg-white"></div>
+        <div className="relative z-10 max-w-md w-full p-8">
+          {/* Header */}
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Đăng nhập hệ thống CRM</h2>
-            <p className="text-gray-600">Dành cho Agency Marketing</p>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-6">
+              <svg className="h-8 w-8 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Chào mừng trở lại</h2>
+            <p className="text-gray-600">Đăng nhập vào hệ thống CRM Corporate</p>
           </div>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 text-center">
-                Email
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                Địa chỉ Email
               </label>
               <input
                 id="email"
@@ -253,12 +326,13 @@ const Login = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200"
+                placeholder="your@email.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1 text-center">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Mật khẩu
               </label>
               <div className="relative">
@@ -270,11 +344,12 @@ const Login = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200"
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -299,15 +374,15 @@ const Login = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 font-medium">
+                  Ghi nhớ đăng nhập
                 </label>
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                <a href="#" className="font-semibold text-emerald-600 hover:text-emerald-500 transition-colors duration-200">
                   Quên mật khẩu?
                 </a>
               </div>
@@ -317,20 +392,51 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
               >
-                {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Đang xử lý...
+                  </div>
+                ) : (
+                  "Đăng nhập"
+                )}
               </button>
             </div>
           </form>
           
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
               Chưa có tài khoản? 
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 ml-1">
-                Liên hệ Admin
+              <a href="#" className="font-semibold text-emerald-600 hover:text-emerald-500 ml-1 transition-colors duration-200">
+                Liên hệ Quản trị viên
               </a>
             </p>
+          </div>
+          
+          {/* Trust indicators */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-center space-x-6 text-xs text-gray-500">
+              <div className="flex items-center">
+                <svg className="h-4 w-4 text-emerald-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+                </svg>
+                Bảo mật
+              </div>
+              <div className="flex items-center">
+                <svg className="h-4 w-4 text-emerald-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Đáng tin cậy
+              </div>
+              <div className="flex items-center">
+                <svg className="h-4 w-4 text-emerald-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                </svg>
+                Hỗ trợ 24/7
+              </div>
+            </div>
           </div>
         </div>
       </div>
