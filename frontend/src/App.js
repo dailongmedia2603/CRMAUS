@@ -603,20 +603,24 @@ const SidebarContent = ({ user, logout }) => {
             onClick={() => navigate("/")}
             className={`${
               location === "/"
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+                ? "bg-emerald-800 text-white shadow-lg"
+                : "text-emerald-100 hover:bg-emerald-600 hover:text-white"
+            } group flex w-full items-center px-3 py-3 text-sm font-semibold rounded-xl text-left transition-all duration-200 transform hover:scale-105`}
           >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Dashboard
+            <div className={`${
+              location === "/" ? "bg-emerald-600" : "bg-emerald-600 bg-opacity-50"
+            } p-2 rounded-lg mr-3 transition-all duration-200`}>
+              <svg
+                className="h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
+            <span>Dashboard</span>
           </button>
 
           {/* Client */}
@@ -624,20 +628,24 @@ const SidebarContent = ({ user, logout }) => {
             onClick={() => navigate("/clients")}
             className={`${
               location.startsWith("/clients")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+                ? "bg-emerald-800 text-white shadow-lg"
+                : "text-emerald-100 hover:bg-emerald-600 hover:text-white"
+            } group flex w-full items-center px-3 py-3 text-sm font-semibold rounded-xl text-left transition-all duration-200 transform hover:scale-105`}
           >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            Client
+            <div className={`${
+              location.startsWith("/clients") ? "bg-emerald-600" : "bg-emerald-600 bg-opacity-50"
+            } p-2 rounded-lg mr-3 transition-all duration-200`}>
+              <svg
+                className="h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <span>Khách hàng</span>
           </button>
 
           {/* Công việc */}
@@ -645,20 +653,24 @@ const SidebarContent = ({ user, logout }) => {
             onClick={() => navigate("/tasks")}
             className={`${
               location.startsWith("/tasks")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
+                ? "bg-emerald-800 text-white shadow-lg"
+                : "text-emerald-100 hover:bg-emerald-600 hover:text-white"
+            } group flex w-full items-center px-3 py-3 text-sm font-semibold rounded-xl text-left transition-all duration-200 transform hover:scale-105`}
           >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            Công việc
+            <div className={`${
+              location.startsWith("/tasks") ? "bg-emerald-600" : "bg-emerald-600 bg-opacity-50"
+            } p-2 rounded-lg mr-3 transition-all duration-200`}>
+              <svg
+                className="h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <span>Công việc</span>
           </button>
 
           {/* Dự án (với submenu) */}
