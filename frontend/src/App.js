@@ -1093,17 +1093,15 @@ const Clients = () => {
     newClientsThisMonth: 0
   });
   const [formData, setFormData] = useState({
-    name: "",
-    company: "",
-    industry: "",
-    size: "",
-    website: "",
+    name: "", // Tên khách hàng (Tên Zalo/Facebook)
     phone: "",
-    contact_name: "",
-    contact_email: "",
-    contact_phone: "",
-    notes: "",
-    address: "",
+    company: "", // Sản phẩm  
+    status: "", // Tiềm năng (Tiềm năng, Bình thường, Thấp)
+    potential_value: "", // Giá trị hợp đồng
+    care_status: "", // Trạng thái chăm sóc
+    sales_result: "", // Kết quả bán hàng
+    source: "", // Nguồn
+    notes: "", // Ghi chú
     tags: []
   });
   const [filterData, setFilterData] = useState({
