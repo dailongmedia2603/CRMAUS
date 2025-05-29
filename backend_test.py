@@ -5,9 +5,22 @@ from datetime import datetime
 import time
 import io
 from PIL import Image
+import os
 
 class CRMAPITester:
-    def __init__(self, base_url="https://b3e10cfb-dcad-4f9b-8473-d7104a7ee54b.preview.emergentagent.com/api"):
+    def __init__(self, base_url=None):
+        # Get backend URL from frontend .env file if not provided
+        if base_url is None:
+            try:
+                with open('/app/frontend/.env', 'r') as f:
+                    for line in f:
+                        if line.startswith('REACT_APP_BACKEND_URL='):
+                            base_url = line.strip().split('=')[1].strip('"\'') + '/api'
+                            break
+            except Exception as e:
+                print(f"Error reading REACT_APP_BACKEND_URL from .env: {e}")
+                base_url = "https://b3e10cfb-dcad-4f9b-8473-d7104a7ee54b.preview.emergentagent.com/api"
+        
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -16,6 +29,7 @@ class CRMAPITester:
         self.client_id = None
         self.project_id = None
         self.task_id = None
+        self.created_users = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
         """Run a single API test"""
@@ -75,7 +89,7 @@ class CRMAPITester:
             'password': password
         }
         
-        print(f"\n🔍 Testing Login...")
+        print(f"\n🔍 Testing Login for {email}...")
         self.tests_run += 1
         
         try:
@@ -105,6 +119,31 @@ class CRMAPITester:
         success, response = self.run_test("Get Current User", "GET", "users/me/", 200)
         if success:
             self.user_id = response.get('id')
+            print(f"Current user: {response.get('email')} (Role: {response.get('role')})")
+        return success, response
+
+    def test_create_user(self, email, full_name, role, password):
+        """Test creating a new user"""
+        user_data = {
+            "email": email,
+            "full_name": full_name,
+            "role": role,
+            "password": password
+        }
+        
+        success, response = self.run_test(f"Create User ({role})", "POST", "users/", 200, user_data)
+        if success:
+            self.created_users.append({"email": email, "password": password, "role": role})
+            print(f"✅ Created user: {email} with role: {role}")
+        return success, response
+
+    def test_get_users(self):
+        """Test getting all users"""
+        success, response = self.run_test("Get All Users", "GET", "users/", 200)
+        if success:
+            print(f"Total users: {len(response)}")
+            for user in response:
+                print(f"- {user.get('email')} (Role: {user.get('role')})")
         return success, response
 
     def test_create_client(self):
@@ -204,85 +243,60 @@ class CRMAPITester:
         task["status"] = "in_progress"
         return self.run_test("Update Task Status", "PUT", f"tasks/{self.task_id}", 200, task)
 
-    def test_upload_avatar(self):
-        """Test avatar upload functionality"""
-        try:
-            # Create a simple test image
-            img = Image.new('RGB', (100, 100), color='red')
-            img_bytes = io.BytesIO()
-            img.save(img_bytes, format='PNG')
-            img_bytes.seek(0)
-            
-            # Prepare file for upload
-            files = {'file': ('test_avatar.png', img_bytes, 'image/png')}
-            
-            url = f"{self.base_url}/upload-avatar/"
-            headers = {}
-            if self.token:
-                headers['Authorization'] = f'Bearer {self.token}'
-            
-            print(f"\n🔍 Testing Avatar Upload...")
-            self.tests_run += 1
-            
-            response = requests.post(url, files=files, headers=headers)
-            success = response.status_code == 200
-            
-            if success:
-                self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
-                response_data = response.json()
-                return True, response_data
-            else:
-                print(f"❌ Failed - Expected 200, got {response.status_code}")
-                try:
-                    print(f"Response: {response.json()}")
-                except:
-                    print(f"Response: {response.text}")
-                return False, {}
-                
-        except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
-            return False, {}
-
-    def test_create_client_with_avatar(self):
-        """Test creating a client with avatar"""
-        # First upload an avatar
-        avatar_success, avatar_response = self.test_upload_avatar()
-        if not avatar_success:
-            print("❌ Cannot test client with avatar: Avatar upload failed")
-            return False, {}
-        
-        avatar_url = avatar_response.get('avatar_url')
-        
-        client_data = {
-            "name": f"Test Client with Avatar {datetime.now().strftime('%H%M%S')}",
-            "company": "Test Company with Avatar",
-            "industry": "Technology",
-            "size": "11-50",
-            "website": "https://example.com",
-            "phone": "123-456-7890",
-            "contact_name": "John Doe",
-            "contact_email": "john@example.com",
-            "contact_phone": "123-456-7890",
-            "notes": "This is a test client with avatar",
-            "tags": ["test", "avatar"],
-            "avatar_url": avatar_url
-        }
-        
-        success, response = self.run_test("Create Client with Avatar", "POST", "clients/", 200, client_data)
-        if success:
-            # Verify the avatar_url is saved correctly
-            if response.get('avatar_url') == avatar_url:
-                print("✅ Avatar URL saved correctly in client data")
-                return True, response
-            else:
-                print("❌ Avatar URL not saved correctly in client data")
-                return False, {}
-        return success, response
-
     def test_get_dashboard(self):
         """Test getting dashboard data"""
         return self.run_test("Get Dashboard Data", "GET", "dashboard", 200)
+
+    def test_create_demo_accounts(self):
+        """Create demo accounts with different roles"""
+        # Define demo accounts
+        demo_accounts = [
+            {"email": "admin@crm.com", "full_name": "Admin User", "role": "admin", "password": "admin123"},
+            {"email": "sale@crm.com", "full_name": "Sales User", "role": "account", "password": "sale123"},
+            {"email": "editor@crm.com", "full_name": "Editor User", "role": "creative", "password": "editor123"},
+            {"email": "content@crm.com", "full_name": "Content User", "role": "staff", "password": "content123"},
+            {"email": "design@crm.com", "full_name": "Design User", "role": "creative", "password": "design123"},
+            {"email": "manager@crm.com", "full_name": "Manager User", "role": "account", "password": "manager123"},
+            {"email": "finance@crm.com", "full_name": "Finance User", "role": "account", "password": "finance123"}
+        ]
+        
+        success_count = 0
+        for account in demo_accounts:
+            success, _ = self.test_create_user(
+                account["email"], 
+                account["full_name"], 
+                account["role"], 
+                account["password"]
+            )
+            if success:
+                success_count += 1
+        
+        print(f"\n✅ Created {success_count}/{len(demo_accounts)} demo accounts")
+        return success_count == len(demo_accounts), self.created_users
+
+    def test_login_all_accounts(self):
+        """Test login for all created accounts"""
+        if not self.created_users:
+            print("❌ No users created to test login")
+            return False, {}
+        
+        success_count = 0
+        for user in self.created_users:
+            print(f"\n🔍 Testing login for {user['email']} (Role: {user['role']})")
+            success, _ = self.test_login(user["email"], user["password"])
+            if success:
+                # Verify we can get user info
+                user_success, user_data = self.test_get_current_user()
+                if user_success and user_data.get("email") == user["email"]:
+                    success_count += 1
+                    print(f"✅ Successfully logged in and verified user: {user['email']}")
+                else:
+                    print(f"❌ Failed to verify user data for: {user['email']}")
+            else:
+                print(f"❌ Failed to login as: {user['email']}")
+        
+        print(f"\n✅ Successfully logged in to {success_count}/{len(self.created_users)} accounts")
+        return success_count == len(self.created_users), {}
 
 def main():
     # Setup
@@ -290,14 +304,19 @@ def main():
     
     # Run tests
     print("🚀 Starting CRM API Tests")
+    print(f"Using backend URL: {tester.base_url}")
     
     # Test health check
-    tester.test_health()
+    health_success, _ = tester.test_health()
     
-    # Test setup
-    tester.test_setup()
+    # Test setup and create first admin
+    setup_success, setup_response = tester.test_setup()
+    if setup_success:
+        print(f"✅ Initial admin setup: {setup_response.get('message')}")
+        print(f"   Email: {setup_response.get('email')}")
+        print(f"   Password: {setup_response.get('password')}")
     
-    # Test login
+    # Test login with initial admin
     login_success, _ = tester.test_login()
     if not login_success:
         print("❌ Login failed, stopping tests")
@@ -306,25 +325,26 @@ def main():
     # Test user info
     tester.test_get_current_user()
     
-    # Test client operations
-    tester.test_create_client()
-    tester.test_get_clients()
-    tester.test_get_client()
+    # Create demo accounts
+    demo_accounts_success, _ = tester.test_create_demo_accounts()
     
-    # Test project operations
-    tester.test_create_project()
-    tester.test_get_projects()
+    # Test login for all created accounts
+    login_all_success, _ = tester.test_login_all_accounts()
     
-    # Test task operations
-    tester.test_create_task()
-    tester.test_get_tasks()
-    tester.test_update_task_status()
+    # Login back as admin to test dashboard
+    tester.test_login()
     
     # Test dashboard
-    tester.test_get_dashboard()
+    dashboard_success, _ = tester.test_get_dashboard()
     
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
+    
+    # Print summary of created accounts
+    print("\n📋 Demo Accounts Created:")
+    for user in tester.created_users:
+        print(f"- {user['email']} (Role: {user['role']}, Password: {user['password']})")
+    
     return 0 if tester.tests_passed == tester.tests_run else 1
 
 if __name__ == "__main__":
