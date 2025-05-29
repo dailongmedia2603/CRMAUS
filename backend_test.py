@@ -4,8 +4,8 @@ import sys
 from datetime import datetime
 import time
 import io
-from PIL import Image
 import os
+import json
 
 class CRMAPITester:
     def __init__(self, base_url=None):
