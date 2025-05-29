@@ -338,12 +338,10 @@ const Login = () => {
   );
 };
 
-// Simple Documents component - placeholder
+// Documents component wrapper
 const Documents = () => {
-  return <div className="p-4">
-    <h1 className="text-2xl font-semibold text-gray-900 mb-4">Quản lý Tài liệu</h1>
-    <p>Tính năng đang phát triển...</p>
-  </div>;
+  const { user } = React.useContext(AuthContext);
+  return <DocumentsComponent user={user} />;
 };
 
 // Layout chính của ứng dụng
