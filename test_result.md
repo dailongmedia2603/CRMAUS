@@ -137,15 +137,18 @@ backend:
 
   - task: "Test login for each account"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test login functionality for each created account"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested login for all 7 demo accounts. Each account was able to login and retrieve their user information correctly."
 
   - task: "Test dashboard API"
     implemented: true
