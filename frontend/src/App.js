@@ -438,6 +438,7 @@ const MainLayout = () => {
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/contracts" element={<Contracts />} />
                 <Route path="/invoices" element={<Invoices />} />
+                <Route path="/documents" element={<Documents />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
