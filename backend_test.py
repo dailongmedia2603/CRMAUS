@@ -520,6 +520,18 @@ class CRMAPITester:
             admin_doc_success, admin_doc = self.run_test("Create Admin Document", "POST", "documents/", 200, admin_doc_data)
             admin_doc_id = admin_doc.get('id') if admin_doc_success else None
         
+        # Get existing users if we don't have any
+        if not self.created_users:
+            success, users = self.run_test("Get All Users", "GET", "users/", 200)
+            if success:
+                for user in users:
+                    if user.get('email') != 'admin@example.com':  # Skip the main admin
+                        self.created_users.append({
+                            "email": user.get('email'),
+                            "role": user.get('role'),
+                            "password": user.get('email').split('@')[0] + "123"  # Assume password pattern
+                        })
+        
         # Test with different roles
         results = {}
         for user in self.created_users:
