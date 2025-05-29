@@ -122,15 +122,18 @@ backend:
 
   - task: "Create demo accounts with different roles"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test creating multiple user accounts with different roles"
+      - working: true
+        agent: "testing"
+        comment: "Successfully created all 7 demo accounts with different roles: admin@crm.com (admin), sale@crm.com (account), editor@crm.com (creative), content@crm.com (staff), design@crm.com (creative), manager@crm.com (account), finance@crm.com (account)"
 
   - task: "Test login for each account"
     implemented: true
