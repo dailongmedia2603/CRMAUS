@@ -337,13 +337,13 @@ const Login = () => {
   );
 };
 
-// Component Documents Management  
+// Simple Documents component - placeholder
 const Documents = () => {
-  const { user } = React.useContext(AuthContext);
-  
-  // Import component Documents từ file riêng
-  const DocumentsComponent = require('./components/Documents').default;
-  return <DocumentsComponent user={user} />;
+  return <div className="p-4">
+    <h1 className="text-2xl font-semibold text-gray-900 mb-4">Quản lý Tài liệu</h1>
+    <p>Tính năng đang phát triển...</p>
+  </div>;
+};
 
 // Layout chính của ứng dụng
 const MainLayout = () => {
