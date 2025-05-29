@@ -4,6 +4,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+import Documents from "./components/Documents";
 
 // Biến môi trường
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
