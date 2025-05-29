@@ -297,6 +297,267 @@ class CRMAPITester:
         
         print(f"\n✅ Successfully logged in to {success_count}/{len(self.created_users)} accounts")
         return success_count == len(self.created_users), {}
+        
+    # Document Management API Tests
+    
+    def test_create_folder(self, folder_data=None):
+        """Test creating a new folder"""
+        if folder_data is None:
+            folder_data = {
+                "name": f"Marketing Documents {datetime.now().strftime('%H%M%S')}",
+                "color": "#FF5722",
+                "permissions": "all",
+                "description": "Tài liệu marketing"
+            }
+        
+        success, response = self.run_test("Create Folder", "POST", "folders/", 200, folder_data)
+        if success:
+            self.folder_id = response.get('id')
+            print(f"✅ Created folder: {response.get('name')} with ID: {self.folder_id}")
+        return success, response
+    
+    def test_get_folders(self):
+        """Test getting all folders"""
+        success, response = self.run_test("Get All Folders", "GET", "folders/", 200)
+        if success:
+            print(f"Total folders: {len(response)}")
+            for folder in response:
+                print(f"- {folder.get('name')} (ID: {folder.get('id')})")
+        return success, response
+    
+    def test_get_folder(self, folder_id=None):
+        """Test getting a specific folder"""
+        if folder_id is None:
+            folder_id = self.folder_id
+            
+        if not folder_id:
+            print("❌ Cannot test get_folder: No folder_id available")
+            return False, {}
+            
+        return self.run_test("Get Folder", "GET", f"folders/{folder_id}", 200)
+    
+    def test_update_folder(self, folder_id=None):
+        """Test updating a folder"""
+        if folder_id is None:
+            folder_id = self.folder_id
+            
+        if not folder_id:
+            print("❌ Cannot test update_folder: No folder_id available")
+            return False, {}
+        
+        # First get the current folder data
+        success, folder = self.run_test("Get Folder", "GET", f"folders/{folder_id}", 200)
+        if not success:
+            return False, {}
+        
+        # Update the folder name and description
+        folder_data = {
+            "name": f"Updated Folder {datetime.now().strftime('%H%M%S')}",
+            "color": folder.get("color"),
+            "permissions": folder.get("permissions"),
+            "description": "Updated folder description"
+        }
+        
+        return self.run_test("Update Folder", "PUT", f"folders/{folder_id}", 200, folder_data)
+    
+    def test_delete_folder(self, folder_id=None):
+        """Test deleting a folder"""
+        if folder_id is None:
+            folder_id = self.folder_id
+            
+        if not folder_id:
+            print("❌ Cannot test delete_folder: No folder_id available")
+            return False, {}
+            
+        return self.run_test("Delete Folder", "DELETE", f"folders/{folder_id}", 200)
+    
+    def test_create_document(self, document_data=None):
+        """Test creating a new document"""
+        if not self.folder_id:
+            print("❌ Cannot test create_document: No folder_id available")
+            return False, {}
+            
+        if document_data is None:
+            document_data = {
+                "title": f"Social Media Strategy {datetime.now().strftime('%H%M%S')}",
+                "folder_id": self.folder_id,
+                "link": "https://example.com/doc",
+                "description": "Chiến lược social media 2024"
+            }
+        
+        success, response = self.run_test("Create Document", "POST", "documents/", 200, document_data)
+        if success:
+            self.document_id = response.get('id')
+            print(f"✅ Created document: {response.get('title')} with ID: {self.document_id}")
+        return success, response
+    
+    def test_get_documents(self):
+        """Test getting all documents"""
+        success, response = self.run_test("Get All Documents", "GET", "documents/", 200)
+        if success:
+            print(f"Total documents: {len(response)}")
+            for doc in response:
+                print(f"- {doc.get('title')} (ID: {doc.get('id')})")
+        return success, response
+    
+    def test_get_folder_documents(self, folder_id=None):
+        """Test getting documents by folder"""
+        if folder_id is None:
+            folder_id = self.folder_id
+            
+        if not folder_id:
+            print("❌ Cannot test get_folder_documents: No folder_id available")
+            return False, {}
+            
+        success, response = self.run_test("Get Folder Documents", "GET", f"documents/folder/{folder_id}", 200)
+        if success:
+            print(f"Documents in folder: {len(response)}")
+            for doc in response:
+                print(f"- {doc.get('title')} (ID: {doc.get('id')})")
+        return success, response
+    
+    def test_get_document(self, document_id=None):
+        """Test getting a specific document"""
+        if document_id is None:
+            document_id = self.document_id
+            
+        if not document_id:
+            print("❌ Cannot test get_document: No document_id available")
+            return False, {}
+            
+        return self.run_test("Get Document", "GET", f"documents/{document_id}", 200)
+    
+    def test_update_document(self, document_id=None):
+        """Test updating a document"""
+        if document_id is None:
+            document_id = self.document_id
+            
+        if not document_id:
+            print("❌ Cannot test update_document: No document_id available")
+            return False, {}
+        
+        # First get the current document data
+        success, document = self.run_test("Get Document", "GET", f"documents/{document_id}", 200)
+        if not success:
+            return False, {}
+        
+        # Update the document title and description
+        document_data = {
+            "title": f"Updated Document {datetime.now().strftime('%H%M%S')}",
+            "folder_id": document.get("folder_id"),
+            "link": document.get("link"),
+            "description": "Updated document description"
+        }
+        
+        return self.run_test("Update Document", "PUT", f"documents/{document_id}", 200, document_data)
+    
+    def test_delete_document(self, document_id=None):
+        """Test deleting a document"""
+        if document_id is None:
+            document_id = self.document_id
+            
+        if not document_id:
+            print("❌ Cannot test delete_document: No document_id available")
+            return False, {}
+            
+        return self.run_test("Delete Document", "DELETE", f"documents/{document_id}", 200)
+    
+    def test_bulk_archive_documents(self, document_ids=None):
+        """Test bulk archiving documents"""
+        if document_ids is None:
+            if not self.document_id:
+                print("❌ Cannot test bulk_archive_documents: No document_id available")
+                return False, {}
+            document_ids = [self.document_id]
+        
+        return self.run_test("Bulk Archive Documents", "POST", "documents/bulk-archive", 200, document_ids)
+    
+    def test_bulk_restore_documents(self, document_ids=None):
+        """Test bulk restoring documents"""
+        if document_ids is None:
+            if not self.document_id:
+                print("❌ Cannot test bulk_restore_documents: No document_id available")
+                return False, {}
+            document_ids = [self.document_id]
+        
+        return self.run_test("Bulk Restore Documents", "POST", "documents/bulk-restore", 200, document_ids)
+    
+    def test_bulk_delete_documents(self, document_ids=None):
+        """Test bulk deleting documents"""
+        if document_ids is None:
+            if not self.document_id:
+                print("❌ Cannot test bulk_delete_documents: No document_id available")
+                return False, {}
+            document_ids = [self.document_id]
+        
+        return self.run_test("Bulk Delete Documents", "POST", "documents/bulk-delete", 200, document_ids)
+    
+    def test_document_permissions(self):
+        """Test document permissions with different roles"""
+        # Store original token
+        original_token = self.token
+        
+        # Create a test folder with admin-only permissions
+        admin_folder_data = {
+            "name": f"Admin Only Folder {datetime.now().strftime('%H%M%S')}",
+            "color": "#FF0000",
+            "permissions": "admin",
+            "description": "Admin only folder"
+        }
+        admin_folder_success, admin_folder = self.test_create_folder(admin_folder_data)
+        admin_folder_id = admin_folder.get('id') if admin_folder_success else None
+        
+        # Create a test document in the admin folder
+        if admin_folder_id:
+            admin_doc_data = {
+                "title": f"Admin Document {datetime.now().strftime('%H%M%S')}",
+                "folder_id": admin_folder_id,
+                "link": "https://example.com/admin-doc",
+                "description": "Admin only document"
+            }
+            admin_doc_success, admin_doc = self.run_test("Create Admin Document", "POST", "documents/", 200, admin_doc_data)
+            admin_doc_id = admin_doc.get('id') if admin_doc_success else None
+        
+        # Test with different roles
+        results = {}
+        for user in self.created_users:
+            if user["role"] != "admin":  # Skip admin users
+                print(f"\n🔍 Testing permissions for {user['email']} (Role: {user['role']})")
+                
+                # Login as this user
+                login_success, _ = self.test_login(user["email"], user["password"])
+                if login_success:
+                    # Try to access admin folder
+                    if admin_folder_id:
+                        folder_access, _ = self.run_test(f"{user['role']} accessing admin folder", 
+                                                      "GET", f"folders/{admin_folder_id}", 403)
+                        results[f"{user['role']}_folder_access"] = not folder_access  # Should fail
+                    
+                    # Try to access admin document
+                    if admin_folder_id and admin_doc_id:
+                        doc_access, _ = self.run_test(f"{user['role']} accessing admin document", 
+                                                   "GET", f"documents/{admin_doc_id}", 403)
+                        results[f"{user['role']}_doc_access"] = not doc_access  # Should fail
+        
+        # Restore original token (admin)
+        self.token = original_token
+        
+        # Clean up
+        if admin_doc_id:
+            self.test_delete_document(admin_doc_id)
+        if admin_folder_id:
+            self.test_delete_folder(admin_folder_id)
+        
+        # Check if all permission tests passed
+        all_passed = all(results.values()) if results else False
+        if all_passed:
+            print("✅ All permission tests passed - non-admin users cannot access admin resources")
+        else:
+            print("❌ Some permission tests failed")
+            for test, result in results.items():
+                print(f"- {test}: {'Passed' if result else 'Failed'}")
+        
+        return all_passed, results
 
 def main():
     # Setup
