@@ -180,6 +180,38 @@ class Invoice(InvoiceBase):
     created_by: Optional[str] = None
     paid_date: Optional[datetime] = None
 
+# Document Management Models
+class FolderBase(BaseModel):
+    name: str
+    color: str = "#3B82F6"  # Default blue color
+    permissions: str = "all"  # all, admin, account, creative, staff
+    description: Optional[str] = None
+
+class FolderCreate(FolderBase):
+    pass
+
+class Folder(FolderBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
+class DocumentBase(BaseModel):
+    title: str
+    folder_id: str
+    link: Optional[str] = None
+    description: Optional[str] = None  # Rich text content
+    archived: bool = False
+
+class DocumentCreate(DocumentBase):
+    pass
+
+class Document(DocumentBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
 # Hàm tiện ích
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
