@@ -570,15 +570,8 @@ def main():
     # Test health check
     health_success, _ = tester.test_health()
     
-    # Test setup and create first admin
-    setup_success, setup_response = tester.test_setup()
-    if setup_success:
-        print(f"✅ Initial admin setup: {setup_response.get('message')}")
-        print(f"   Email: {setup_response.get('email')}")
-        print(f"   Password: {setup_response.get('password')}")
-    
-    # Test login with initial admin
-    login_success, _ = tester.test_login()
+    # Test login with admin
+    login_success, _ = tester.test_login("admin@example.com", "admin123")
     if not login_success:
         print("❌ Login failed, stopping tests")
         return 1
@@ -586,25 +579,86 @@ def main():
     # Test user info
     tester.test_get_current_user()
     
-    # Create demo accounts
-    demo_accounts_success, _ = tester.test_create_demo_accounts()
+    # Initialize class attributes
+    tester.folder_id = None
+    tester.document_id = None
     
-    # Test login for all created accounts
-    login_all_success, _ = tester.test_login_all_accounts()
+    print("\n🚀 Starting Document Management API Tests")
     
-    # Login back as admin to test dashboard
-    tester.test_login()
+    # Test Folder endpoints
+    print("\n📁 Testing Folder Endpoints")
+    folder_success, folder = tester.test_create_folder()
+    if folder_success:
+        tester.test_get_folders()
+        tester.test_get_folder()
+        tester.test_update_folder()
     
-    # Test dashboard
-    dashboard_success, _ = tester.test_get_dashboard()
+    # Test Document endpoints
+    if folder_success:
+        print("\n📄 Testing Document Endpoints")
+        doc_success, doc = tester.test_create_document()
+        if doc_success:
+            tester.test_get_documents()
+            tester.test_get_folder_documents()
+            tester.test_get_document()
+            tester.test_update_document()
+    
+    # Test bulk operations
+    if folder_success and doc_success:
+        print("\n🔄 Testing Bulk Operations")
+        # Create a second document for bulk operations
+        second_doc_data = {
+            "title": f"Second Document {datetime.now().strftime('%H%M%S')}",
+            "folder_id": tester.folder_id,
+            "link": "https://example.com/doc2",
+            "description": "Second test document"
+        }
+        second_doc_success, second_doc = tester.test_create_document(second_doc_data)
+        
+        if second_doc_success:
+            doc_ids = [tester.document_id, second_doc.get('id')]
+            
+            # Test bulk archive
+            tester.test_bulk_archive_documents(doc_ids)
+            
+            # Verify documents are archived
+            archived_docs, _ = tester.run_test("Get Archived Documents", "GET", f"documents/?archived=true", 200)
+            
+            # Test bulk restore
+            tester.test_bulk_restore_documents(doc_ids)
+            
+            # Test bulk delete
+            tester.test_bulk_delete_documents(doc_ids)
+            tester.document_id = None  # Reset since documents are deleted
+        else:
+            # Delete the first document if second one failed
+            tester.test_delete_document()
+            tester.document_id = None
+    
+    # Test permissions with different roles
+    if folder_success:
+        print("\n🔒 Testing Document Permissions")
+        # Create demo accounts if they don't exist
+        if not tester.created_users:
+            tester.test_create_demo_accounts()
+        
+        # Test permissions
+        tester.test_document_permissions()
+    
+    # Clean up - delete the test folder if it still exists
+    if tester.folder_id:
+        # Check if folder has any documents
+        docs, _ = tester.run_test("Check Remaining Documents", "GET", f"documents/folder/{tester.folder_id}", 200)
+        if docs and len(docs) > 0:
+            # Delete any remaining documents
+            for doc in docs:
+                tester.test_delete_document(doc.get('id'))
+        
+        # Now delete the folder
+        tester.test_delete_folder()
     
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
-    
-    # Print summary of created accounts
-    print("\n📋 Demo Accounts Created:")
-    for user in tester.created_users:
-        print(f"- {user['email']} (Role: {user['role']}, Password: {user['password']})")
     
     return 0 if tester.tests_passed == tester.tests_run else 1
 
