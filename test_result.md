@@ -413,11 +413,21 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Setup API and create first admin"
-    - "Create demo accounts with different roles"
-    - "Test login for each account"
-    - "Test dashboard API"
-    - "Test health check API"
+    - "Create folder API"
+    - "Get folders API"
+    - "Get folder by ID API"
+    - "Update folder API"
+    - "Delete folder API"
+    - "Create document API"
+    - "Get documents API"
+    - "Get documents by folder API"
+    - "Get document by ID API"
+    - "Update document API"
+    - "Delete document API"
+    - "Bulk archive documents API"
+    - "Bulk restore documents API"
+    - "Bulk delete documents API"
+    - "Document permissions"
   stuck_tasks: []
   test_all: true
   test_priority: "sequential"
@@ -427,3 +437,7 @@ agent_communication:
     message: "Starting testing of backend CRM API to create demo accounts with different roles. Will test setup API, user creation, login functionality, dashboard API, and health check."
   - agent: "testing"
     message: "All backend tests have been completed successfully. The setup API creates the initial admin user correctly. All 7 demo accounts with different roles were created successfully. Login functionality works for all accounts. Dashboard API and health check API are working as expected."
+  - agent: "testing"
+    message: "Starting testing of Document Management API endpoints. Will test folder and document CRUD operations, bulk operations, and permissions."
+  - agent: "testing"
+    message: "All Document Management API tests have been completed successfully. Folder and document CRUD operations work as expected. Bulk operations (archive, restore, delete) function correctly. Permission restrictions are properly enforced - non-admin users cannot access admin-only resources."
