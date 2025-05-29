@@ -152,15 +152,18 @@ backend:
 
   - task: "Test dashboard API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the dashboard API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the dashboard API endpoint. It returns the expected data with status code 200."
 
   - task: "Test health check API"
     implemented: true
