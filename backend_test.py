@@ -545,13 +545,15 @@ class CRMAPITester:
                     if admin_folder_id:
                         folder_access, _ = self.run_test(f"{user['role']} accessing admin folder", 
                                                       "GET", f"folders/{admin_folder_id}", 403)
-                        results[f"{user['role']}_folder_access"] = not folder_access  # Should fail
+                        # If folder_access is True, the test passed (got 403 as expected)
+                        results[f"{user['role']}_folder_access"] = folder_access
                     
                     # Try to access admin document
                     if admin_folder_id and admin_doc_id:
                         doc_access, _ = self.run_test(f"{user['role']} accessing admin document", 
                                                    "GET", f"documents/{admin_doc_id}", 403)
-                        results[f"{user['role']}_doc_access"] = not doc_access  # Should fail
+                        # If doc_access is True, the test passed (got 403 as expected)
+                        results[f"{user['role']}_doc_access"] = doc_access
         
         # Restore original token (admin)
         self.token = original_token
