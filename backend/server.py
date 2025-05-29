@@ -720,6 +720,239 @@ async def upload_avatar(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Document Management Routes
+
+# Folder routes
+@api_router.post("/folders/", response_model=Folder)
+async def create_folder(folder: FolderCreate, current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    folder_data = folder.dict()
+    folder_obj = Folder(**folder_data, created_by=current_user.id)
+    result = await db.folders.insert_one(folder_obj.dict())
+    return folder_obj
+
+@api_router.get("/folders/", response_model=List[Folder])
+async def read_folders(current_user: User = Depends(get_current_active_user)):
+    # Filter folders based on user role and permissions
+    if current_user.role == "admin":
+        folders = await db.folders.find().to_list(length=100)
+    else:
+        # Show folders with 'all' permissions or folders specific to user role
+        folders = await db.folders.find({
+            "$or": [
+                {"permissions": "all"},
+                {"permissions": current_user.role}
+            ]
+        }).to_list(length=100)
+    return folders
+
+@api_router.get("/folders/{folder_id}", response_model=Folder)
+async def read_folder(folder_id: str, current_user: User = Depends(get_current_active_user)):
+    folder = await db.folders.find_one({"id": folder_id})
+    if folder is None:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    # Check permissions
+    if folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    return folder
+
+@api_router.put("/folders/{folder_id}", response_model=Folder)
+async def update_folder(folder_id: str, folder: FolderCreate, current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    db_folder = await db.folders.find_one({"id": folder_id})
+    if db_folder is None:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    folder_data = folder.dict()
+    updated_folder = {**db_folder, **folder_data, "updated_at": datetime.utcnow()}
+    
+    await db.folders.update_one({"id": folder_id}, {"$set": updated_folder})
+    return updated_folder
+
+@api_router.delete("/folders/{folder_id}")
+async def delete_folder(folder_id: str, current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Check if folder has documents
+    documents_count = await db.documents.count_documents({"folder_id": folder_id})
+    if documents_count > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete folder with documents")
+    
+    result = await db.folders.delete_one({"id": folder_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    return {"detail": "Folder deleted successfully"}
+
+# Document routes
+@api_router.post("/documents/", response_model=Document)
+async def create_document(document: DocumentCreate, current_user: User = Depends(get_current_active_user)):
+    # Check if folder exists and user has permission
+    folder = await db.folders.find_one({"id": document.folder_id})
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    # Check folder permissions
+    if folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions to add document to this folder")
+    
+    document_data = document.dict()
+    document_obj = Document(**document_data, created_by=current_user.id)
+    result = await db.documents.insert_one(document_obj.dict())
+    return document_obj
+
+@api_router.get("/documents/", response_model=List[Document])
+async def read_documents(skip: int = 0, limit: int = 100, archived: bool = False, current_user: User = Depends(get_current_active_user)):
+    # Get accessible folders first
+    if current_user.role == "admin":
+        accessible_folders = await db.folders.find().to_list(length=1000)
+    else:
+        accessible_folders = await db.folders.find({
+            "$or": [
+                {"permissions": "all"},
+                {"permissions": current_user.role}
+            ]
+        }).to_list(length=1000)
+    
+    folder_ids = [folder["id"] for folder in accessible_folders]
+    
+    documents = await db.documents.find({
+        "folder_id": {"$in": folder_ids},
+        "archived": archived
+    }).skip(skip).limit(limit).to_list(length=limit)
+    
+    return documents
+
+@api_router.get("/documents/folder/{folder_id}", response_model=List[Document])
+async def read_folder_documents(folder_id: str, archived: bool = False, current_user: User = Depends(get_current_active_user)):
+    # Check folder permissions
+    folder = await db.folders.find_one({"id": folder_id})
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    if folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    documents = await db.documents.find({
+        "folder_id": folder_id,
+        "archived": archived
+    }).to_list(length=100)
+    
+    return documents
+
+@api_router.get("/documents/{document_id}", response_model=Document)
+async def read_document(document_id: str, current_user: User = Depends(get_current_active_user)):
+    document = await db.documents.find_one({"id": document_id})
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Check folder permissions
+    folder = await db.folders.find_one({"id": document["folder_id"]})
+    if folder and folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    return document
+
+@api_router.put("/documents/{document_id}", response_model=Document)
+async def update_document(document_id: str, document: DocumentCreate, current_user: User = Depends(get_current_active_user)):
+    db_document = await db.documents.find_one({"id": document_id})
+    if db_document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Check folder permissions for both old and new folder
+    old_folder = await db.folders.find_one({"id": db_document["folder_id"]})
+    new_folder = await db.folders.find_one({"id": document.folder_id})
+    
+    if not new_folder:
+        raise HTTPException(status_code=404, detail="New folder not found")
+    
+    # Check permissions for both folders
+    for folder in [old_folder, new_folder]:
+        if folder and folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    document_data = document.dict()
+    updated_document = {**db_document, **document_data, "updated_at": datetime.utcnow()}
+    
+    await db.documents.update_one({"id": document_id}, {"$set": updated_document})
+    return updated_document
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(document_id: str, current_user: User = Depends(get_current_active_user)):
+    document = await db.documents.find_one({"id": document_id})
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Check permissions
+    folder = await db.folders.find_one({"id": document["folder_id"]})
+    if folder and folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.documents.delete_one({"id": document_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    return {"detail": "Document deleted successfully"}
+
+# Bulk operations
+@api_router.post("/documents/bulk-archive")
+async def bulk_archive_documents(document_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    # Check permissions for all documents
+    for doc_id in document_ids:
+        document = await db.documents.find_one({"id": doc_id})
+        if document:
+            folder = await db.folders.find_one({"id": document["folder_id"]})
+            if folder and folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+                raise HTTPException(status_code=403, detail=f"Not enough permissions for document {doc_id}")
+    
+    result = await db.documents.update_many(
+        {"id": {"$in": document_ids}},
+        {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": f"{result.modified_count} documents archived"}
+
+@api_router.post("/documents/bulk-restore")
+async def bulk_restore_documents(document_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    # Check permissions for all documents
+    for doc_id in document_ids:
+        document = await db.documents.find_one({"id": doc_id})
+        if document:
+            folder = await db.folders.find_one({"id": document["folder_id"]})
+            if folder and folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+                raise HTTPException(status_code=403, detail=f"Not enough permissions for document {doc_id}")
+    
+    result = await db.documents.update_many(
+        {"id": {"$in": document_ids}},
+        {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": f"{result.modified_count} documents restored"}
+
+@api_router.post("/documents/bulk-delete")
+async def bulk_delete_documents(document_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Check permissions for all documents
+    for doc_id in document_ids:
+        document = await db.documents.find_one({"id": doc_id})
+        if document:
+            folder = await db.folders.find_one({"id": document["folder_id"]})
+            if folder and folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
+                raise HTTPException(status_code=403, detail=f"Not enough permissions for document {doc_id}")
+    
+    result = await db.documents.delete_many({"id": {"$in": document_ids}})
+    
+    return {"detail": f"{result.deleted_count} documents deleted"}
+
 # Root endpoint
 @api_router.get("/")
 async def root():
