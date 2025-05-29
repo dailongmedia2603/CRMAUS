@@ -107,15 +107,18 @@ user_problem_statement: "Tôi cần test backend CRM để tạo các tài kho�
 backend:
   - task: "Setup API and create first admin"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the setup API to create the first admin user"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the setup API. It creates the initial admin user with email: admin@example.com and password: admin123"
 
   - task: "Create demo accounts with different roles"
     implemented: true
