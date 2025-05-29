@@ -101,3 +101,87 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Tôi cần test backend CRM để tạo các tài khoản demo cho các role khác nhau. Hãy: 1. Kiểm tra API setup và tạo admin đầu tiên 2. Tạo các tài khoản demo với thông tin như sau: - Admin: admin@crm.com / admin123 (role: admin) - Sale: sale@crm.com / sale123 (role: account) - Editor: editor@crm.com / editor123 (role: creative) - Content: content@crm.com / content123 (role: staff) - Design: design@crm.com / design123 (role: creative) - Manager: manager@crm.com / manager123 (role: account) - Finance: finance@crm.com / finance123 (role: account) 3. Test đăng nhập từng tài khoản để đảm bảo hoạt động 4. Kiểm tra API dashboard và health check"
+
+backend:
+  - task: "Setup API and create first admin"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the setup API to create the first admin user"
+
+  - task: "Create demo accounts with different roles"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test creating multiple user accounts with different roles"
+
+  - task: "Test login for each account"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test login functionality for each created account"
+
+  - task: "Test dashboard API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the dashboard API endpoint"
+
+  - task: "Test health check API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the health check API endpoint"
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Setup API and create first admin"
+    - "Create demo accounts with different roles"
+    - "Test login for each account"
+    - "Test dashboard API"
+    - "Test health check API"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "sequential"
+
+agent_communication:
+  - agent: "testing"
+    message: "Starting testing of backend CRM API to create demo accounts with different roles. Will test setup API, user creation, login functionality, dashboard API, and health check."
