@@ -661,15 +661,23 @@ def main():
     
     # Clean up - delete the test folder if it still exists
     if tester.folder_id:
-        # Check if folder has any documents
-        docs, _ = tester.run_test("Check Remaining Documents", "GET", f"documents/folder/{tester.folder_id}", 200)
-        if docs and len(docs) > 0:
-            # Delete any remaining documents
-            for doc in docs:
-                tester.test_delete_document(doc.get('id'))
-        
-        # Now delete the folder
-        tester.test_delete_folder()
+        try:
+            # Check if folder still exists
+            folder_exists, _ = tester.run_test("Check Folder Exists", "GET", f"folders/{tester.folder_id}", 200)
+            
+            if folder_exists:
+                # Check if folder has any documents
+                docs, _ = tester.run_test("Check Remaining Documents", "GET", f"documents/folder/{tester.folder_id}", 200)
+                if docs and len(docs) > 0:
+                    # Delete any remaining documents
+                    for doc in docs:
+                        tester.test_delete_document(doc.get('id'))
+                
+                # Now delete the folder
+                tester.test_delete_folder()
+        except Exception as e:
+            print(f"Error during cleanup: {str(e)}")
+            # Folder might already be deleted, so we can ignore this error
     
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
