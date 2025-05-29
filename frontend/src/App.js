@@ -339,37 +339,13 @@ const Login = () => {
   );
 };
 
-// Component Documents Management
+// Component Documents Management  
 const Documents = () => {
-  const [folders, setFolders] = useState([]);
-  const [documents, setDocuments] = useState([]);
-  const [selectedFolder, setSelectedFolder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("active"); // active, archived
-  const [selectedDocuments, setSelectedDocuments] = useState([]);
-  const [showFolderModal, setShowFolderModal] = useState(false);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
-  const [editingFolder, setEditingFolder] = useState(null);
-  const [editingDocument, setEditingDocument] = useState(null);
-  const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
-  
-  // Form states
-  const [folderForm, setFolderForm] = useState({
-    name: "",
-    color: "#3B82F6",
-    permissions: "all",
-    description: ""
-  });
-  
-  const [documentForm, setDocumentForm] = useState({
-    title: "",
-    folder_id: "",
-    link: "",
-    description: ""
-  });
-
   const { user } = React.useContext(AuthContext);
+  
+  // Import component Documents từ file riêng
+  const DocumentsComponent = require('./components/Documents').default;
+  return <DocumentsComponent user={user} />;
 
 // Layout chính của ứng dụng
 const MainLayout = () => {
