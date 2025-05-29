@@ -180,6 +180,231 @@ backend:
         agent: "testing"
         comment: "Successfully tested the health check API endpoint. It returns status code 200, indicating the system is healthy."
 
+  - task: "Create folder API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the folder creation API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the folder creation API. It creates folders with the specified name, color, permissions, and description."
+
+  - task: "Get folders API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the get folders API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the get folders API. It returns a list of all folders with their details."
+
+  - task: "Get folder by ID API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the get folder by ID API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the get folder by ID API. It returns the details of the specified folder."
+
+  - task: "Update folder API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the update folder API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the update folder API. It updates the folder with the specified details."
+
+  - task: "Delete folder API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the delete folder API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the delete folder API. It deletes the specified folder when it has no documents."
+
+  - task: "Create document API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the document creation API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the document creation API. It creates documents with the specified title, folder_id, link, and description."
+
+  - task: "Get documents API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the get documents API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the get documents API. It returns a list of all documents with their details."
+
+  - task: "Get documents by folder API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the get documents by folder API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the get documents by folder API. It returns a list of documents in the specified folder."
+
+  - task: "Get document by ID API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the get document by ID API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the get document by ID API. It returns the details of the specified document."
+
+  - task: "Update document API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the update document API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the update document API. It updates the document with the specified details."
+
+  - task: "Delete document API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the delete document API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the delete document API. It deletes the specified document."
+
+  - task: "Bulk archive documents API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk archive documents API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the bulk archive documents API. It archives multiple documents at once."
+
+  - task: "Bulk restore documents API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk restore documents API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the bulk restore documents API. It restores multiple archived documents at once."
+
+  - task: "Bulk delete documents API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk delete documents API endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the bulk delete documents API. It deletes multiple documents at once."
+
+  - task: "Document permissions"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test document permissions with different user roles"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested document permissions. Non-admin users cannot access admin-only folders and documents."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
