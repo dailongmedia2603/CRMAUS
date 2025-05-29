@@ -29,6 +29,8 @@ class CRMAPITester:
         self.client_id = None
         self.project_id = None
         self.task_id = None
+        self.folder_id = None
+        self.document_id = None
         self.created_users = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None):
