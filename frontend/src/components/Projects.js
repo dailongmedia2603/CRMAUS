@@ -726,12 +726,61 @@ const Projects = ({ user }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="relative">
-                      <button className="text-gray-400 hover:text-gray-600">
+                      <button 
+                        className="text-gray-400 hover:text-gray-600"
+                        onClick={() => setActionDropdownOpen(actionDropdownOpen === project.id ? null : project.id)}
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                         </svg>
                       </button>
-                      {/* Dropdown menu would go here */}
+                      
+                      {/* Dropdown menu */}
+                      {actionDropdownOpen === project.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                // Chi tiết dự án - có thể navigate tới trang chi tiết
+                                console.log('View project details:', project.id);
+                                setActionDropdownOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Chi tiết
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleEdit(project);
+                                setActionDropdownOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleArchive(project.id);
+                                setActionDropdownOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              {project.archived ? 'Khôi phục' : 'Lưu trữ'}
+                            </button>
+                            {(user?.role === 'admin' || user?.role === 'account') && (
+                              <button
+                                onClick={() => {
+                                  handleDelete(project.id);
+                                  setActionDropdownOpen(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              >
+                                Xóa
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>
