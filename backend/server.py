@@ -349,8 +349,61 @@ async def create_project(project: ProjectCreate, current_user: User = Depends(ge
     return project_obj
 
 @api_router.get("/projects/", response_model=List[Project])
-async def read_projects(skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_active_user)):
-    projects = await db.projects.find().skip(skip).limit(limit).to_list(length=limit)
+async def read_projects(
+    skip: int = 0, 
+    limit: int = 100,
+    archived: bool = False,
+    status: Optional[str] = None,
+    client_id: Optional[str] = None,
+    team_member: Optional[str] = None,
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Build query filter
+    query_filter = {"archived": archived}
+    
+    # Status filter
+    if status:
+        query_filter["status"] = status
+    
+    # Client filter  
+    if client_id:
+        query_filter["client_id"] = client_id
+    
+    # Team member filter
+    if team_member:
+        query_filter["team"] = {"$in": [team_member]}
+    
+    # Time filters
+    if year:
+        start_date = datetime(year, 1, 1)
+        if quarter:
+            # Quarter filter
+            quarter_months = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
+            start_month, end_month = quarter_months[quarter]
+            start_date = datetime(year, start_month, 1)
+            end_date = datetime(year, end_month + 1, 1) if end_month < 12 else datetime(year + 1, 1, 1)
+        elif month:
+            # Month filter
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+        else:
+            # Year filter
+            end_date = datetime(year + 1, 1, 1)
+        
+        query_filter["created_at"] = {"$gte": start_date, "$lt": end_date}
+    
+    # Search filter
+    if search:
+        query_filter["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    
+    projects = await db.projects.find(query_filter).skip(skip).limit(limit).to_list(length=limit)
     return projects
 
 @api_router.get("/projects/client/{client_id}", response_model=List[Project])
