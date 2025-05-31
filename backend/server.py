@@ -1445,6 +1445,25 @@ async def delete_task(
     
     return {"detail": "Task deleted successfully"}
 
+@api_router.delete("/tasks/bulk")
+async def bulk_delete_tasks(
+    task_ids: List[str],
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa nhiều nhiệm vụ cùng lúc"""
+    if not task_ids:
+        raise HTTPException(status_code=400, detail="No task IDs provided")
+    
+    if len(task_ids) > 50:
+        raise HTTPException(status_code=400, detail="Cannot delete more than 50 tasks at once")
+    
+    result = await db.tasks.delete_many({"id": {"$in": task_ids}})
+    
+    return {
+        "detail": f"{result.deleted_count} tasks deleted successfully",
+        "deleted_count": result.deleted_count
+    }
+
 @api_router.post("/tasks/{task_id}/copy")
 async def copy_task(
     task_id: str,
