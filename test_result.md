@@ -16,15 +16,18 @@ backend:
 
   - task: "Projects API - PUT /api/projects/{project_id}"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the PUT /api/projects/{project_id} endpoint for updating projects, including the archive/restore functionality"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the PUT /api/projects/{project_id} endpoint. The API correctly updates project information. The archive/restore functionality works as expected - setting archived=true archives the project and setting archived=false restores it. All authenticated users can update projects regardless of role."
 
   - task: "Projects API - DELETE /api/projects/{project_id}"
     implemented: true
