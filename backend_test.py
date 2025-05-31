@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 # Base URL for API
-BASE_URL = "http://localhost:8001"
+BASE_URL = "https://b3e10cfb-dcad-4f9b-8473-d7104a7ee54b.preview.emergentagent.com"
 API_PREFIX = "/api"
 
 # Admin credentials
