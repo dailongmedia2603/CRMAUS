@@ -205,6 +205,9 @@ test_plan:
     - "Clients API - GET /api/clients/"
     - "Users API - GET /api/users/"
     - "Projects API - Search Functionality"
+    - "Projects UI - Dropdown Actions"
+    - "Projects UI - Layout Full Width"
+    - "Projects UI - Search Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
