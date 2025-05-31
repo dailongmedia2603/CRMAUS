@@ -800,55 +800,55 @@ const Projects = ({ user }) => {
                       
                       {/* Dropdown menu */}
                       {actionDropdownOpen === project.id && (
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-md shadow-lg z-50 transform origin-top-right" 
-                             style={{ 
-                               position: 'fixed',
-                               top: 'auto',
-                               bottom: 'auto',
-                               zIndex: 9999 
-                             }}>
-                          <div className="py-1">
-                            <button
-                              onClick={() => {
-                                // Chi tiết dự án - có thể navigate tới trang chi tiết
-                                console.log('View project details:', project.id);
-                                setActionDropdownOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              Chi tiết
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleEdit(project);
-                                setActionDropdownOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              Sửa
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleArchive(project.id);
-                                setActionDropdownOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              {project.archived ? 'Khôi phục' : 'Lưu trữ'}
-                            </button>
-                            {(user?.role === 'admin' || user?.role === 'account') && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={() => setActionDropdownOpen(null)}
+                          />
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-md shadow-lg z-50">
+                            <div className="py-1">
                               <button
                                 onClick={() => {
-                                  handleDelete(project.id);
+                                  // Chi tiết dự án - có thể navigate tới trang chi tiết
+                                  console.log('View project details:', project.id);
                                   setActionDropdownOpen(null);
                                 }}
-                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
-                                Xóa
+                                Chi tiết
                               </button>
-                            )}
+                              <button
+                                onClick={() => {
+                                  handleEdit(project);
+                                  setActionDropdownOpen(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleArchive(project.id);
+                                  setActionDropdownOpen(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                {project.archived ? 'Khôi phục' : 'Lưu trữ'}
+                              </button>
+                              {(user?.role === 'admin' || user?.role === 'account') && (
+                                <button
+                                  onClick={() => {
+                                    handleDelete(project.id);
+                                    setActionDropdownOpen(null);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                >
+                                  Xóa
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        </>
                       )}
                     </div>
                   </td>
