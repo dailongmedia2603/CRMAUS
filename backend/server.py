@@ -1572,6 +1572,128 @@ async def get_template(
     
     return Template(**template)
 
+@api_router.put("/templates/{template_id}", response_model=Template)
+async def update_template(
+    template_id: str,
+    template_update: TemplateUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật template"""
+    template = await db.templates.find_one({"id": template_id})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Check permissions (only creator or admin can update)
+    if template["created_by"] != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    update_data = {k: v for k, v in template_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.templates.update_one(
+            {"id": template_id},
+            {"$set": update_data}
+        )
+    
+    updated_template = await db.templates.find_one({"id": template_id})
+    
+    # Add creator name
+    if updated_template.get("created_by"):
+        user = await db.users.find_one({"id": updated_template["created_by"]})
+        if user:
+            updated_template["creator_name"] = user.get("full_name", "Unknown")
+        else:
+            updated_template["creator_name"] = "Unknown"
+    else:
+        updated_template["creator_name"] = "Unknown"
+    
+    return Template(**updated_template)
+
+@api_router.delete("/templates/{template_id}")
+async def delete_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa template"""
+    template = await db.templates.find_one({"id": template_id})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Check permissions (only creator, admin or account can delete)
+    if (template["created_by"] != current_user.id and 
+        current_user.role not in ["admin", "account"]):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    await db.templates.delete_one({"id": template_id})
+    return {"message": "Template deleted successfully"}
+
+@api_router.post("/templates/bulk-archive")
+async def bulk_archive_templates(
+    template_ids: List[str],
+    current_user: User = Depends(get_current_user)
+):
+    """Lưu trữ templates hàng loạt"""
+    result = await db.templates.update_many(
+        {"id": {"$in": template_ids}},
+        {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+    )
+    return {"message": f"Archived {result.modified_count} templates"}
+
+@api_router.post("/templates/bulk-restore")
+async def bulk_restore_templates(
+    template_ids: List[str],
+    current_user: User = Depends(get_current_user)
+):
+    """Khôi phục templates hàng loạt"""
+    result = await db.templates.update_many(
+        {"id": {"$in": template_ids}},
+        {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+    )
+    return {"message": f"Restored {result.modified_count} templates"}
+
+@api_router.post("/templates/bulk-delete")
+async def bulk_delete_templates(
+    template_ids: List[str],
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa templates hàng loạt (chỉ admin và account)"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.templates.delete_many(
+        {"id": {"$in": template_ids}}
+    )
+    return {"message": f"Deleted {result.deleted_count} templates"}
+
+@api_router.post("/templates/{template_id}/duplicate", response_model=Template)
+async def duplicate_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Nhân đôi template"""
+    original_template = await db.templates.find_one({"id": template_id})
+    if not original_template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Create new template
+    new_template = {
+        "id": str(uuid.uuid4()),
+        "name": f"{original_template['name']} (Copy)",
+        "content": original_template.get("content"),
+        "template_type": original_template.get("template_type", "service"),
+        "archived": False,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "created_by": current_user.id
+    }
+    
+    await db.templates.insert_one(new_template)
+    
+    # Add creator name
+    new_template["creator_name"] = current_user.full_name
+    
+    return Template(**new_template)
+
 # Root endpoint
 @api_router.get("/")
 async def root():
