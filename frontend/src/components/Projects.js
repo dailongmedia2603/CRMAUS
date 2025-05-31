@@ -68,7 +68,44 @@ const Projects = ({ user }) => {
     };
   }, [actionDropdownOpen]);
 
-  const fetchProjects = async () => {
+  // Calculate dropdown position based on screen space
+  const calculateDropdownPosition = (projectId, event) => {
+    const buttonRect = event.currentTarget.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = 160; // Estimated height of dropdown
+    
+    const spaceBelow = viewportHeight - buttonRect.bottom;
+    const spaceAbove = buttonRect.top;
+    
+    let position = {};
+    
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+      // Show above
+      position = {
+        bottom: '100%',
+        right: '0',
+        marginBottom: '4px'
+      };
+    } else {
+      // Show below (default)
+      position = {
+        top: '100%',
+        right: '0',
+        marginTop: '4px'
+      };
+    }
+    
+    setDropdownPosition(prev => ({ ...prev, [projectId]: position }));
+  };
+
+  const handleDropdownToggle = (projectId, event) => {
+    if (actionDropdownOpen === projectId) {
+      setActionDropdownOpen(null);
+    } else {
+      calculateDropdownPosition(projectId, event);
+      setActionDropdownOpen(projectId);
+    }
+  };
     try {
       const params = new URLSearchParams({
         archived: showArchived,
