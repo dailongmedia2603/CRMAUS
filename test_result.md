@@ -623,15 +623,19 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Replace 'Công việc' menu with 'Task' menu"
+    - "Projects API with filters"
+    - "Projects Statistics API"
+    - "Project model fields"
+    - "Projects Bulk Operations"
+    - "Projects Error Handling"
   stuck_tasks: []
   test_all: false
-  test_priority: "sequential"
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
@@ -650,3 +654,5 @@ agent_communication:
     message: "Testing the replacement of 'Công việc' menu with 'Task' menu. Will verify menu structure, navigation, and page content."
   - agent: "testing"
     message: "Successfully verified the menu replacement. The 'Công việc' menu has been replaced with 'Task' menu in the sidebar. The Task menu is positioned correctly below the Client menu. The Task page shows the correct development message and the URL is correctly set to '/task'. However, there's still a 'Công việc gần đây' section in the Dashboard that should be reviewed."
+  - agent: "testing"
+    message: "Starting testing of Projects API features. Will test filtering, statistics, model fields, bulk operations, and error handling."
