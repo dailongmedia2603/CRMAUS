@@ -195,6 +195,96 @@ backend:
         comment: "Successfully tested the POST /api/campaigns/bulk-action endpoint. The API correctly performs bulk operations on campaigns. The bulk-archive action correctly archives multiple campaigns at once. The bulk-restore action correctly restores multiple archived campaigns. The bulk-delete action correctly deletes multiple campaigns at once. All bulk operations are working as expected."
 
 frontend:
+  - task: "Campaigns UI - Toolbar Components"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Campaigns.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the toolbar components in the Campaigns UI including search, archive toggle, and create button"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the toolbar components in the Campaigns UI. The search input is visible and functional, allowing case-insensitive search by campaign name. The 'Xem lưu trữ' toggle button is visible and correctly switches between active and archived campaigns. The 'Chiến dịch mới' button is visible and opens the create campaign modal when clicked. All toolbar components are properly positioned and styled."
+
+  - task: "Campaigns UI - Table Display"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Campaigns.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the campaigns table display including columns for checkbox, campaign name, creator, creation date, and actions"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the campaigns table display. The table shows all required columns: checkbox for selection, campaign name with description, creator name, creation date (formatted as dd/mm/yyyy), and actions dropdown. The table is properly styled with alternating row colors and hover effects. The table is responsive and adapts to different screen sizes."
+
+  - task: "Campaigns UI - Create/Edit Modal"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Campaigns.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the create/edit modal functionality including form fields, validation, and submission"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the create/edit modal functionality. The modal opens correctly when clicking the 'Chiến dịch mới' button or the edit action. The form includes the required fields: campaign name (required) and description (optional). Validation works correctly - attempting to submit without a name shows an error message. The create and update operations work as expected, with success notifications displayed after submission."
+
+  - task: "Campaigns UI - Actions Dropdown"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Campaigns.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the actions dropdown functionality including view, edit, archive/restore, and delete options"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the actions dropdown functionality. The dropdown opens when clicking the action button (⋮) and displays all required options: Xem chi tiết, Sửa, Lưu trữ/Khôi phục, and Xóa. Each action works correctly: edit opens the edit modal, archive/restore toggles the campaign's archived status, and delete removes the campaign after confirmation. The dropdown is properly positioned and styled."
+
+  - task: "Campaigns UI - Bulk Operations"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Campaigns.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk operations functionality including selection, bulk archive/restore, and bulk delete"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the bulk operations functionality. The checkbox selection works correctly for both individual campaigns and the select all checkbox. When campaigns are selected, the bulk actions button appears with options for archive/restore and delete. Bulk archive/restore correctly changes the status of multiple campaigns at once. Bulk delete correctly removes multiple campaigns after confirmation. All bulk operations display appropriate success notifications."
+
+  - task: "Campaigns UI - Integration with Backend"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Campaigns.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the integration between the Campaigns UI and the backend API"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the integration between the Campaigns UI and the backend API. The UI correctly fetches campaigns from the API with proper filtering for search and archived status. Create, update, delete, archive/restore, and bulk operations all communicate correctly with the API and update the UI based on the response. Error handling is implemented for API failures with appropriate error messages displayed to the user."
+
   - task: "Projects UI - Time Filter Tabs"
     implemented: true
     working: true
