@@ -495,7 +495,43 @@ async def delete_project(project_id: str, current_user: User = Depends(get_curre
     
     return {"detail": "Project deleted successfully"}
 
-# Contract routes
+# Project bulk operations
+@api_router.post("/projects/bulk-archive")
+async def bulk_archive_projects(project_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.projects.update_many(
+        {"id": {"$in": project_ids}},
+        {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": f"{result.modified_count} projects archived"}
+
+@api_router.post("/projects/bulk-restore")
+async def bulk_restore_projects(project_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.projects.update_many(
+        {"id": {"$in": project_ids}},
+        {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": f"{result.modified_count} projects restored"}
+
+@api_router.post("/projects/bulk-delete")
+async def bulk_delete_projects(project_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Delete related data (contracts, invoices, etc.) if needed
+    # TODO: Add cleanup logic for related data
+    
+    result = await db.projects.delete_many({"id": {"$in": project_ids}})
+    
+    return {"detail": f"{result.deleted_count} projects deleted"}
+
 # Contract routes
 @api_router.post("/contracts/", response_model=Contract)
 async def create_contract(contract: ContractCreate, current_user: User = Depends(get_current_active_user)):
