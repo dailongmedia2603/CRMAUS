@@ -106,6 +106,8 @@ const Projects = ({ user }) => {
       setActionDropdownOpen(projectId);
     }
   };
+
+  const fetchProjects = async () => {
     try {
       const params = new URLSearchParams({
         archived: showArchived,
