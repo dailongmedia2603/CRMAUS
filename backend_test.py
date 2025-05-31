@@ -3,8 +3,9 @@ import json
 import time
 from datetime import datetime
 
-# Base URL for API - don't include /api prefix as it's already in the router
+# Base URL for API
 BASE_URL = "http://localhost:8001"
+API_PREFIX = "/api"
 
 # Admin credentials
 admin_credentials = {
