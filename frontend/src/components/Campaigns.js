@@ -390,8 +390,7 @@ const Campaigns = () => {
                               <div className="py-1">
                                 <button
                                   onClick={() => {
-                                    // Chi tiết chiến dịch - có thể implement sau
-                                    console.log('View campaign details:', campaign.id);
+                                    navigate(`/campaigns/${campaign.id}`);
                                     setActionDropdownOpen(null);
                                   }}
                                   className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
