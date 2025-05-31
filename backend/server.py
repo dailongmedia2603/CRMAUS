@@ -406,6 +406,56 @@ async def read_projects(
     projects = await db.projects.find(query_filter).skip(skip).limit(limit).to_list(length=limit)
     return projects
 
+@api_router.get("/projects/statistics")
+async def get_projects_statistics(
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Build time filter
+    time_filter = {}
+    if year:
+        start_date = datetime(year, 1, 1)
+        if quarter:
+            quarter_months = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
+            start_month, end_month = quarter_months[quarter]
+            start_date = datetime(year, start_month, 1)
+            end_date = datetime(year, end_month + 1, 1) if end_month < 12 else datetime(year + 1, 1, 1)
+        elif month:
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year + 1, 1, 1)
+        
+        time_filter["created_at"] = {"$gte": start_date, "$lt": end_date}
+    
+    # Get all non-archived projects within time filter
+    base_filter = {"archived": False, **time_filter}
+    
+    # Count statistics
+    total_projects = await db.projects.count_documents(base_filter)
+    in_progress = await db.projects.count_documents({**base_filter, "status": "in_progress"})
+    completed = await db.projects.count_documents({**base_filter, "status": "completed"})
+    pending = await db.projects.count_documents({**base_filter, "status": "pending"})
+    
+    # Count overdue projects (end_date < now and status not completed)
+    from datetime import datetime as dt
+    now = dt.utcnow()
+    overdue = await db.projects.count_documents({
+        **base_filter,
+        "end_date": {"$lt": now},
+        "status": {"$nin": ["completed", "cancelled"]}
+    })
+    
+    return {
+        "total_projects": total_projects,
+        "in_progress": in_progress,
+        "completed": completed,
+        "pending": pending,
+        "overdue": overdue
+    }
+
 @api_router.get("/projects/client/{client_id}", response_model=List[Project])
 async def read_client_projects(client_id: str, current_user: User = Depends(get_current_active_user)):
     projects = await db.projects.find({"client_id": client_id}).to_list(length=100)
