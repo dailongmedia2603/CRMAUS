@@ -947,7 +947,8 @@ def test_task_crud(tokens):
     service_data = {
         "name": "Test Service for Tasks",
         "sort_order": 1,
-        "description": "Service created for testing tasks"
+        "description": "Service created for testing tasks",
+        "campaign_id": campaign_id
     }
     
     response = make_request("POST", f"/campaigns/{campaign_id}/services/", tokens["admin_token"], service_data)
