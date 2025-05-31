@@ -529,11 +529,11 @@ const SidebarContent = ({ user, logout }) => {
             Client
           </button>
 
-          {/* Công việc */}
+          {/* Task */}
           <button
-            onClick={() => navigate("/tasks")}
+            onClick={() => navigate("/task")}
             className={`${
-              location.startsWith("/tasks")
+              location.startsWith("/task")
                 ? "bg-indigo-800 text-white"
                 : "text-indigo-100 hover:bg-indigo-600"
             } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
@@ -547,7 +547,7 @@ const SidebarContent = ({ user, logout }) => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            Công việc
+            Task
           </button>
 
           {/* Dự án (với submenu) */}
