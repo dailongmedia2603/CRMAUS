@@ -224,8 +224,10 @@ class ServiceBase(BaseModel):
     sort_order: int = 0
     description: Optional[str] = None
 
-class ServiceCreate(ServiceBase):
-    pass
+class ServiceCreate(BaseModel):
+    name: str
+    sort_order: int = 0
+    description: Optional[str] = None
 
 class ServiceUpdate(BaseModel):
     name: Optional[str] = None
