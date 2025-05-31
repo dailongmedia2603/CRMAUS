@@ -453,7 +453,7 @@ def test_bulk_delete_tasks():
     
     # Step 1: Get list of campaigns to obtain a campaign_id
     print("\n1. Getting list of campaigns...")
-    response = requests.get(f"{BASE_URL}/campaigns/", headers=headers)
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/campaigns/", headers=headers)
     
     if response.status_code != 200:
         log_test("Get Campaigns", False, f"Failed to get campaigns: {response.text}", response)
@@ -469,7 +469,7 @@ def test_bulk_delete_tasks():
             "name": "Test Campaign for Bulk Delete",
             "description": "Campaign for testing bulk delete tasks"
         }
-        response = requests.post(f"{BASE_URL}/campaigns/", headers=headers, json=campaign_data)
+        response = requests.post(f"{BASE_URL}{API_PREFIX}/campaigns/", headers=headers, json=campaign_data)
         
         if response.status_code != 200:
             log_test("Create Campaign", False, f"Failed to create campaign: {response.text}", response)
@@ -485,7 +485,7 @@ def test_bulk_delete_tasks():
     
     # Step 2: Get list of services in the campaign
     print("\n2. Getting list of services for the campaign...")
-    response = requests.get(f"{BASE_URL}/campaigns/{campaign_id}/services/", headers=headers)
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/", headers=headers)
     
     if response.status_code != 200:
         log_test("Get Services", False, f"Failed to get services: {response.text}", response)
@@ -503,7 +503,7 @@ def test_bulk_delete_tasks():
             "description": "Service for testing bulk delete tasks"
         }
         response = requests.post(
-            f"{BASE_URL}/campaigns/{campaign_id}/services/", 
+            f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/", 
             headers=headers, 
             json=service_data
         )
@@ -522,7 +522,7 @@ def test_bulk_delete_tasks():
     
     # Step 3: Get existing tasks for the service
     print("\n3. Getting existing tasks for the service...")
-    response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", headers=headers)
     
     if response.status_code != 200:
         log_test("Get Tasks", False, f"Failed to get tasks: {response.text}", response)
@@ -550,7 +550,7 @@ def test_bulk_delete_tasks():
                 "status": "not_started"
             }
             response = requests.post(
-                f"{BASE_URL}/services/{service_id}/tasks/", 
+                f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", 
                 headers=headers, 
                 json=task_data
             )
@@ -564,7 +564,7 @@ def test_bulk_delete_tasks():
             log_test(f"Create Task '{name}'", True, f"Successfully created task with ID: {task['id']}", response)
         
         # Get updated task list
-        response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
+        response = requests.get(f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", headers=headers)
         if response.status_code != 200:
             log_test("Get Updated Tasks", False, f"Failed to get updated tasks: {response.text}", response)
             return
@@ -582,21 +582,21 @@ def test_bulk_delete_tasks():
     
     # Try different ways to send the task_ids
     # Method 1: As JSON body
-    response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, json=task_ids_to_delete)
+    response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=task_ids_to_delete)
     
     if response.status_code != 200:
         print(f"Method 1 failed with status code {response.status_code}: {response.text}")
         
         # Method 2: As form data
         form_data = {"task_ids": task_ids_to_delete}
-        response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, data=form_data)
+        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
         
         if response.status_code != 200:
             print(f"Method 2 failed with status code {response.status_code}: {response.text}")
             
             # Method 3: As query parameters
             query_params = {"task_ids": ",".join(task_ids_to_delete)}
-            response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, params=query_params)
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
             
             if response.status_code != 200:
                 print(f"Method 3 failed with status code {response.status_code}: {response.text}")
@@ -612,7 +612,7 @@ def test_bulk_delete_tasks():
         log_test("Bulk Delete Tasks", True, f"Method 1 succeeded: {result['deleted_count']} tasks deleted", response)
     
     # Verify tasks were deleted
-    response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", headers=headers)
     if response.status_code == 200:
         remaining_tasks = response.json()
         remaining_ids = [task["id"] for task in remaining_tasks]
@@ -635,7 +635,7 @@ def test_bulk_delete_tasks():
     
     # Try different ways to send empty array
     # Method 1: As JSON body
-    response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, json=[])
+    response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=[])
     
     if response.status_code == 400:
         log_test("Empty Array Edge Case", True, "Successfully handled empty array case (returned 400 error)", response)
@@ -644,7 +644,7 @@ def test_bulk_delete_tasks():
         
         # Method 2: As form data
         form_data = {"task_ids": []}
-        response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, data=form_data)
+        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
         
         if response.status_code == 400:
             log_test("Empty Array Edge Case", True, "Method 2 succeeded: Successfully handled empty array case", response)
@@ -653,7 +653,7 @@ def test_bulk_delete_tasks():
             
             # Method 3: As query parameters
             query_params = {"task_ids": ""}
-            response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, params=query_params)
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
             
             if response.status_code == 400:
                 log_test("Empty Array Edge Case", True, "Method 3 succeeded: Successfully handled empty array case", response)
@@ -666,7 +666,7 @@ def test_bulk_delete_tasks():
     fake_ids = [f"fake_id_{i}" for i in range(51)]
     
     # Method 1: As JSON body
-    response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, json=fake_ids)
+    response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=fake_ids)
     
     if response.status_code == 400:
         log_test("Too Many Tasks Edge Case", True, "Successfully handled too many tasks case (returned 400 error)", response)
@@ -675,7 +675,7 @@ def test_bulk_delete_tasks():
         
         # Method 2: As form data
         form_data = {"task_ids": fake_ids}
-        response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, data=form_data)
+        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
         
         if response.status_code == 400:
             log_test("Too Many Tasks Edge Case", True, "Method 2 succeeded: Successfully handled too many tasks case", response)
@@ -684,7 +684,7 @@ def test_bulk_delete_tasks():
             
             # Method 3: As query parameters
             query_params = {"task_ids": ",".join(fake_ids)}
-            response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, params=query_params)
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
             
             if response.status_code == 400:
                 log_test("Too Many Tasks Edge Case", True, "Method 3 succeeded: Successfully handled too many tasks case", response)
@@ -696,7 +696,7 @@ def test_bulk_delete_tasks():
     non_existent_ids = ["non_existent_id_1", "non_existent_id_2", "non_existent_id_3"]
     
     # Method 1: As JSON body
-    response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, json=non_existent_ids)
+    response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=non_existent_ids)
     
     if response.status_code == 200:
         result = response.json()
@@ -709,7 +709,7 @@ def test_bulk_delete_tasks():
         
         # Method 2: As form data
         form_data = {"task_ids": non_existent_ids}
-        response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, data=form_data)
+        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
         
         if response.status_code == 200:
             result = response.json()
@@ -722,7 +722,7 @@ def test_bulk_delete_tasks():
             
             # Method 3: As query parameters
             query_params = {"task_ids": ",".join(non_existent_ids)}
-            response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, params=query_params)
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
             
             if response.status_code == 200:
                 result = response.json()
