@@ -322,24 +322,104 @@ const Projects = ({ user }) => {
               <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
                 <div className="p-4">
                   <div className="flex border-b">
-                    <button className="px-4 py-2 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600">Năm</button>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Quý</button>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Tháng</button>
+                    <button 
+                      onClick={() => setTimeFilter({...timeFilter, type: 'year', quarter: null, month: null})}
+                      className={`px-4 py-2 text-sm font-medium ${timeFilter.type === 'year' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      Năm
+                    </button>
+                    <button 
+                      onClick={() => setTimeFilter({...timeFilter, type: 'quarter'})}
+                      className={`px-4 py-2 text-sm font-medium ${timeFilter.type === 'quarter' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      Quý
+                    </button>
+                    <button 
+                      onClick={() => setTimeFilter({...timeFilter, type: 'month'})}
+                      className={`px-4 py-2 text-sm font-medium ${timeFilter.type === 'month' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      Tháng
+                    </button>
                   </div>
                   
                   {/* Year Tab */}
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Chọn năm:</label>
-                    <select
-                      value={timeFilter.year}
-                      onChange={(e) => handleTimeFilterChange('year', parseInt(e.target.value))}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      {[2020, 2021, 2022, 2023, 2024, 2025].map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {timeFilter.type === 'year' && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Chọn năm:</label>
+                      <select
+                        value={timeFilter.year}
+                        onChange={(e) => handleTimeFilterChange('year', parseInt(e.target.value))}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      >
+                        {[2020, 2021, 2022, 2023, 2024, 2025].map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Quarter Tab */}
+                  {timeFilter.type === 'quarter' && (
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Chọn năm:</label>
+                        <select
+                          value={timeFilter.year}
+                          onChange={(e) => setTimeFilter({...timeFilter, year: parseInt(e.target.value)})}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                          {[2020, 2021, 2022, 2023, 2024, 2025].map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Chọn quý:</label>
+                        <select
+                          value={timeFilter.quarter || ''}
+                          onChange={(e) => handleTimeFilterChange('quarter', timeFilter.year, parseInt(e.target.value))}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                          <option value="">Chọn quý</option>
+                          <option value="1">Quý 1 (Tháng 1-3)</option>
+                          <option value="2">Quý 2 (Tháng 4-6)</option>
+                          <option value="3">Quý 3 (Tháng 7-9)</option>
+                          <option value="4">Quý 4 (Tháng 10-12)</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Month Tab */}
+                  {timeFilter.type === 'month' && (
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Chọn năm:</label>
+                        <select
+                          value={timeFilter.year}
+                          onChange={(e) => setTimeFilter({...timeFilter, year: parseInt(e.target.value)})}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                          {[2020, 2021, 2022, 2023, 2024, 2025].map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Chọn tháng:</label>
+                        <select
+                          value={timeFilter.month || ''}
+                          onChange={(e) => handleTimeFilterChange('month', timeFilter.year, null, parseInt(e.target.value))}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        >
+                          <option value="">Chọn tháng</option>
+                          {[1,2,3,4,5,6,7,8,9,10,11,12].map(month => (
+                            <option key={month} value={month}>Tháng {month}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
