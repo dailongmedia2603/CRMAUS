@@ -4011,7 +4011,7 @@ const Contracts = () => {
   );
 };
 
-const Contracts = () => {
+const ContractsComponent = () => {
   const [contracts, setContracts] = useState([]);
   const [clients, setClients] = useState([]);
   const [projects, setProjects] = useState([]);
