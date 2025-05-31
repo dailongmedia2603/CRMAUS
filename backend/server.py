@@ -293,6 +293,7 @@ class Template(TemplateBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
+    creator_name: Optional[str] = None
 
 # Hàm tiện ích
 def verify_password(plain_password, hashed_password):
