@@ -394,6 +394,7 @@ test_plan:
     - "Campaigns API - PUT /api/campaigns/{campaign_id}"
     - "Campaigns API - DELETE /api/campaigns/{campaign_id}"
     - "Campaigns API - POST /api/campaigns/bulk-action"
+    - "Campaigns API - Services CRUD"
     - "Campaigns UI - Toolbar Components"
     - "Campaigns UI - Table Display"
     - "Campaigns UI - Create/Edit Modal"
