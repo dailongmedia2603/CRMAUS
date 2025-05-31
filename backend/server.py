@@ -1534,11 +1534,29 @@ async def create_template(
 async def get_templates(
     template_type: str = "service",
     archived: bool = False,
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Lấy danh sách templates"""
+    """Lấy danh sách templates với tìm kiếm"""
     query_filter = {"template_type": template_type, "archived": archived}
+    
+    # Thêm tìm kiếm theo tên
+    if search:
+        query_filter["name"] = {"$regex": search, "$options": "i"}
+    
     templates = await db.templates.find(query_filter).sort([("created_at", -1)]).to_list(length=None)
+    
+    # Thêm thông tin người tạo
+    for template in templates:
+        if template.get("created_by"):
+            user = await db.users.find_one({"id": template["created_by"]})
+            if user:
+                template["creator_name"] = user.get("full_name", "Unknown")
+            else:
+                template["creator_name"] = "Unknown"
+        else:
+            template["creator_name"] = "Unknown"
+    
     return [Template(**template) for template in templates]
 
 @api_router.get("/templates/{template_id}", response_model=Template)
