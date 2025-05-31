@@ -595,7 +595,37 @@ def main():
     # Test user info
     tester.test_get_current_user()
     
-    # Initialize class attributes
+    # Create a test client for project tests
+    client_success, _ = tester.test_create_client()
+    if not client_success:
+        print("❌ Failed to create test client, stopping tests")
+        return 1
+    
+    # Test Projects API with new features
+    print("\n🚀 Starting Projects API Tests")
+    
+    # Test Project model fields
+    print("\n📋 Testing Project Model Fields")
+    tester.test_create_project_with_new_fields()
+    tester.test_update_project_with_new_fields()
+    
+    # Test Projects with filters
+    print("\n🔍 Testing Projects API with Filters")
+    tester.test_projects_with_filters()
+    
+    # Test Projects Statistics API
+    print("\n📊 Testing Projects Statistics API")
+    tester.test_projects_statistics()
+    
+    # Test Projects Bulk Operations
+    print("\n🔄 Testing Projects Bulk Operations")
+    tester.test_projects_bulk_operations()
+    
+    # Test Projects Error Handling
+    print("\n⚠️ Testing Projects Error Handling")
+    tester.test_projects_error_handling()
+    
+    # Initialize class attributes for document tests
     tester.folder_id = None
     tester.document_id = None
     
