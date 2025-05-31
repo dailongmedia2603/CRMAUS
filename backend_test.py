@@ -1175,9 +1175,9 @@ def test_campaign_hierarchy_integration(tokens):
     
     # 2. Create multiple services with different sort_order
     services_data = [
-        {"name": "Design Service", "sort_order": 1, "description": "Design related tasks"},
-        {"name": "Development Service", "sort_order": 2, "description": "Development related tasks"},
-        {"name": "Testing Service", "sort_order": 3, "description": "Testing related tasks"}
+        {"name": "Design Service", "sort_order": 1, "description": "Design related tasks", "campaign_id": campaign_id},
+        {"name": "Development Service", "sort_order": 2, "description": "Development related tasks", "campaign_id": campaign_id},
+        {"name": "Testing Service", "sort_order": 3, "description": "Testing related tasks", "campaign_id": campaign_id}
     ]
     
     service_ids = []
