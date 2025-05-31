@@ -61,15 +61,18 @@ backend:
 
   - task: "Clients API - GET /api/clients/"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the GET /api/clients/ endpoint to ensure it returns the list of clients correctly for project form dropdowns"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
 
   - task: "Users API - GET /api/users/"
     implemented: true
