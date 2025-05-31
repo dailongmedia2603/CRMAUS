@@ -109,7 +109,11 @@ class ProjectBase(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     budget: Optional[float] = None
-    status: str = "planning"  # planning, in_progress, on_hold, completed, cancelled
+    status: str = "planning"  # planning, in_progress, on_hold, completed, cancelled, overdue, pending
+    team: Optional[List[str]] = []  # List of user IDs assigned to project
+    contract_value: Optional[float] = None  # Giá trị hợp đồng
+    debt: Optional[float] = None  # Công nợ
+    archived: bool = False  # Dự án lưu trữ
 
 class ProjectCreate(ProjectBase):
     pass
