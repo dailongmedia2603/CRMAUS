@@ -1052,6 +1052,149 @@ async def bulk_delete_documents(document_ids: List[str], current_user: User = De
     
     return {"detail": f"{result.deleted_count} documents deleted"}
 
+# ================== CAMPAIGN ENDPOINTS ==================
+
+@api_router.post("/campaigns/", response_model=Campaign)
+async def create_campaign(
+    campaign: CampaignCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo chiến dịch mới"""
+    campaign_dict = campaign.dict()
+    campaign_dict["id"] = str(uuid.uuid4())
+    campaign_dict["created_at"] = datetime.utcnow()
+    campaign_dict["updated_at"] = datetime.utcnow()
+    campaign_dict["created_by"] = current_user.id
+    
+    await db.campaigns.insert_one(campaign_dict)
+    return Campaign(**campaign_dict)
+
+@api_router.get("/campaigns/", response_model=List[Campaign])
+async def get_campaigns(
+    search: Optional[str] = None,
+    archived: bool = False,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách chiến dịch với search và filter"""
+    query_filter = {"archived": archived}
+    
+    # Search filter
+    if search:
+        query_filter["name"] = {"$regex": search, "$options": "i"}
+    
+    campaigns = await db.campaigns.find(query_filter).sort([("created_at", -1)]).to_list(length=None)
+    
+    # Enrich with user info
+    for campaign in campaigns:
+        if campaign.get("created_by"):
+            user = await db.users.find_one({"id": campaign["created_by"]})
+            campaign["created_by_name"] = user.get("full_name", "Unknown") if user else "Unknown"
+        else:
+            campaign["created_by_name"] = "Unknown"
+    
+    return [Campaign(**campaign) for campaign in campaigns]
+
+@api_router.get("/campaigns/{campaign_id}", response_model=Campaign)
+async def get_campaign(
+    campaign_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy thông tin chi tiết một chiến dịch"""
+    campaign = await db.campaigns.find_one({"id": campaign_id})
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    # Enrich with user info
+    if campaign.get("created_by"):
+        user = await db.users.find_one({"id": campaign["created_by"]})
+        campaign["created_by_name"] = user.get("full_name", "Unknown") if user else "Unknown"
+    else:
+        campaign["created_by_name"] = "Unknown"
+    
+    return Campaign(**campaign)
+
+@api_router.put("/campaigns/{campaign_id}", response_model=Campaign)
+async def update_campaign(
+    campaign_id: str,
+    campaign_update: CampaignUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật chiến dịch"""
+    existing_campaign = await db.campaigns.find_one({"id": campaign_id})
+    if not existing_campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    update_data = {k: v for k, v in campaign_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.campaigns.update_one({"id": campaign_id}, {"$set": update_data})
+    
+    updated_campaign = await db.campaigns.find_one({"id": campaign_id})
+    
+    # Enrich with user info
+    if updated_campaign.get("created_by"):
+        user = await db.users.find_one({"id": updated_campaign["created_by"]})
+        updated_campaign["created_by_name"] = user.get("full_name", "Unknown") if user else "Unknown"
+    else:
+        updated_campaign["created_by_name"] = "Unknown"
+    
+    return Campaign(**updated_campaign)
+
+@api_router.delete("/campaigns/{campaign_id}")
+async def delete_campaign(
+    campaign_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa chiến dịch (chỉ admin và account)"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only admin and account users can delete campaigns"
+        )
+    
+    result = await db.campaigns.delete_one({"id": campaign_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    return {"detail": "Campaign deleted successfully"}
+
+@api_router.post("/campaigns/bulk-action")
+async def bulk_campaign_action(
+    action: str = Body(..., embed=True),
+    campaign_ids: List[str] = Body(..., embed=True),
+    current_user: User = Depends(get_current_user)
+):
+    """Thực hiện hành động hàng loạt trên nhiều chiến dịch"""
+    if not campaign_ids:
+        raise HTTPException(status_code=400, detail="No campaigns selected")
+    
+    if action == "archive":
+        result = await db.campaigns.update_many(
+            {"id": {"$in": campaign_ids}},
+            {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+        )
+        return {"detail": f"{result.modified_count} campaigns archived"}
+    
+    elif action == "restore":
+        result = await db.campaigns.update_many(
+            {"id": {"$in": campaign_ids}},
+            {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+        )
+        return {"detail": f"{result.modified_count} campaigns restored"}
+    
+    elif action == "delete":
+        if current_user.role not in ["admin", "account"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Only admin and account users can delete campaigns"
+            )
+        
+        result = await db.campaigns.delete_many({"id": {"$in": campaign_ids}})
+        return {"detail": f"{result.deleted_count} campaigns deleted"}
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
 # Root endpoint
 @api_router.get("/")
 async def root():
