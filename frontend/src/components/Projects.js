@@ -699,7 +699,7 @@ const Projects = ({ user }) => {
 
       {/* Projects Table */}
       <div className="bg-white rounded-lg shadow">
-        <div className="overflow-x-auto" style={{ position: 'relative' }}>
+        <div className="table-container">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
