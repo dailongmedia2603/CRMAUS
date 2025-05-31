@@ -517,63 +517,76 @@ const Projects = ({ user }) => {
 
       {/* Toolbar */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Search */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Tìm kiếm dự án..."
-              />
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
-
-            {/* Team Filter */}
-            <select
-              value={teamFilter}
-              onChange={(e) => setTeamFilter(e.target.value)}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2"
-            >
-              <option value="">Tất cả nhân sự</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>{user.full_name}</option>
-              ))}
-            </select>
-
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2"
-            >
-              <option value="">Tất cả tiến độ</option>
-              <option value="planning">Lập kế hoạch</option>
-              <option value="in_progress">Đang chạy</option>
-              <option value="completed">Hoàn thành</option>
-              <option value="overdue">Quá hạn</option>
-              <option value="pending">Pending</option>
-            </select>
-
-            {/* Archive Toggle */}
-            <button
-              onClick={() => setShowArchived(!showArchived)}
-              className={`px-4 py-2 text-sm font-medium rounded-md border ${
-                showArchived 
-                  ? 'bg-indigo-600 text-white border-indigo-600' 
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {showArchived ? 'Dự án hoạt động' : 'Dự án lưu trữ'}
-            </button>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-48 pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Tìm kiếm dự án..."
+            />
           </div>
 
+          {/* Team Filter */}
+          <select
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+            className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 min-w-32"
+          >
+            <option value="">Tất cả nhân sự</option>
+            {users.map(user => (
+              <option key={user.id} value={user.id}>{user.full_name}</option>
+            ))}
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 min-w-32"
+          >
+            <option value="">Tất cả tiến độ</option>
+            <option value="planning">Lập kế hoạch</option>
+            <option value="in_progress">Đang chạy</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="overdue">Quá hạn</option>
+            <option value="pending">Pending</option>
+          </select>
+
+          {/* Advanced Filter */}
+          <button
+            onClick={() => setShowAdvancedFilter(true)}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            title="Bộ lọc nâng cao"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+            </svg>
+          </button>
+
+          {/* Archive Toggle */}
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className={`px-4 py-2 text-sm font-medium rounded-md border ${
+              showArchived 
+                ? 'bg-indigo-600 text-white border-indigo-600' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            {showArchived ? 'Dự án hoạt động' : 'Dự án lưu trữ'}
+          </button>
+
+          {/* Spacer */}
+          <div className="flex-1"></div>
+
+          {/* Right Side Actions */}
           <div className="flex items-center gap-2">
             {/* Bulk Actions */}
             {selectedProjects.length > 0 && (
