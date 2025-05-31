@@ -2859,9 +2859,9 @@ const ClientOverviewTab = ({ clientId }) => {
         </div>
       </div>
       
-      {/* Công việc gần đây */}
+      {/* Task gần đây */}
       <div className="mt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Công việc gần đây</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Task gần đây</h3>
         <div className="bg-white overflow-hidden shadow-sm rounded-lg border">
           {recentTasks.length > 0 ? (
             <ul className="divide-y divide-gray-200">
