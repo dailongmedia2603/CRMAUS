@@ -885,6 +885,202 @@ const Projects = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Advanced Filter Modal */}
+      {showAdvancedFilter && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Bộ lọc nâng cao</h3>
+                <button
+                  onClick={() => setShowAdvancedFilter(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Column 1: Basic Info */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 text-sm border-b pb-2">Thông tin cơ bản</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                    <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">Tất cả client</option>
+                      {clients.map(client => (
+                        <option key={client.id} value={client.id}>{client.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tên dự án</label>
+                    <input
+                      type="text"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="Nhập tên dự án..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                    <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">Tất cả trạng thái</option>
+                      <option value="planning">Lập kế hoạch</option>
+                      <option value="in_progress">Đang chạy</option>
+                      <option value="completed">Hoàn thành</option>
+                      <option value="overdue">Quá hạn</option>
+                      <option value="pending">Pending</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
+                    <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                      <option value="">Tất cả nhân sự</option>
+                      {users.map(user => (
+                        <option key={user.id} value={user.id}>{user.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Column 2: Time & Financial */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 text-sm border-b pb-2">Thời gian & Tài chính</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu từ</label>
+                    <input
+                      type="date"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu đến</label>
+                    <input
+                      type="date"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngày kết thúc từ</label>
+                    <input
+                      type="date"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngày kết thúc đến</label>
+                    <input
+                      type="date"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Column 3: Budget & Contract */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900 text-sm border-b pb-2">Ngân sách & Hợp đồng</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngân sách từ</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="VNĐ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngân sách đến</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="VNĐ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Giá trị HĐ từ</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="VNĐ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Giá trị HĐ đến</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="VNĐ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Công nợ từ</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="VNĐ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Công nợ đến</label>
+                    <input
+                      type="number"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      placeholder="VNĐ"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                <button
+                  onClick={() => setShowAdvancedFilter(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => {
+                    // Reset all filters
+                    setSearchTerm('');
+                    setStatusFilter('');
+                    setTeamFilter('');
+                    // Reset other advanced filter states when implemented
+                    setShowAdvancedFilter(false);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Xóa bộ lọc
+                </button>
+                <button
+                  onClick={() => {
+                    // Apply advanced filters logic would go here
+                    setShowAdvancedFilter(false);
+                  }}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Áp dụng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
