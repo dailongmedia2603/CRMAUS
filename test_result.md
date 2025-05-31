@@ -510,6 +510,21 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested responsive design. The UI adapts well to mobile view with a hamburger menu for navigation."
+        
+  - task: "Replace 'Công việc' menu with 'Task' menu"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the replacement of 'Công việc' menu with 'Task' menu"
+      - working: true
+        agent: "testing"
+        comment: "Successfully verified that the 'Công việc' menu has been replaced with 'Task' menu in the sidebar. The Task menu is positioned correctly below the Client menu. The Task page shows the correct development message 'Module Task đang được phát triển...' and the URL is correctly set to '/task'. However, there's still a 'Công việc gần đây' section in the Dashboard that should be reviewed."
 
 metadata:
   created_by: "testing_agent"
