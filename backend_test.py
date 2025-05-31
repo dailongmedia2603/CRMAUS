@@ -827,9 +827,9 @@ def test_service_crud(tokens):
     
     # Create services with different sort_order values
     service_data = [
-        {"name": "Service 1", "sort_order": 3, "description": "Third service"},
-        {"name": "Service 2", "sort_order": 1, "description": "First service"},
-        {"name": "Service 3", "sort_order": 2, "description": "Second service"}
+        {"name": "Service 1", "sort_order": 3, "description": "Third service", "campaign_id": campaign_id},
+        {"name": "Service 2", "sort_order": 1, "description": "First service", "campaign_id": campaign_id},
+        {"name": "Service 3", "sort_order": 2, "description": "Second service", "campaign_id": campaign_id}
     ]
     
     created_service_ids = []
