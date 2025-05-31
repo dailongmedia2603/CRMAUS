@@ -147,6 +147,7 @@ test_plan:
     - "Projects API - Bulk Operations"
     - "Clients API - GET /api/clients/"
     - "Users API - GET /api/users/"
+    - "Projects API - Search Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
