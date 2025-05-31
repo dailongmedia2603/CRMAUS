@@ -1071,6 +1071,7 @@ def test_task_crud(tokens):
         
         if success:
             result = response.json()
+            print(f"  Copy task response: {result}")
             copied_tasks = result.get("copied_tasks", [])
             success = len(copied_tasks) == 3
             print_test_result("Verify 3 tasks were copied", success)
