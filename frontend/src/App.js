@@ -348,6 +348,12 @@ const Documents = () => {
   return <DocumentsComponent user={user} />;
 };
 
+// Templates component wrapper
+const Templates = () => {
+  const { user } = React.useContext(AuthContext);
+  return <TemplatesComponent user={user} />;
+};
+
 // Layout chính của ứng dụng
 const MainLayout = () => {
   const { user, logout } = React.useContext(AuthContext);
