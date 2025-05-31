@@ -46,15 +46,18 @@ backend:
 
   - task: "Projects API - Bulk Operations"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the bulk operations endpoints for projects: bulk-archive, bulk-restore, and bulk-delete"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the bulk operations endpoints for projects. The bulk-archive endpoint correctly archives multiple projects at once. The bulk-restore endpoint correctly restores multiple archived projects. The bulk-delete endpoint correctly deletes multiple projects at once. All bulk operations are working as expected."
 
   - task: "Clients API - GET /api/clients/"
     implemented: true
