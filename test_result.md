@@ -670,4 +670,4 @@ agent_communication:
   - agent: "testing"
     message: "Successfully verified the menu replacement. The 'Công việc' menu has been replaced with 'Task' menu in the sidebar. The Task menu is positioned correctly below the Client menu. The Task page shows the correct development message and the URL is correctly set to '/task'. However, there's still a 'Công việc gần đây' section in the Dashboard that should be reviewed."
   - agent: "testing"
-    message: "Starting testing of Projects API features. Will test filtering, statistics, model fields, bulk operations, and error handling."
+    message: "Completed testing of Projects API features. The Projects API with filters, Projects Statistics API, Project model fields, and Projects Bulk Operations are all working correctly. Found an issue with Projects Error Handling - the API returns 500 Internal Server Error instead of 422 Validation Error for invalid quarter and month values. This should be fixed to provide better error handling."
