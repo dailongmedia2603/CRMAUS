@@ -808,10 +808,10 @@ const Projects = ({ user }) => {
                       {actionDropdownOpen === project.id && (
                         <>
                           <div 
-                            className="fixed inset-0 z-40" 
+                            className="dropdown-backdrop" 
                             onClick={() => setActionDropdownOpen(null)}
                           />
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-md shadow-lg z-50">
+                          <div className="dropdown-menu">
                             <div className="py-1">
                               <button
                                 onClick={() => {
