@@ -456,15 +456,18 @@ backend:
 
   - task: "Projects Statistics API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the Projects Statistics API with different time filters and verify the response format"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Projects Statistics API with different time filters. The API returns the correct statistics format with total_projects, in_progress, completed, pending, and overdue counts. All time filters (year, quarter, month) work correctly."
 
   - task: "Project model fields"
     implemented: true
