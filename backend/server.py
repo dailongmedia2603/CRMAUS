@@ -264,6 +264,7 @@ class Task(TaskBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
+    template_name: Optional[str] = None
 
 # Template Models (for service templates)
 class TemplateBase(BaseModel):
