@@ -363,8 +363,7 @@ const CampaignDetail = () => {
     }
 
     try {
-      const response = await axios.delete(`/api/tasks/bulk`, {
-        data: selectedTasks,
+      const response = await axios.post(`/api/tasks/bulk-delete`, selectedTasks, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -380,7 +379,8 @@ const CampaignDetail = () => {
       });
     } catch (error) {
       console.error('Error bulk deleting tasks:', error);
-      toast.error('Có lỗi xảy ra khi xóa nhiệm vụ');
+      const errorMsg = error.response?.data?.detail || 'Có lỗi xảy ra khi xóa nhiệm vụ';
+      toast.error(errorMsg);
     }
   };
 
