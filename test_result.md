@@ -438,6 +438,66 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested document permissions. Non-admin users cannot access admin-only folders and documents."
+        
+  - task: "Projects API with filters"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Projects API with new filters: archived, status, year, quarter, month, search, and team_member"
+
+  - task: "Projects Statistics API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Projects Statistics API with different time filters and verify the response format"
+
+  - task: "Project model fields"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test creating and updating projects with new fields: team, contract_value, debt, archived"
+
+  - task: "Projects Bulk Operations"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test bulk operations: bulk-archive, bulk-restore, and bulk-delete for projects"
+
+  - task: "Projects Error Handling"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test error handling for invalid inputs and permission restrictions"
 
 frontend:
   - task: "Document Management UI - 2-column layout"
