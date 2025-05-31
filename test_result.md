@@ -179,20 +179,20 @@ backend:
         agent: "testing"
         comment: "Successfully tested the DELETE /api/campaigns/{campaign_id} endpoint. The API correctly deletes campaigns when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete campaigns. After deletion, attempting to access the deleted campaign returns a 404 Not Found response."
 
-  - task: "Campaigns API - POST /api/campaigns/bulk-action"
+  - task: "Campaigns API - Services CRUD"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the POST /api/campaigns/bulk-action endpoint for bulk operations on campaigns"
+        comment: "Need to test the campaign service creation functionality after the fix in ServiceCreate model"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the POST /api/campaigns/bulk-action endpoint. The API correctly performs bulk operations on campaigns. The bulk-archive action correctly archives multiple campaigns at once. The bulk-restore action correctly restores multiple archived campaigns. The bulk-delete action correctly deletes multiple campaigns at once. All bulk operations are working as expected."
+        comment: "Successfully tested the campaign service creation functionality. The ServiceCreate model has been fixed to not require campaign_id in the payload. Created multiple services (Facebook Ads, Google Ads, Content Marketing) for an existing campaign. All API endpoints are working correctly: POST /api/campaigns/{campaign_id}/services/ creates new services, GET /api/campaigns/{campaign_id}/services/ retrieves services for a campaign, and PUT /api/services/{service_id} updates service details. The sort_order parameter works correctly for ordering services."
 
 frontend:
   - task: "Campaigns UI - Toolbar Components"
