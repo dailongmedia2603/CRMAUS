@@ -578,32 +578,56 @@ def test_bulk_delete_tasks():
     task_ids_to_delete = [task["id"] for task in tasks_to_delete]
     
     print(f"Attempting to delete {len(task_ids_to_delete)} tasks: {task_ids_to_delete}")
+    
+    # Try different ways to send the task_ids
+    # Method 1: As JSON body
     response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, json=task_ids_to_delete)
     
-    if response.status_code == 200:
-        result = response.json()
-        log_test("Bulk Delete Tasks", True, f"Successfully deleted {result['deleted_count']} tasks", response)
+    if response.status_code != 200:
+        print(f"Method 1 failed with status code {response.status_code}: {response.text}")
         
-        # Verify tasks were deleted
-        response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
-        if response.status_code == 200:
-            remaining_tasks = response.json()
-            remaining_ids = [task["id"] for task in remaining_tasks]
+        # Method 2: As form data
+        form_data = {"task_ids": task_ids_to_delete}
+        response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, data=form_data)
+        
+        if response.status_code != 200:
+            print(f"Method 2 failed with status code {response.status_code}: {response.text}")
             
-            all_deleted = True
-            for task_id in task_ids_to_delete:
-                if task_id in remaining_ids:
-                    print(f"Task {task_id} was not deleted!")
-                    all_deleted = False
+            # Method 3: As query parameters
+            query_params = {"task_ids": ",".join(task_ids_to_delete)}
+            response = requests.delete(f"{BASE_URL}/tasks/bulk", headers=headers, params=query_params)
             
-            if all_deleted:
-                log_test("Verify Deletion", True, "All tasks were successfully deleted", response)
+            if response.status_code != 200:
+                print(f"Method 3 failed with status code {response.status_code}: {response.text}")
+                log_test("Bulk Delete Tasks", False, f"All methods failed to delete tasks", response)
             else:
-                log_test("Verify Deletion", False, "Some tasks were not deleted", response)
+                result = response.json()
+                log_test("Bulk Delete Tasks", True, f"Method 3 succeeded: {result['deleted_count']} tasks deleted", response)
         else:
-            log_test("Verify Deletion", False, f"Failed to verify task deletion: {response.text}", response)
+            result = response.json()
+            log_test("Bulk Delete Tasks", True, f"Method 2 succeeded: {result['deleted_count']} tasks deleted", response)
     else:
-        log_test("Bulk Delete Tasks", False, f"Bulk delete failed: {response.text}", response)
+        result = response.json()
+        log_test("Bulk Delete Tasks", True, f"Method 1 succeeded: {result['deleted_count']} tasks deleted", response)
+    
+    # Verify tasks were deleted
+    response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
+    if response.status_code == 200:
+        remaining_tasks = response.json()
+        remaining_ids = [task["id"] for task in remaining_tasks]
+        
+        all_deleted = True
+        for task_id in task_ids_to_delete:
+            if task_id in remaining_ids:
+                print(f"Task {task_id} was not deleted!")
+                all_deleted = False
+        
+        if all_deleted:
+            log_test("Verify Deletion", True, "All tasks were successfully deleted", response)
+        else:
+            log_test("Verify Deletion", False, "Some tasks were not deleted", response)
+    else:
+        log_test("Verify Deletion", False, f"Failed to verify task deletion: {response.text}", response)
     
     # Step 6: Test edge case - empty array
     print("\n6. Testing edge case - empty array...")
