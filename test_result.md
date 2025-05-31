@@ -534,15 +534,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Document Management UI - 2-column layout"
-    - "Document Management UI - Folder Creation"
-    - "Document Management UI - Document Creation"
-    - "Document Management UI - Search and Filters"
-    - "Document Management UI - Bulk Operations"
-    - "Document Management UI - Permissions"
-    - "Document Management UI - Responsive Design"
+    - "Replace 'Công việc' menu with 'Task' menu"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "sequential"
 
 agent_communication:
