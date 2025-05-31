@@ -209,6 +209,242 @@ def test_campaign_services():
     else:
         print("\n❌ Some tests failed. Check the logs above for details.")
 
+def test_task_creation():
+    """Test task creation functionality"""
+    token = get_token()
+    if not token:
+        log_test("Authentication", False, "Failed to get authentication token")
+        return
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Step 1: Get list of campaigns to obtain a campaign_id
+    print("\n1. Getting list of campaigns...")
+    response = requests.get(f"{BASE_URL}/campaigns/", headers=headers)
+    
+    if response.status_code != 200:
+        log_test("Get Campaigns", False, f"Failed to get campaigns: {response.text}", response)
+        return
+    
+    campaigns = response.json()
+    log_test("Get Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
+    
+    # If no campaigns exist, create one
+    if len(campaigns) == 0:
+        print("No campaigns found. Creating a new campaign...")
+        campaign_data = {
+            "name": "Test Campaign",
+            "description": "Campaign for testing tasks"
+        }
+        response = requests.post(f"{BASE_URL}/campaigns/", headers=headers, json=campaign_data)
+        
+        if response.status_code != 200:
+            log_test("Create Campaign", False, f"Failed to create campaign: {response.text}", response)
+            return
+        
+        campaign = response.json()
+        campaign_id = campaign["id"]
+        log_test("Create Campaign", True, f"Successfully created campaign with ID: {campaign_id}", response)
+    else:
+        # Use the first campaign
+        campaign_id = campaigns[0]["id"]
+        print(f"Using existing campaign with ID: {campaign_id}")
+    
+    # Step 2: Get list of services in the campaign
+    print("\n2. Getting list of services for the campaign...")
+    response = requests.get(f"{BASE_URL}/campaigns/{campaign_id}/services/", headers=headers)
+    
+    if response.status_code != 200:
+        log_test("Get Services", False, f"Failed to get services: {response.text}", response)
+        return
+    
+    services = response.json()
+    log_test("Get Services", True, f"Successfully retrieved {len(services)} services", response)
+    
+    # If no services exist, create one
+    if len(services) == 0:
+        print("No services found. Creating a new service...")
+        service_data = {
+            "name": "Facebook Marketing",
+            "sort_order": 1,
+            "description": "Dịch vụ marketing trên Facebook"
+        }
+        response = requests.post(
+            f"{BASE_URL}/campaigns/{campaign_id}/services/", 
+            headers=headers, 
+            json=service_data
+        )
+        
+        if response.status_code != 200:
+            log_test("Create Service", False, f"Failed to create service: {response.text}", response)
+            return
+        
+        service = response.json()
+        service_id = service["id"]
+        log_test("Create Service", True, f"Successfully created service with ID: {service_id}", response)
+    else:
+        # Use the first service
+        service_id = services[0]["id"]
+        print(f"Using existing service with ID: {service_id}")
+    
+    # Step 3: Create a new task
+    print("\n3. Creating a new task - Thiết kế banner Facebook...")
+    task_data = {
+        "name": "Thiết kế banner Facebook",
+        "start_date": "2025-01-06T01:00:00Z",
+        "end_date": "2025-01-08T02:00:00Z",
+        "status": "not_started",
+        "description": "Thiết kế banner cho chiến dịch quảng cáo Facebook"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}/services/{service_id}/tasks/", 
+        headers=headers, 
+        json=task_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Task", False, f"Failed to create task: {response.text}", response)
+        return
+    
+    task = response.json()
+    task_id = task["id"]
+    log_test("Create Task", True, f"Successfully created task with ID: {task_id}", response)
+    
+    # Step 4: Create more sample tasks
+    print("\n4. Creating more sample tasks...")
+    
+    # Task 2: Viết nội dung bài đăng
+    task_data = {
+        "name": "Viết nội dung bài đăng",
+        "start_date": "2025-01-07T01:00:00Z",
+        "end_date": "2025-01-09T02:00:00Z",
+        "status": "in_progress",
+        "description": "Viết nội dung cho các bài đăng trên Facebook"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}/services/{service_id}/tasks/", 
+        headers=headers, 
+        json=task_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Task 2", False, f"Failed to create task 2: {response.text}", response)
+    else:
+        task2 = response.json()
+        task2_id = task2["id"]
+        log_test("Create Task 2", True, f"Successfully created task 2 with ID: {task2_id}", response)
+    
+    # Task 3: Chạy ads Facebook
+    task_data = {
+        "name": "Chạy ads Facebook",
+        "start_date": "2025-01-10T01:00:00Z",
+        "end_date": "2025-01-20T02:00:00Z",
+        "status": "not_started",
+        "description": "Thiết lập và chạy quảng cáo trên Facebook"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}/services/{service_id}/tasks/", 
+        headers=headers, 
+        json=task_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Task 3", False, f"Failed to create task 3: {response.text}", response)
+    else:
+        task3 = response.json()
+        task3_id = task3["id"]
+        log_test("Create Task 3", True, f"Successfully created task 3 with ID: {task3_id}", response)
+    
+    # Task 4: Báo cáo kết quả tuần
+    task_data = {
+        "name": "Báo cáo kết quả tuần",
+        "start_date": "2025-01-21T01:00:00Z",
+        "end_date": "2025-01-22T02:00:00Z",
+        "status": "not_started",
+        "description": "Tổng hợp và báo cáo kết quả chiến dịch trong tuần"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}/services/{service_id}/tasks/", 
+        headers=headers, 
+        json=task_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Task 4", False, f"Failed to create task 4: {response.text}", response)
+    else:
+        task4 = response.json()
+        task4_id = task4["id"]
+        log_test("Create Task 4", True, f"Successfully created task 4 with ID: {task4_id}", response)
+    
+    # Step 5: Get list of tasks for the service
+    print("\n5. Getting list of tasks for the service...")
+    response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
+    
+    if response.status_code != 200:
+        log_test("Get Tasks", False, f"Failed to get tasks: {response.text}", response)
+    else:
+        tasks = response.json()
+        log_test("Get Tasks", True, f"Successfully retrieved {len(tasks)} tasks", response)
+        
+        # Print the tasks
+        print("\nTasks for service:")
+        for idx, task in enumerate(tasks, 1):
+            print(f"{idx}. {task['name']} (status: {task['status']}) - {task['description']}")
+    
+    # Step 6: Update a task
+    if 'task_id' in locals():
+        print("\n6. Updating a task...")
+        update_data = {
+            "name": "Thiết kế banner Facebook (Updated)",
+            "status": "in_progress",
+            "description": "Thiết kế banner cho chiến dịch quảng cáo Facebook - Đã cập nhật"
+        }
+        
+        response = requests.put(
+            f"{BASE_URL}/tasks/{task_id}", 
+            headers=headers, 
+            json=update_data
+        )
+        
+        if response.status_code != 200:
+            log_test("Update Task", False, f"Failed to update task: {response.text}", response)
+        else:
+            updated_task = response.json()
+            log_test("Update Task", True, f"Successfully updated task: {updated_task['name']}", response)
+        
+        # Get tasks again to verify the update
+        response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
+        if response.status_code == 200:
+            tasks = response.json()
+            print("\nUpdated tasks for service:")
+            for idx, task in enumerate(tasks, 1):
+                print(f"{idx}. {task['name']} (status: {task['status']}) - {task['description']}")
+    
+    # Print summary
+    print("\n=== Test Summary ===")
+    print(f"Total tests: {test_results['success'] + test_results['failure']}")
+    print(f"Passed: {test_results['success']}")
+    print(f"Failed: {test_results['failure']}")
+    
+    if test_results['failure'] == 0:
+        print("\n✅ All tests passed successfully!")
+    else:
+        print("\n❌ Some tests failed. Check the logs above for details.")
+
 if __name__ == "__main__":
+    # Reset test results
+    test_results = {
+        "success": 0,
+        "failure": 0,
+        "tests": []
+    }
+    
     # Run the tests
-    test_campaign_services()
+    test_task_creation()
