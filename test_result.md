@@ -394,6 +394,12 @@ test_plan:
     - "Campaigns API - PUT /api/campaigns/{campaign_id}"
     - "Campaigns API - DELETE /api/campaigns/{campaign_id}"
     - "Campaigns API - POST /api/campaigns/bulk-action"
+    - "Campaigns UI - Toolbar Components"
+    - "Campaigns UI - Table Display"
+    - "Campaigns UI - Create/Edit Modal"
+    - "Campaigns UI - Actions Dropdown"
+    - "Campaigns UI - Bulk Operations"
+    - "Campaigns UI - Integration with Backend"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
