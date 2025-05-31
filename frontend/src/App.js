@@ -7,6 +7,7 @@ import "./App.css";
 import DocumentsComponent from "./components/Documents";
 import ProjectsComponent from "./components/Projects";
 import CampaignsComponent from "./components/Campaigns";
+import CampaignDetailComponent from "./components/CampaignDetail";
 
 // Biến môi trường
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
