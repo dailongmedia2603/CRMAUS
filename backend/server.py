@@ -406,7 +406,7 @@ async def delete_project(project_id: str, current_user: User = Depends(get_curre
     
     return {"detail": "Project deleted successfully"}
 
-# Task routes
+# Contract routes
 @api_router.post("/tasks/", response_model=Task)
 async def create_task(task: TaskCreate, current_user: User = Depends(get_current_active_user)):
     # Kiểm tra project tồn tại
