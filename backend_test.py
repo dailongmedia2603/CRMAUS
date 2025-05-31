@@ -373,6 +373,203 @@ def test_get_users(tokens):
     
     return True
 
+def test_project_search(tokens):
+    print("\n=== Testing Project Search Functionality ===")
+    
+    # First, ensure we have the test data
+    # Get a client ID for "Dai Long" and "Test Client 093010"
+    response = make_request("GET", "/clients/", tokens["admin_token"])
+    if response.status_code != 200:
+        print_test_result("Get clients for search test", False, f"Failed to get clients: {response.status_code}")
+        return False
+    
+    clients = response.json()
+    dai_long_client = None
+    test_client = None
+    
+    for client in clients:
+        if "Dai Long" in client["name"]:
+            dai_long_client = client
+        elif "Test Client 093010" in client["name"]:
+            test_client = client
+    
+    # Create test clients if they don't exist
+    if not dai_long_client:
+        client_data = {
+            "name": "Dai Long",
+            "company": "Dai Long Company",
+            "contact_email": "dai.long@example.com"
+        }
+        response = make_request("POST", "/clients/", tokens["admin_token"], client_data)
+        if response.status_code == 200:
+            dai_long_client = response.json()
+            print(f"  Created 'Dai Long' client with ID: {dai_long_client['id']}")
+    
+    if not test_client:
+        client_data = {
+            "name": "Test Client 093010",
+            "company": "Test Company",
+            "contact_email": "test.client@example.com"
+        }
+        response = make_request("POST", "/clients/", tokens["admin_token"], client_data)
+        if response.status_code == 200:
+            test_client = response.json()
+            print(f"  Created 'Test Client 093010' client with ID: {test_client['id']}")
+    
+    # Check if we have the required clients
+    if not dai_long_client or not test_client:
+        print_test_result("Setup clients for search test", False, "Failed to find or create required clients")
+        return False
+    
+    # Check if we have the test projects, create them if not
+    # First, check for "Say Hi" project
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "Say Hi"})
+    say_hi_exists = False
+    if response.status_code == 200:
+        projects = response.json()
+        for project in projects:
+            if project["name"] == "Say Hi":
+                say_hi_exists = True
+                break
+    
+    if not say_hi_exists:
+        project_data = {
+            "name": "Say Hi",
+            "client_id": dai_long_client["id"],
+            "description": "A project to say hi to everyone",
+            "status": "in_progress"
+        }
+        response = make_request("POST", "/projects/", tokens["admin_token"], project_data)
+        if response.status_code == 200:
+            print(f"  Created 'Say Hi' project for 'Dai Long' client")
+        else:
+            print_test_result("Create 'Say Hi' project", False, f"Failed: {response.status_code} - {response.text}")
+    
+    # Check for "vvv" project
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "vvv"})
+    vvv_exists = False
+    if response.status_code == 200:
+        projects = response.json()
+        for project in projects:
+            if project["name"] == "vvv":
+                vvv_exists = True
+                break
+    
+    if not vvv_exists:
+        project_data = {
+            "name": "vvv",
+            "client_id": test_client["id"],
+            "description": "A test project with a unique name",
+            "status": "planning"
+        }
+        response = make_request("POST", "/projects/", tokens["admin_token"], project_data)
+        if response.status_code == 200:
+            print(f"  Created 'vvv' project for 'Test Client 093010' client")
+        else:
+            print_test_result("Create 'vvv' project", False, f"Failed: {response.status_code} - {response.text}")
+    
+    # Now run the search tests
+    
+    # Test Case 1: Search by project name "Say"
+    print("\n  Test Case 1: Search by project name 'Say'")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "Say"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_say_hi = any(project["name"] == "Say Hi" for project in projects)
+        print_test_result("Search for 'Say'", found_say_hi, 
+                         f"Found {len(projects)} projects, 'Say Hi' project {'found' if found_say_hi else 'not found'}")
+    else:
+        print_test_result("Search for 'Say'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 2: Search by project name "vvv"
+    print("\n  Test Case 2: Search by project name 'vvv'")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "vvv"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_vvv = any(project["name"] == "vvv" for project in projects)
+        print_test_result("Search for 'vvv'", found_vvv, 
+                         f"Found {len(projects)} projects, 'vvv' project {'found' if found_vvv else 'not found'}")
+    else:
+        print_test_result("Search for 'vvv'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 3: Search by client name "Dai"
+    print("\n  Test Case 3: Search by client name 'Dai'")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "Dai"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_dai_long_project = any(project["client_id"] == dai_long_client["id"] for project in projects)
+        print_test_result("Search for 'Dai'", found_dai_long_project, 
+                         f"Found {len(projects)} projects, project for 'Dai Long' client {'found' if found_dai_long_project else 'not found'}")
+    else:
+        print_test_result("Search for 'Dai'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 4: Search by client name "Test"
+    print("\n  Test Case 4: Search by client name 'Test'")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "Test"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_test_client_project = any(project["client_id"] == test_client["id"] for project in projects)
+        print_test_result("Search for 'Test'", found_test_client_project, 
+                         f"Found {len(projects)} projects, project for 'Test Client 093010' {'found' if found_test_client_project else 'not found'}")
+    else:
+        print_test_result("Search for 'Test'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 5: Case-insensitive search - lowercase
+    print("\n  Test Case 5: Case-insensitive search - lowercase")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "say"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_say_hi = any(project["name"] == "Say Hi" for project in projects)
+        print_test_result("Case-insensitive search - lowercase 'say'", found_say_hi, 
+                         f"Found {len(projects)} projects, 'Say Hi' project {'found' if found_say_hi else 'not found'}")
+    else:
+        print_test_result("Case-insensitive search - lowercase 'say'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 6: Case-insensitive search - uppercase
+    print("\n  Test Case 6: Case-insensitive search - uppercase")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "VVV"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_vvv = any(project["name"] == "vvv" for project in projects)
+        print_test_result("Case-insensitive search - uppercase 'VVV'", found_vvv, 
+                         f"Found {len(projects)} projects, 'vvv' project {'found' if found_vvv else 'not found'}")
+    else:
+        print_test_result("Case-insensitive search - uppercase 'VVV'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 7: Search with no results
+    print("\n  Test Case 7: Search with no results")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "xyz123"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        no_results = len(projects) == 0
+        print_test_result("Search with no results 'xyz123'", no_results, 
+                         f"Found {len(projects)} projects, expected 0")
+    else:
+        print_test_result("Search with no results 'xyz123'", False, f"API call failed: {response.status_code}")
+    
+    # Test Case 8: Search with other filters
+    print("\n  Test Case 8: Search with other filters")
+    response = make_request("GET", "/projects/", tokens["admin_token"], 
+                           params={"search": "Say", "status": "in_progress"})
+    success = response.status_code == 200
+    if success:
+        projects = response.json()
+        found_say_hi_with_status = any(project["name"] == "Say Hi" and project["status"] == "in_progress" 
+                                      for project in projects)
+        print_test_result("Search with other filters", found_say_hi_with_status, 
+                         f"Found {len(projects)} projects with search='Say' and status='in_progress'")
+    else:
+        print_test_result("Search with other filters", False, f"API call failed: {response.status_code}")
+    
+    return True
+
 def run_all_tests():
     print("\n=== Starting Backend API Tests ===")
     
@@ -387,7 +584,8 @@ def run_all_tests():
         test_project_crud(tokens),
         test_bulk_operations(tokens),
         test_get_clients(tokens),
-        test_get_users(tokens)
+        test_get_users(tokens),
+        test_project_search(tokens)
     ]
     
     # Print summary
