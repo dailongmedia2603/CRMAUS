@@ -563,6 +563,10 @@ test_plan:
     - "Templates API - Bulk Operations"
     - "Templates API - Advanced Features"
     - "Templates API - Error Handling"
+    - "Templates UI - Management"
+    - "Templates UI - Creation and Actions"
+    - "Templates UI - Designer"
+    - "Templates UI - Data Persistence"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
