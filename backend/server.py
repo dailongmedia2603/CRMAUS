@@ -1423,10 +1423,11 @@ async def delete_task(
 @api_router.post("/tasks/{task_id}/copy")
 async def copy_task(
     task_id: str,
-    quantity: int = Body(..., embed=True),
+    data: dict,
     current_user: User = Depends(get_current_user)
 ):
     """Sao chép nhiệm vụ"""
+    quantity = data.get("quantity", 1)
     if quantity <= 0 or quantity > 20:
         raise HTTPException(status_code=400, detail="Quantity must be between 1 and 20")
     
