@@ -501,15 +501,18 @@ backend:
 
   - task: "Projects Error Handling"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
     needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test error handling for invalid inputs and permission restrictions"
+      - working: false
+        agent: "testing"
+        comment: "Found issues with error handling for invalid time parameters. The API returns 500 Internal Server Error instead of 422 Validation Error for invalid quarter and month values. Permission restrictions for bulk operations are working correctly - non-admin users cannot perform bulk delete operations. Error handling for non-existent project IDs in bulk operations works correctly."
 
 frontend:
   - task: "Document Management UI - 2-column layout"
