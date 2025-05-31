@@ -346,9 +346,12 @@ const Campaigns = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div>
-                          <div className="text-sm font-medium text-gray-900 cursor-pointer hover:text-indigo-600">
+                          <button
+                            onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                          >
                             {campaign.name}
-                          </div>
+                          </button>
                           {campaign.description && (
                             <div className="text-sm text-gray-500 truncate max-w-xs">
                               {campaign.description}
