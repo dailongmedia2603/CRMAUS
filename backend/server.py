@@ -398,10 +398,24 @@ async def read_projects(
     
     # Search filter
     if search:
-        query_filter["$or"] = [
+        # We need to get client names that match the search term first
+        matching_clients = await db.clients.find(
+            {"name": {"$regex": search, "$options": "i"}}
+        ).to_list(length=None)
+        
+        client_ids = [client["id"] for client in matching_clients]
+        
+        # Search in project name, description, or matching client names
+        search_conditions = [
             {"name": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}}
         ]
+        
+        # Add client_id condition if we found matching clients
+        if client_ids:
+            search_conditions.append({"client_id": {"$in": client_ids}})
+        
+        query_filter["$or"] = search_conditions
     
     projects = await db.projects.find(query_filter).skip(skip).limit(limit).to_list(length=limit)
     return projects
