@@ -40,7 +40,7 @@ def log_test(name, success, message, response=None):
 
 def get_token():
     """Get authentication token"""
-    response = requests.post(f"{BASE_URL}/token", data=admin_credentials)
+    response = requests.post(f"{BASE_URL}{API_PREFIX}/token", data=admin_credentials)
     if response.status_code == 200:
         return response.json()["access_token"]
     else:
