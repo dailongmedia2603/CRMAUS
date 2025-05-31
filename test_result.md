@@ -179,7 +179,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the DELETE /api/campaigns/{campaign_id} endpoint. The API correctly deletes campaigns when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete campaigns. After deletion, attempting to access the deleted campaign returns a 404 Not Found response."
 
-  - task: "Campaigns API - Services CRUD"
+  - task: "Campaigns API - Tasks CRUD"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -189,10 +189,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the campaign service creation functionality after the fix in ServiceCreate model"
+        comment: "Need to test the task creation functionality after the fix in TaskCreate model"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the campaign service creation functionality. The ServiceCreate model has been fixed to not require campaign_id in the payload. Created multiple services (Facebook Ads, Google Ads, Content Marketing) for an existing campaign. All API endpoints are working correctly: POST /api/campaigns/{campaign_id}/services/ creates new services, GET /api/campaigns/{campaign_id}/services/ retrieves services for a campaign, and PUT /api/services/{service_id} updates service details. The sort_order parameter works correctly for ordering services."
+        comment: "Successfully tested the task creation functionality. The TaskCreate model has been fixed to not require service_id in the payload. Created multiple tasks (Thiết kế banner Facebook, Viết nội dung bài đăng, Chạy ads Facebook, Báo cáo kết quả tuần) for an existing service with different statuses. All API endpoints are working correctly: POST /api/services/{service_id}/tasks/ creates new tasks, GET /api/services/{service_id}/tasks/ retrieves tasks for a service, and PUT /api/tasks/{task_id} updates task details. All HTTP status codes are correct (200 for successful operations)."
 
 frontend:
   - task: "Campaigns UI - Toolbar Components"
