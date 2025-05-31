@@ -437,8 +437,8 @@ const MainLayout = () => {
         </div>
 
         <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-6 px-6">
-            <div className="w-full">
+          <div className="py-6 px-8 max-w-none">
+            <div className="w-full max-w-none">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/clients" element={<Clients />} />
