@@ -211,6 +211,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully implemented and tested the bulk delete tasks functionality. Added Body(...) parameter to the endpoint definition and created an alternative POST /api/tasks/bulk-delete endpoint. The POST endpoint works correctly, accepting an array of task IDs in the request body. It properly handles all edge cases: empty array (returns 400 error), too many tasks (>50, returns 400 error), and non-existent task IDs (returns 0 deleted_count). The response format is correct, returning {detail: 'X tasks deleted successfully', deleted_count: X}. Verified that tasks are actually deleted by checking the task list after deletion."
+      - working: true
+        agent: "testing"
+        comment: "Performed real-world testing of the bulk delete functionality with actual task data. Successfully tested the POST /api/tasks/bulk-delete endpoint with 2-3 real task IDs. The endpoint correctly deleted the specified tasks and returned the proper response with deleted_count. Verified that the tasks were actually deleted by checking the task list after deletion. All edge cases were handled correctly: empty array returns 400 error, too many tasks (>50) returns 400 error, and non-existent task IDs returns 0 deleted_count. The frontend integration with this endpoint should work correctly."
 
 frontend:
   - task: "Tasks UI - Bulk Delete"
