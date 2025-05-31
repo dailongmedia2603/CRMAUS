@@ -471,15 +471,18 @@ backend:
 
   - task: "Project model fields"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test creating and updating projects with new fields: team, contract_value, debt, archived"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested creating and updating projects with new fields. The API correctly saves and retrieves the team, contract_value, debt, and archived fields. All fields are properly updated when using the PUT endpoint."
 
   - task: "Projects Bulk Operations"
     implemented: true
