@@ -574,6 +574,382 @@ class CRMAPITester:
                 print(f"- {test}: {'Passed' if result else 'Failed'}")
         
         return all_passed, results
+        
+    def test_create_project_with_new_fields(self):
+        """Test creating a project with new fields: team, contract_value, debt, archived"""
+        if not self.client_id:
+            print("❌ Cannot test create_project_with_new_fields: No client_id available")
+            return False, {}
+            
+        project_data = {
+            "name": f"Test Project with New Fields {datetime.now().strftime('%H%M%S')}",
+            "client_id": self.client_id,
+            "description": "This is a test project with new fields",
+            "start_date": datetime.now().isoformat(),
+            "end_date": (datetime.now() + timedelta(days=30)).isoformat(),
+            "budget": 10000,
+            "status": "planning",
+            "team": [self.user_id] if self.user_id else [],
+            "contract_value": 100000,
+            "debt": 20000,
+            "archived": False
+        }
+        
+        success, response = self.run_test("Create Project with New Fields", "POST", "projects/", 200, project_data)
+        if success:
+            self.project_id = response.get('id')
+            print(f"✅ Created project with new fields: {response.get('name')} with ID: {self.project_id}")
+            
+            # Verify all fields were saved correctly
+            for key, value in project_data.items():
+                if key in ['start_date', 'end_date']:  # Skip date comparison
+                    continue
+                if response.get(key) != value:
+                    print(f"❌ Field mismatch: {key} expected {value}, got {response.get(key)}")
+                    success = False
+            
+            if success:
+                print("✅ All fields were saved correctly")
+        
+        return success, response
+    
+    def test_update_project_with_new_fields(self):
+        """Test updating a project with new fields"""
+        if not self.project_id:
+            print("❌ Cannot test update_project_with_new_fields: No project_id available")
+            return False, {}
+        
+        # First get the current project data
+        success, project = self.run_test("Get Project", "GET", f"projects/{self.project_id}", 200)
+        if not success:
+            return False, {}
+        
+        # Update the project with new values
+        updated_data = {
+            "name": project.get("name"),
+            "client_id": project.get("client_id"),
+            "description": "Updated project description",
+            "start_date": project.get("start_date"),
+            "end_date": project.get("end_date"),
+            "budget": project.get("budget"),
+            "status": "in_progress",  # Change status
+            "team": project.get("team", []) + ["new_user_id"],  # Add a team member
+            "contract_value": 150000,  # Update contract value
+            "debt": 10000,  # Update debt
+            "archived": False
+        }
+        
+        success, response = self.run_test("Update Project with New Fields", "PUT", f"projects/{self.project_id}", 200, updated_data)
+        if success:
+            print(f"✅ Updated project with new fields: {response.get('name')}")
+            
+            # Verify all fields were updated correctly
+            for key, value in updated_data.items():
+                if key in ['start_date', 'end_date']:  # Skip date comparison
+                    continue
+                if response.get(key) != value:
+                    print(f"❌ Field mismatch: {key} expected {value}, got {response.get(key)}")
+                    success = False
+            
+            if success:
+                print("✅ All fields were updated correctly")
+        
+        return success, response
+    
+    def test_projects_with_filters(self):
+        """Test getting projects with various filters"""
+        # Create multiple projects with different statuses and dates for testing
+        if not self.client_id:
+            print("❌ Cannot test projects_with_filters: No client_id available")
+            return False, {}
+        
+        # Create projects with different statuses
+        statuses = ["planning", "in_progress", "completed", "pending", "overdue"]
+        project_ids = []
+        
+        for status in statuses:
+            project_data = {
+                "name": f"Test {status.capitalize()} Project {datetime.now().strftime('%H%M%S')}",
+                "client_id": self.client_id,
+                "description": f"This is a test {status} project",
+                "start_date": datetime.now().isoformat(),
+                "end_date": (datetime.now() + timedelta(days=30)).isoformat(),
+                "status": status,
+                "team": [self.user_id] if self.user_id else [],
+                "contract_value": 100000,
+                "debt": 20000,
+                "archived": False
+            }
+            
+            success, response = self.run_test(f"Create {status.capitalize()} Project", "POST", "projects/", 200, project_data)
+            if success:
+                project_ids.append(response.get('id'))
+        
+        # Create an archived project
+        archived_project_data = {
+            "name": f"Archived Project {datetime.now().strftime('%H%M%S')}",
+            "client_id": self.client_id,
+            "description": "This is an archived project",
+            "status": "completed",
+            "archived": True
+        }
+        
+        success, response = self.run_test("Create Archived Project", "POST", "projects/", 200, archived_project_data)
+        if success:
+            archived_project_id = response.get('id')
+            project_ids.append(archived_project_id)
+        
+        # Test filters
+        filter_tests = [
+            {"name": "Get All Projects", "params": "", "expected_count": len(project_ids)},
+            {"name": "Filter by Archived=true", "params": "?archived=true", "expected_min": 1},
+            {"name": "Filter by Archived=false", "params": "?archived=false", "expected_min": len(project_ids) - 1},
+            {"name": "Filter by Status=in_progress", "params": "?status=in_progress", "expected_min": 1},
+            {"name": "Filter by Status=completed", "params": "?status=completed", "expected_min": 1},
+            {"name": "Filter by Team Member", "params": f"?team_member={self.user_id}" if self.user_id else "?team_member=any", "expected_min": 1},
+            {"name": "Filter by Search", "params": "?search=test", "expected_min": 1},
+            {"name": "Filter by Year", "params": f"?year={datetime.now().year}", "expected_min": 1},
+            {"name": "Filter by Year and Month", "params": f"?year={datetime.now().year}&month={datetime.now().month}", "expected_min": 1},
+            {"name": "Filter by Year and Quarter", "params": f"?year={datetime.now().year}&quarter={(datetime.now().month-1)//3+1}", "expected_min": 1},
+            {"name": "Combined Filters", "params": f"?archived=false&status=in_progress&year={datetime.now().year}", "expected_min": 1}
+        ]
+        
+        filter_results = {}
+        for test in filter_tests:
+            success, response = self.run_test(test["name"], "GET", f"projects/{test['params']}", 200)
+            if success:
+                count = len(response)
+                expected = test.get("expected_count", test.get("expected_min", 0))
+                if "expected_count" in test:
+                    filter_results[test["name"]] = count == expected
+                    print(f"  - Expected exactly {expected} projects, got {count}")
+                else:
+                    filter_results[test["name"]] = count >= expected
+                    print(f"  - Expected at least {expected} projects, got {count}")
+            else:
+                filter_results[test["name"]] = False
+        
+        # Clean up - delete the test projects
+        for project_id in project_ids:
+            self.run_test(f"Delete Test Project", "DELETE", f"projects/{project_id}", 200)
+        
+        # Check if all filter tests passed
+        all_passed = all(filter_results.values())
+        if all_passed:
+            print("✅ All project filter tests passed")
+        else:
+            print("❌ Some project filter tests failed")
+            for test, result in filter_results.items():
+                print(f"  - {test}: {'Passed' if result else 'Failed'}")
+        
+        return all_passed, filter_results
+    
+    def test_projects_statistics(self):
+        """Test the projects statistics API with different time filters"""
+        # Create projects with different statuses for testing
+        if not self.client_id:
+            print("❌ Cannot test projects_statistics: No client_id available")
+            return False, {}
+        
+        # Create projects with different statuses
+        statuses = ["in_progress", "completed", "pending", "overdue"]
+        project_ids = []
+        
+        for status in statuses:
+            project_data = {
+                "name": f"Stats {status.capitalize()} Project {datetime.now().strftime('%H%M%S')}",
+                "client_id": self.client_id,
+                "description": f"This is a test {status} project for statistics",
+                "start_date": datetime.now().isoformat(),
+                "end_date": (datetime.now() - timedelta(days=5)).isoformat() if status == "overdue" else (datetime.now() + timedelta(days=30)).isoformat(),
+                "status": status,
+                "archived": False
+            }
+            
+            success, response = self.run_test(f"Create {status.capitalize()} Project for Stats", "POST", "projects/", 200, project_data)
+            if success:
+                project_ids.append(response.get('id'))
+        
+        # Test statistics endpoints
+        stats_tests = [
+            {"name": "Get All Projects Statistics", "params": "", "expected_keys": ["total_projects", "in_progress", "completed", "pending", "overdue"]},
+            {"name": "Statistics by Year", "params": f"?year={datetime.now().year}", "expected_keys": ["total_projects", "in_progress", "completed", "pending", "overdue"]},
+            {"name": "Statistics by Year and Month", "params": f"?year={datetime.now().year}&month={datetime.now().month}", "expected_keys": ["total_projects", "in_progress", "completed", "pending", "overdue"]},
+            {"name": "Statistics by Year and Quarter", "params": f"?year={datetime.now().year}&quarter={(datetime.now().month-1)//3+1}", "expected_keys": ["total_projects", "in_progress", "completed", "pending", "overdue"]}
+        ]
+        
+        stats_results = {}
+        for test in stats_tests:
+            success, response = self.run_test(test["name"], "GET", f"projects/statistics{test['params']}", 200)
+            if success:
+                # Check if all expected keys are present
+                keys_present = all(key in response for key in test["expected_keys"])
+                stats_results[test["name"]] = keys_present
+                
+                if keys_present:
+                    print(f"  - All expected keys present: {', '.join(test['expected_keys'])}")
+                    print(f"  - Statistics: {response}")
+                else:
+                    print(f"  - Missing keys. Expected: {test['expected_keys']}, Got: {list(response.keys())}")
+            else:
+                stats_results[test["name"]] = False
+        
+        # Clean up - delete the test projects
+        for project_id in project_ids:
+            self.run_test(f"Delete Test Project", "DELETE", f"projects/{project_id}", 200)
+        
+        # Check if all statistics tests passed
+        all_passed = all(stats_results.values())
+        if all_passed:
+            print("✅ All project statistics tests passed")
+        else:
+            print("❌ Some project statistics tests failed")
+            for test, result in stats_results.items():
+                print(f"  - {test}: {'Passed' if result else 'Failed'}")
+        
+        return all_passed, stats_results
+    
+    def test_projects_bulk_operations(self):
+        """Test bulk operations for projects: archive, restore, delete"""
+        if not self.client_id:
+            print("❌ Cannot test projects_bulk_operations: No client_id available")
+            return False, {}
+        
+        # Create multiple projects for testing bulk operations
+        project_ids = []
+        for i in range(3):
+            project_data = {
+                "name": f"Bulk Test Project {i} {datetime.now().strftime('%H%M%S')}",
+                "client_id": self.client_id,
+                "description": f"This is test project {i} for bulk operations",
+                "status": "planning",
+                "archived": False
+            }
+            
+            success, response = self.run_test(f"Create Project {i} for Bulk Ops", "POST", "projects/", 200, project_data)
+            if success:
+                project_ids.append(response.get('id'))
+        
+        if len(project_ids) < 3:
+            print(f"❌ Failed to create enough test projects. Only created {len(project_ids)}/3")
+            return False, {}
+        
+        # Test bulk archive
+        success, response = self.run_test("Bulk Archive Projects", "POST", "projects/bulk-archive", 200, project_ids)
+        if success:
+            print(f"✅ Successfully archived {response.get('detail', '').split()[0]} projects")
+            
+            # Verify projects are archived
+            for project_id in project_ids:
+                verify_success, project = self.run_test(f"Verify Project {project_id} Archived", "GET", f"projects/{project_id}", 200)
+                if verify_success and not project.get('archived', False):
+                    print(f"❌ Project {project_id} was not archived")
+                    success = False
+        
+        # Test bulk restore
+        if success:
+            success, response = self.run_test("Bulk Restore Projects", "POST", "projects/bulk-restore", 200, project_ids)
+            if success:
+                print(f"✅ Successfully restored {response.get('detail', '').split()[0]} projects")
+                
+                # Verify projects are restored
+                for project_id in project_ids:
+                    verify_success, project = self.run_test(f"Verify Project {project_id} Restored", "GET", f"projects/{project_id}", 200)
+                    if verify_success and project.get('archived', True):
+                        print(f"❌ Project {project_id} was not restored")
+                        success = False
+        
+        # Test bulk delete (admin only)
+        if success:
+            success, response = self.run_test("Bulk Delete Projects", "POST", "projects/bulk-delete", 200, project_ids)
+            if success:
+                print(f"✅ Successfully deleted {response.get('detail', '').split()[0]} projects")
+                
+                # Verify projects are deleted
+                for project_id in project_ids:
+                    verify_success, _ = self.run_test(f"Verify Project {project_id} Deleted", "GET", f"projects/{project_id}", 404)
+                    if not verify_success:
+                        print(f"❌ Project {project_id} was not deleted")
+                        success = False
+            
+            # Projects are deleted, so clear the list
+            project_ids = []
+        
+        # Clean up any remaining projects
+        for project_id in project_ids:
+            self.run_test(f"Delete Test Project", "DELETE", f"projects/{project_id}", 200)
+        
+        return success, {}
+    
+    def test_projects_error_handling(self):
+        """Test error handling for projects API"""
+        error_tests = []
+        
+        # Test invalid year/quarter/month values
+        invalid_time_params = [
+            {"name": "Invalid Year", "params": "?year=invalid", "expected_status": 422},
+            {"name": "Invalid Quarter", "params": "?year=2024&quarter=5", "expected_status": 422},
+            {"name": "Invalid Month", "params": "?year=2024&month=13", "expected_status": 422}
+        ]
+        
+        for test in invalid_time_params:
+            success, _ = self.run_test(test["name"], "GET", f"projects/{test['params']}", test["expected_status"])
+            error_tests.append({"name": test["name"], "success": success})
+        
+        # Test non-existent project IDs for bulk operations
+        non_existent_ids = ["non_existent_id1", "non_existent_id2"]
+        
+        bulk_ops_tests = [
+            {"name": "Bulk Archive Non-existent Projects", "endpoint": "projects/bulk-archive", "expected_status": 200},
+            {"name": "Bulk Restore Non-existent Projects", "endpoint": "projects/bulk-restore", "expected_status": 200},
+            {"name": "Bulk Delete Non-existent Projects", "endpoint": "projects/bulk-delete", "expected_status": 200}
+        ]
+        
+        for test in bulk_ops_tests:
+            success, _ = self.run_test(test["name"], "POST", test["endpoint"], test["expected_status"], non_existent_ids)
+            error_tests.append({"name": test["name"], "success": success})
+        
+        # Test permissions (non-admin trying bulk delete)
+        # First create a non-admin user if we don't have one
+        non_admin_user = None
+        for user in self.created_users:
+            if user["role"] != "admin":
+                non_admin_user = user
+                break
+        
+        if not non_admin_user:
+            # Create a non-admin user
+            non_admin_email = f"nonadmin_{datetime.now().strftime('%H%M%S')}@example.com"
+            non_admin_password = "nonadmin123"
+            success, _ = self.test_create_user(non_admin_email, "Non Admin User", "account", non_admin_password)
+            if success:
+                non_admin_user = {"email": non_admin_email, "password": non_admin_password, "role": "account"}
+                self.created_users.append(non_admin_user)
+        
+        if non_admin_user:
+            # Store original token
+            original_token = self.token
+            
+            # Login as non-admin user
+            login_success, _ = self.test_login(non_admin_user["email"], non_admin_user["password"])
+            if login_success:
+                # Try to bulk delete projects as non-admin
+                success, _ = self.run_test("Non-admin Bulk Delete", "POST", "projects/bulk-delete", 403, non_existent_ids)
+                error_tests.append({"name": "Non-admin Bulk Delete", "success": success})
+            
+            # Restore original token
+            self.token = original_token
+        
+        # Check if all error handling tests passed
+        all_passed = all(test["success"] for test in error_tests)
+        if all_passed:
+            print("✅ All project error handling tests passed")
+        else:
+            print("❌ Some project error handling tests failed")
+            for test in error_tests:
+                print(f"  - {test['name']}: {'Passed' if test['success'] else 'Failed'}")
+        
+        return all_passed, error_tests
 
 def main():
     # Setup
