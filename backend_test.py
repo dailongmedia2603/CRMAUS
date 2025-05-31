@@ -1324,7 +1324,7 @@ def test_campaign_hierarchy_integration(tokens):
                     response = make_request("GET", f"/tasks/{task_id}", tokens["admin_token"])
                     if response.status_code != 404:
                         all_tasks_deleted = False
-                        print(f"    Task {task_id} was not deleted with service")
+                        print(f"    Task {task_id} was not deleted with service, status: {response.status_code}")
                 
                 print_test_result("Verify all tasks are cascade deleted with service", all_tasks_deleted)
     
