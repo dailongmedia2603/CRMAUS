@@ -57,7 +57,7 @@ const Projects = ({ user }) => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (actionDropdownOpen && !event.target.closest('.relative')) {
+      if (actionDropdownOpen && !event.target.closest('button')) {
         setActionDropdownOpen(null);
       }
     };
