@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Campaigns = () => {
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
