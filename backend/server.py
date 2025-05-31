@@ -1466,7 +1466,7 @@ async def copy_task(
         await db.tasks.insert_one(task_dict)
         copied_tasks.append(task_dict)
     
-    return {"detail": f"{quantity} tasks copied successfully", "copied_tasks": copied_tasks}
+    return {"detail": f"{quantity} tasks copied successfully", "copied_tasks": [Task(**task) for task in copied_tasks]}
 
 # ================== TEMPLATE ENDPOINTS ==================
 
