@@ -197,6 +197,26 @@ class Document(DocumentBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
 
+# Campaign Models
+class CampaignBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    archived: bool = False
+
+class CampaignCreate(CampaignBase):
+    pass
+
+class CampaignUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    archived: Optional[bool] = None
+
+class Campaign(CampaignBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
 # Hàm tiện ích
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
