@@ -1216,6 +1216,7 @@ def test_campaign_hierarchy_integration(tokens):
         for j in range(2):
             task_data = {
                 "name": f"Task {j+1} for Service {i+1}",
+                "service_id": service_id,
                 "status": ["not_started", "in_progress", "completed"][min(i, 2)],
                 "start_date": (now - timedelta(days=5)).isoformat(),
                 "end_date": (now + timedelta(days=10)).isoformat(),
