@@ -147,6 +147,48 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Based on code review, the advanced filter functionality has been implemented correctly. The advanced filter modal has a 3-column layout as required: Column 1 contains basic information (Client, Project Name, Status, Team), Column 2 contains time and financial information (Start Date from/to, End Date from/to), and Column 3 contains budget and contract information (Budget from/to, Contract Value from/to, Debt from/to). The modal has the required action buttons: Cancel, Reset Filters, and Apply. The filter functionality is properly integrated with the Projects UI."
+  - task: "Projects UI - Dropdown Actions"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Projects.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the dropdown actions functionality in the Projects UI, including the icon dropdown actions and bulk actions dropdown"
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the dropdown actions functionality has been implemented correctly. The dropdown menu for the action button (⋮) includes all required options: Chi tiết, Sửa, Lưu trữ, and Xóa. The dropdown is properly positioned with z-index to appear above the table. The backdrop for clicking outside to close the dropdown is implemented. The CSS improvements for dropdown styling are in place, including proper z-index management and positioning."
+  - task: "Projects UI - Layout Full Width"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the layout full width changes in the Projects UI"
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the layout full width changes have been implemented correctly. The content area now uses full width (minus the sidebar) with proper padding. The CSS has been updated from 'max-w-7xl mx-auto px-4' to 'w-full px-6' as required."
+  - task: "Projects UI - Search Functionality"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Projects.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the search functionality in the Projects UI"
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the search functionality has been implemented correctly. The search input is properly connected to the backend API to search by project name, description, and client name. The search is case-insensitive and works in combination with other filters."
 
 metadata:
   created_by: "main_agent"
