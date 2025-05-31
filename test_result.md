@@ -1,3 +1,76 @@
+backend:
+  - task: "Projects API - GET /api/projects/"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/projects/ endpoint to ensure it returns the list of projects correctly with all filters working"
+
+  - task: "Projects API - PUT /api/projects/{project_id}"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the PUT /api/projects/{project_id} endpoint for updating projects, including the archive/restore functionality"
+
+  - task: "Projects API - DELETE /api/projects/{project_id}"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the DELETE /api/projects/{project_id} endpoint and verify that only admin/account roles can delete projects"
+
+  - task: "Projects API - Bulk Operations"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk operations endpoints for projects: bulk-archive, bulk-restore, and bulk-delete"
+
+  - task: "Clients API - GET /api/clients/"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/clients/ endpoint to ensure it returns the list of clients correctly for project form dropdowns"
+
+  - task: "Users API - GET /api/users/"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/users/ endpoint to ensure it returns the list of users correctly for project form dropdowns and verify that only admin can access this endpoint"
+
 frontend:
   - task: "Projects UI - Time Filter Tabs"
     implemented: true
