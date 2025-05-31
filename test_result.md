@@ -76,15 +76,18 @@ backend:
 
   - task: "Users API - GET /api/users/"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the GET /api/users/ endpoint to ensure it returns the list of users correctly for project form dropdowns and verify that only admin can access this endpoint"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/users/ endpoint. The API returns the list of users correctly when accessed by admin users. Authorization is properly implemented - non-admin users (account and staff) receive a 403 Forbidden response when attempting to access the users list. This ensures that only admin users can access user information."
 
 frontend:
   - task: "Projects UI - Time Filter Tabs"
