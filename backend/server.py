@@ -408,66 +408,6 @@ async def delete_project(project_id: str, current_user: User = Depends(get_curre
     return {"detail": "Project deleted successfully"}
 
 # Contract routes
-@api_router.post("/tasks/", response_model=Task)
-async def create_task(task: TaskCreate, current_user: User = Depends(get_current_active_user)):
-    # Kiểm tra project tồn tại
-    project = await db.projects.find_one({"id": task.project_id})
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    
-    task_data = task.dict()
-    task_obj = Task(**task_data, created_by=current_user.id)
-    result = await db.tasks.insert_one(task_obj.dict())
-    return task_obj
-
-@api_router.get("/tasks/", response_model=List[Task])
-async def read_tasks(skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_active_user)):
-    tasks = await db.tasks.find().skip(skip).limit(limit).to_list(length=limit)
-    return tasks
-
-@api_router.get("/tasks/project/{project_id}", response_model=List[Task])
-async def read_project_tasks(project_id: str, current_user: User = Depends(get_current_active_user)):
-    tasks = await db.tasks.find({"project_id": project_id}).to_list(length=100)
-    return tasks
-
-@api_router.get("/tasks/assigned/{user_id}", response_model=List[Task])
-async def read_assigned_tasks(user_id: str, current_user: User = Depends(get_current_active_user)):
-    if current_user.id != user_id and current_user.role not in ["admin", "account"]:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    
-    tasks = await db.tasks.find({"assigned_to": user_id}).to_list(length=100)
-    return tasks
-
-@api_router.get("/tasks/{task_id}", response_model=Task)
-async def read_task(task_id: str, current_user: User = Depends(get_current_active_user)):
-    task = await db.tasks.find_one({"id": task_id})
-    if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
-
-@api_router.put("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: str, task: TaskCreate, current_user: User = Depends(get_current_active_user)):
-    db_task = await db.tasks.find_one({"id": task_id})
-    if db_task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    task_data = task.dict()
-    updated_task = {**db_task, **task_data, "updated_at": datetime.utcnow()}
-    
-    # Nếu đang chuyển trạng thái sang completed, cập nhật completion_date
-    if task.status == "completed" and db_task.get("status") != "completed":
-        updated_task["completion_date"] = datetime.utcnow()
-    
-    await db.tasks.update_one({"id": task_id}, {"$set": updated_task})
-    return updated_task
-
-@api_router.delete("/tasks/{task_id}")
-async def delete_task(task_id: str, current_user: User = Depends(get_current_active_user)):
-    result = await db.tasks.delete_one({"id": task_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return {"detail": "Task deleted successfully"}
-
 # Contract routes
 @api_router.post("/contracts/", response_model=Contract)
 async def create_contract(contract: ContractCreate, current_user: User = Depends(get_current_active_user)):
