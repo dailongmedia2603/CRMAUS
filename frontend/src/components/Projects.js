@@ -751,7 +751,7 @@ const Projects = ({ user }) => {
                       
                       {/* Dropdown menu */}
                       {actionDropdownOpen === project.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-md shadow-lg z-50 transform origin-top-right">
                           <div className="py-1">
                             <button
                               onClick={() => {
