@@ -53,6 +53,20 @@ const Projects = ({ user }) => {
     fetchUsers();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (actionDropdownOpen && !event.target.closest('.relative')) {
+        setActionDropdownOpen(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [actionDropdownOpen]);
+
   const fetchProjects = async () => {
     try {
       const params = new URLSearchParams({
