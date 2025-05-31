@@ -800,7 +800,13 @@ const Projects = ({ user }) => {
                       
                       {/* Dropdown menu */}
                       {actionDropdownOpen === project.id && (
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-md shadow-lg z-50 transform origin-top-right">
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-md shadow-lg z-50 transform origin-top-right" 
+                             style={{ 
+                               position: 'fixed',
+                               top: 'auto',
+                               bottom: 'auto',
+                               zIndex: 9999 
+                             }}>
                           <div className="py-1">
                             <button
                               onClick={() => {
