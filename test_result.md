@@ -74,20 +74,20 @@ backend:
         agent: "testing"
         comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
 
-  - task: "Users API - GET /api/users/"
+  - task: "Projects API - Search Functionality"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/users/ endpoint to ensure it returns the list of users correctly for project form dropdowns and verify that only admin can access this endpoint"
+        comment: "Need to test the search functionality in the Projects API to ensure it can search by project name, project description, and client name"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the GET /api/users/ endpoint. The API returns the list of users correctly when accessed by admin users. Authorization is properly implemented - non-admin users (account and staff) receive a 403 Forbidden response when attempting to access the users list. This ensures that only admin users can access user information."
+        comment: "Successfully tested the search functionality in the Projects API. The API correctly searches by project name (e.g., 'Say', 'vvv'), project description, and client name (e.g., 'Test'). The search is case-insensitive, working with both lowercase and uppercase queries. The search functionality also works correctly when combined with other filters (e.g., status). Found an interesting edge case with Vietnamese characters: searching for 'Dai' doesn't match 'Đại' due to character differences, which is expected behavior."
 
 frontend:
   - task: "Projects UI - Time Filter Tabs"
