@@ -104,6 +104,96 @@ backend:
         agent: "testing"
         comment: "Successfully tested the search functionality in the Projects API. The API correctly searches by project name (e.g., 'Say', 'vvv'), project description, and client name (e.g., 'Test'). The search is case-insensitive, working with both lowercase and uppercase queries. The search functionality also works correctly when combined with other filters (e.g., status). Found an interesting edge case with Vietnamese characters: searching for 'Dai' doesn't match 'Đại' due to character differences, which is expected behavior."
 
+  - task: "Campaigns API - POST /api/campaigns/"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the POST /api/campaigns/ endpoint to ensure it creates new campaigns correctly"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the POST /api/campaigns/ endpoint. The API correctly creates new campaigns with the provided name, description, and archived status. The created_by field is automatically set to the current user's ID. The API returns the created campaign with all fields including the generated UUID."
+
+  - task: "Campaigns API - GET /api/campaigns/"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/campaigns/ endpoint to ensure it returns the list of campaigns correctly with search and archived filter"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/campaigns/ endpoint. The API returns the list of campaigns correctly. The search functionality works properly with case-insensitive search. The archived filter correctly returns only archived or non-archived campaigns based on the parameter. The endpoint is accessible by all authenticated users."
+
+  - task: "Campaigns API - GET /api/campaigns/{campaign_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/campaigns/{campaign_id} endpoint to ensure it returns the details of a specific campaign"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/campaigns/{campaign_id} endpoint. The API correctly returns the details of a specific campaign by ID. All fields are returned correctly including name, description, archived status, created_at, updated_at, and created_by."
+
+  - task: "Campaigns API - PUT /api/campaigns/{campaign_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the PUT /api/campaigns/{campaign_id} endpoint for updating campaigns, including the archive/restore functionality"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the PUT /api/campaigns/{campaign_id} endpoint. The API correctly updates campaign information including name and description. The archive/restore functionality works as expected - setting archived=true archives the campaign and setting archived=false restores it. All authenticated users can update campaigns."
+
+  - task: "Campaigns API - DELETE /api/campaigns/{campaign_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the DELETE /api/campaigns/{campaign_id} endpoint and verify that only admin/account roles can delete campaigns"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the DELETE /api/campaigns/{campaign_id} endpoint. The API correctly deletes campaigns when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete campaigns. After deletion, attempting to access the deleted campaign returns a 404 Not Found response."
+
+  - task: "Campaigns API - POST /api/campaigns/bulk-action"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the POST /api/campaigns/bulk-action endpoint for bulk operations on campaigns"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the POST /api/campaigns/bulk-action endpoint. The API correctly performs bulk operations on campaigns. The bulk-archive action correctly archives multiple campaigns at once. The bulk-restore action correctly restores multiple archived campaigns. The bulk-delete action correctly deletes multiple campaigns at once. All bulk operations are working as expected."
+
 frontend:
   - task: "Projects UI - Time Filter Tabs"
     implemented: true
@@ -208,6 +298,12 @@ test_plan:
     - "Projects UI - Dropdown Actions"
     - "Projects UI - Layout Full Width"
     - "Projects UI - Search Functionality"
+    - "Campaigns API - POST /api/campaigns/"
+    - "Campaigns API - GET /api/campaigns/"
+    - "Campaigns API - GET /api/campaigns/{campaign_id}"
+    - "Campaigns API - PUT /api/campaigns/{campaign_id}"
+    - "Campaigns API - DELETE /api/campaigns/{campaign_id}"
+    - "Campaigns API - POST /api/campaigns/bulk-action"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -247,3 +343,5 @@ agent_communication:
     message: "Completed code review of the dropdown functionality in the Projects UI. Based on the code analysis, the dropdown actions have been implemented correctly. The dropdown menu for the action button (⋮) includes all required options: Chi tiết, Sửa, Lưu trữ, and Xóa. The dropdown is properly positioned with z-index to appear above the table. The backdrop for clicking outside to close the dropdown is implemented. The CSS improvements for dropdown styling are in place, including proper z-index management and positioning."
   - agent: "testing"
     message: "Completed code review of the layout full width changes and search functionality in the Projects UI. The layout full width changes have been implemented correctly, with the content area now using full width (minus the sidebar) with proper padding. The CSS has been updated from 'max-w-7xl mx-auto px-4' to 'w-full px-6' as required. The search functionality is properly connected to the backend API to search by project name, description, and client name, with case-insensitive search that works in combination with other filters."
+  - agent: "testing"
+    message: "Completed testing of Campaigns API features. All endpoints are working correctly: POST /api/campaigns/ creates new campaigns, GET /api/campaigns/ retrieves campaigns with search and archived filter, GET /api/campaigns/{campaign_id} retrieves campaign details, PUT /api/campaigns/{campaign_id} updates campaigns including archive/restore functionality, DELETE /api/campaigns/{campaign_id} deletes campaigns with proper role-based permissions, and POST /api/campaigns/bulk-action performs bulk operations (archive, restore, delete) on multiple campaigns. Created demo campaigns as requested for frontend testing."
