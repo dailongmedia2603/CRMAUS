@@ -581,26 +581,34 @@ def test_bulk_delete_tasks():
     print(f"Attempting to delete {len(task_ids_to_delete)} tasks: {task_ids_to_delete}")
     
     # Try different ways to send the task_ids
-    # Method 1: As JSON body
+    # Method 1: As JSON body with DELETE
     response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=task_ids_to_delete)
     
     if response.status_code != 200:
-        print(f"Method 1 failed with status code {response.status_code}: {response.text}")
+        print(f"Method 1 (DELETE with JSON body) failed with status code {response.status_code}: {response.text}")
         
-        # Method 2: As form data
-        form_data = {"task_ids": task_ids_to_delete}
-        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
+        # Method 2: As JSON body with POST
+        response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=task_ids_to_delete)
         
         if response.status_code != 200:
-            print(f"Method 2 failed with status code {response.status_code}: {response.text}")
+            print(f"Method 2 (POST to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
             
-            # Method 3: As query parameters
-            query_params = {"task_ids": ",".join(task_ids_to_delete)}
-            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
+            # Method 3: Try a different URL format
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=task_ids_to_delete)
             
             if response.status_code != 200:
-                print(f"Method 3 failed with status code {response.status_code}: {response.text}")
-                log_test("Bulk Delete Tasks", False, f"All methods failed to delete tasks", response)
+                print(f"Method 3 (DELETE to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
+                
+                # Method 4: Try with query parameters
+                task_ids_str = ",".join(task_ids_to_delete)
+                response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk?task_ids={task_ids_str}", headers=headers)
+                
+                if response.status_code != 200:
+                    print(f"Method 4 (DELETE with query params) failed with status code {response.status_code}: {response.text}")
+                    log_test("Bulk Delete Tasks", False, f"All methods failed to delete tasks", response)
+                else:
+                    result = response.json()
+                    log_test("Bulk Delete Tasks", True, f"Method 4 succeeded: {result['deleted_count']} tasks deleted", response)
             else:
                 result = response.json()
                 log_test("Bulk Delete Tasks", True, f"Method 3 succeeded: {result['deleted_count']} tasks deleted", response)
