@@ -1381,6 +1381,24 @@ async def get_tasks(
     
     return [Task(**task) for task in tasks]
 
+@api_router.get("/tasks/{task_id}", response_model=Task)
+async def get_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy chi tiết nhiệm vụ"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Enrich with template name if template_id exists
+    if task.get("template_id"):
+        template = await db.templates.find_one({"id": task["template_id"]})
+        if template:
+            task["template_name"] = template["name"]
+    
+    return Task(**task)
+
 @api_router.put("/tasks/{task_id}", response_model=Task)
 async def update_task(
     task_id: str,
