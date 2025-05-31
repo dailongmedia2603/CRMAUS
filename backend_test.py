@@ -800,6 +800,530 @@ def test_campaign_bulk_actions(tokens):
     
     return True
 
+def test_service_crud(tokens):
+    print("\n=== Testing Service CRUD Operations ===")
+    
+    # First, get or create a campaign to work with
+    response = make_request("GET", "/campaigns/", tokens["admin_token"])
+    campaign_id = None
+    
+    if response.status_code == 200 and len(response.json()) > 0:
+        campaign_id = response.json()[0]["id"]
+        print(f"  Using existing campaign with ID: {campaign_id}")
+    else:
+        # Create a new campaign
+        campaign_data = {
+            "name": f"Test Campaign for Services {uuid.uuid4()}",
+            "description": "Campaign created for testing services"
+        }
+        response = make_request("POST", "/campaigns/", tokens["admin_token"], campaign_data)
+        if response.status_code == 200:
+            campaign_id = response.json()["id"]
+            print(f"  Created new campaign with ID: {campaign_id}")
+        else:
+            print_test_result("Create campaign for service testing", False, 
+                             f"Failed: {response.status_code} - {response.text}")
+            return False
+    
+    # Create services with different sort_order values
+    service_data = [
+        {"name": "Service 1", "sort_order": 3, "description": "Third service"},
+        {"name": "Service 2", "sort_order": 1, "description": "First service"},
+        {"name": "Service 3", "sort_order": 2, "description": "Second service"}
+    ]
+    
+    created_service_ids = []
+    
+    for data in service_data:
+        response = make_request("POST", f"/campaigns/{campaign_id}/services/", tokens["admin_token"], data)
+        success = response.status_code == 200
+        print_test_result(f"Create service: {data['name']}", success)
+        
+        if success:
+            service_id = response.json()["id"]
+            created_service_ids.append(service_id)
+            print(f"  Created service with ID: {service_id}")
+    
+    # Test get services (should be sorted by sort_order)
+    response = make_request("GET", f"/campaigns/{campaign_id}/services/", tokens["admin_token"])
+    success = response.status_code == 200
+    print_test_result("Get services for campaign", success)
+    
+    if success:
+        services = response.json()
+        print(f"  Retrieved {len(services)} services")
+        
+        # Verify services are sorted by sort_order
+        is_sorted = True
+        for i in range(1, len(services)):
+            if services[i-1]["sort_order"] > services[i]["sort_order"]:
+                is_sorted = False
+                break
+        
+        print_test_result("Verify services are sorted by sort_order", is_sorted)
+        
+        # Print the order for debugging
+        print("  Services in order:")
+        for service in services:
+            print(f"    - {service['name']} (sort_order: {service['sort_order']})")
+    
+    # Test update service
+    if created_service_ids:
+        service_id = created_service_ids[0]
+        update_data = {
+            "name": "Updated Service Name",
+            "description": "Updated service description",
+            "sort_order": 5
+        }
+        
+        response = make_request("PUT", f"/services/{service_id}", tokens["admin_token"], update_data)
+        success = response.status_code == 200
+        print_test_result("Update service", success)
+        
+        if success:
+            updated_service = response.json()
+            success = (updated_service["name"] == update_data["name"] and 
+                      updated_service["description"] == update_data["description"] and
+                      updated_service["sort_order"] == update_data["sort_order"])
+            print_test_result("Verify service update", success)
+    
+    # Test delete service with different roles
+    if len(created_service_ids) >= 3:
+        # Test with staff (should fail)
+        if "staff" in tokens["user_tokens"]:
+            service_id = created_service_ids[2]
+            response = make_request("DELETE", f"/services/{service_id}", tokens["user_tokens"]["staff"])
+            success = response.status_code == 403  # Should be forbidden
+            print_test_result("Delete service as staff (should be forbidden)", success)
+        
+        # Test with account (should succeed)
+        if "account" in tokens["user_tokens"]:
+            service_id = created_service_ids[1]
+            response = make_request("DELETE", f"/services/{service_id}", tokens["user_tokens"]["account"])
+            success = response.status_code == 200
+            print_test_result("Delete service as account", success)
+        
+        # Test with admin
+        service_id = created_service_ids[0]
+        response = make_request("DELETE", f"/services/{service_id}", tokens["admin_token"])
+        success = response.status_code == 200
+        print_test_result("Delete service as admin", success)
+        
+        # Verify service is deleted
+        response = make_request("GET", f"/campaigns/{campaign_id}/services/", tokens["admin_token"])
+        if response.status_code == 200:
+            services = response.json()
+            service_deleted = not any(s["id"] == service_id for s in services)
+            print_test_result("Verify service deletion", service_deleted)
+    
+    return True
+
+def test_task_crud(tokens):
+    print("\n=== Testing Task CRUD Operations ===")
+    
+    # First, get or create a campaign and service to work with
+    response = make_request("GET", "/campaigns/", tokens["admin_token"])
+    campaign_id = None
+    
+    if response.status_code == 200 and len(response.json()) > 0:
+        campaign_id = response.json()[0]["id"]
+        print(f"  Using existing campaign with ID: {campaign_id}")
+    else:
+        # Create a new campaign
+        campaign_data = {
+            "name": f"Test Campaign for Tasks {uuid.uuid4()}",
+            "description": "Campaign created for testing tasks"
+        }
+        response = make_request("POST", "/campaigns/", tokens["admin_token"], campaign_data)
+        if response.status_code == 200:
+            campaign_id = response.json()["id"]
+            print(f"  Created new campaign with ID: {campaign_id}")
+        else:
+            print_test_result("Create campaign for task testing", False, 
+                             f"Failed: {response.status_code} - {response.text}")
+            return False
+    
+    # Create a service
+    service_data = {
+        "name": "Test Service for Tasks",
+        "sort_order": 1,
+        "description": "Service created for testing tasks"
+    }
+    
+    response = make_request("POST", f"/campaigns/{campaign_id}/services/", tokens["admin_token"], service_data)
+    if response.status_code != 200:
+        print_test_result("Create service for task testing", False, 
+                         f"Failed: {response.status_code} - {response.text}")
+        return False
+    
+    service_id = response.json()["id"]
+    print(f"  Created service with ID: {service_id}")
+    
+    # Create a template for tasks
+    template_data = {
+        "name": "Test Template",
+        "content": '{"title": "Test Template", "steps": ["Step 1", "Step 2", "Step 3"]}',
+        "template_type": "service"
+    }
+    
+    response = make_request("POST", "/templates/", tokens["admin_token"], template_data)
+    template_id = None
+    if response.status_code == 200:
+        template_id = response.json()["id"]
+        print(f"  Created template with ID: {template_id}")
+    else:
+        print_test_result("Create template for task testing", False, 
+                         f"Failed: {response.status_code} - {response.text}")
+    
+    # Create tasks with different statuses
+    now = datetime.utcnow()
+    task_data = [
+        {
+            "name": "Task 1 - Not Started",
+            "status": "not_started",
+            "start_date": (now - timedelta(days=5)).isoformat(),
+            "end_date": (now + timedelta(days=10)).isoformat(),
+            "description": "Task that hasn't started yet"
+        },
+        {
+            "name": "Task 2 - In Progress",
+            "status": "in_progress",
+            "start_date": (now - timedelta(days=10)).isoformat(),
+            "end_date": (now + timedelta(days=5)).isoformat(),
+            "description": "Task that is in progress"
+        },
+        {
+            "name": "Task 3 - Completed",
+            "status": "completed",
+            "start_date": (now - timedelta(days=15)).isoformat(),
+            "end_date": now.isoformat(),
+            "description": "Task that is completed"
+        }
+    ]
+    
+    # Add template to one task
+    if template_id:
+        task_data[0]["template_id"] = template_id
+    
+    created_task_ids = []
+    
+    for data in task_data:
+        response = make_request("POST", f"/services/{service_id}/tasks/", tokens["admin_token"], data)
+        success = response.status_code == 200
+        print_test_result(f"Create task: {data['name']}", success)
+        
+        if success:
+            task_id = response.json()["id"]
+            created_task_ids.append(task_id)
+            print(f"  Created task with ID: {task_id}")
+    
+    # Test get tasks
+    response = make_request("GET", f"/services/{service_id}/tasks/", tokens["admin_token"])
+    success = response.status_code == 200
+    print_test_result("Get tasks for service", success)
+    
+    if success:
+        tasks = response.json()
+        print(f"  Retrieved {len(tasks)} tasks")
+        
+        # Verify template enrichment
+        if template_id:
+            template_task = next((t for t in tasks if t.get("template_id") == template_id), None)
+            if template_task:
+                template_name_included = "template_name" in template_task
+                print_test_result("Verify template_name enrichment", template_name_included)
+                if template_name_included:
+                    print(f"  Template name: {template_task['template_name']}")
+    
+    # Test update task
+    if created_task_ids:
+        task_id = created_task_ids[0]
+        update_data = {
+            "name": "Updated Task Name",
+            "status": "in_progress",
+            "description": "Updated task description"
+        }
+        
+        response = make_request("PUT", f"/tasks/{task_id}", tokens["admin_token"], update_data)
+        success = response.status_code == 200
+        print_test_result("Update task", success)
+        
+        if success:
+            updated_task = response.json()
+            success = (updated_task["name"] == update_data["name"] and 
+                      updated_task["status"] == update_data["status"] and
+                      updated_task["description"] == update_data["description"])
+            print_test_result("Verify task update", success)
+    
+    # Test task copy functionality
+    if created_task_ids:
+        task_id = created_task_ids[0]
+        
+        # Test with valid quantity
+        copy_data = {"quantity": 3}
+        response = make_request("POST", f"/tasks/{task_id}/copy", tokens["admin_token"], copy_data)
+        success = response.status_code == 200
+        print_test_result("Copy task with quantity=3", success)
+        
+        if success:
+            result = response.json()
+            copied_tasks = result.get("copied_tasks", [])
+            success = len(copied_tasks) == 3
+            print_test_result("Verify 3 tasks were copied", success)
+            
+            # Check that all copies have status="not_started"
+            all_not_started = all(task["status"] == "not_started" for task in copied_tasks)
+            print_test_result("Verify all copied tasks have status='not_started'", all_not_started)
+        
+        # Test with invalid quantity (too high)
+        copy_data = {"quantity": 25}  # Over the limit of 20
+        response = make_request("POST", f"/tasks/{task_id}/copy", tokens["admin_token"], copy_data)
+        success = response.status_code == 400  # Should fail with 400 Bad Request
+        print_test_result("Copy task with invalid quantity=25 (should fail)", success)
+    
+    # Test delete task
+    if created_task_ids:
+        task_id = created_task_ids[0]
+        response = make_request("DELETE", f"/tasks/{task_id}", tokens["admin_token"])
+        success = response.status_code == 200
+        print_test_result("Delete task", success)
+        
+        # Verify task is deleted
+        response = make_request("GET", f"/services/{service_id}/tasks/", tokens["admin_token"])
+        if response.status_code == 200:
+            tasks = response.json()
+            task_deleted = not any(t["id"] == task_id for t in tasks)
+            print_test_result("Verify task deletion", task_deleted)
+    
+    return True
+
+def test_template_crud(tokens):
+    print("\n=== Testing Template CRUD Operations ===")
+    
+    # Create templates
+    template_data = [
+        {
+            "name": "Service Template 1",
+            "content": '{"title": "Service Template", "sections": ["Section 1", "Section 2"]}',
+            "template_type": "service"
+        },
+        {
+            "name": "Task Template 1",
+            "content": '{"title": "Task Template", "steps": ["Step 1", "Step 2", "Step 3"]}',
+            "template_type": "task"
+        }
+    ]
+    
+    created_template_ids = []
+    
+    for data in template_data:
+        response = make_request("POST", "/templates/", tokens["admin_token"], data)
+        success = response.status_code == 200
+        print_test_result(f"Create template: {data['name']}", success)
+        
+        if success:
+            template_id = response.json()["id"]
+            created_template_ids.append(template_id)
+            print(f"  Created template with ID: {template_id}")
+    
+    # Test get templates with filter by type
+    for template_type in ["service", "task"]:
+        response = make_request("GET", "/templates/", tokens["admin_token"], params={"template_type": template_type})
+        success = response.status_code == 200
+        print_test_result(f"Get templates with type={template_type}", success)
+        
+        if success:
+            templates = response.json()
+            print(f"  Retrieved {len(templates)} {template_type} templates")
+            
+            # Verify all templates have the correct type
+            all_correct_type = all(t["template_type"] == template_type for t in templates)
+            print_test_result(f"Verify all templates have type={template_type}", all_correct_type)
+    
+    # Test get template by ID
+    if created_template_ids:
+        template_id = created_template_ids[0]
+        response = make_request("GET", f"/templates/{template_id}", tokens["admin_token"])
+        success = response.status_code == 200
+        print_test_result("Get template by ID", success)
+        
+        if success:
+            template = response.json()
+            print(f"  Retrieved template: {template['name']}")
+    
+    return True
+
+def test_campaign_hierarchy_integration(tokens):
+    print("\n=== Testing Campaign Hierarchy Integration ===")
+    
+    # Create a complete hierarchy: Campaign -> Services -> Tasks
+    # 1. Create a campaign
+    campaign_data = {
+        "name": f"Hierarchy Test Campaign {uuid.uuid4()}",
+        "description": "Campaign for testing the complete hierarchy"
+    }
+    
+    response = make_request("POST", "/campaigns/", tokens["admin_token"], campaign_data)
+    if response.status_code != 200:
+        print_test_result("Create campaign for hierarchy testing", False, 
+                         f"Failed: {response.status_code} - {response.text}")
+        return False
+    
+    campaign_id = response.json()["id"]
+    print(f"  Created campaign with ID: {campaign_id}")
+    
+    # 2. Create multiple services with different sort_order
+    services_data = [
+        {"name": "Design Service", "sort_order": 1, "description": "Design related tasks"},
+        {"name": "Development Service", "sort_order": 2, "description": "Development related tasks"},
+        {"name": "Testing Service", "sort_order": 3, "description": "Testing related tasks"}
+    ]
+    
+    service_ids = []
+    for data in services_data:
+        response = make_request("POST", f"/campaigns/{campaign_id}/services/", tokens["admin_token"], data)
+        if response.status_code == 200:
+            service_id = response.json()["id"]
+            service_ids.append(service_id)
+            print(f"  Created service: {data['name']} with ID: {service_id}")
+    
+    if not service_ids:
+        print_test_result("Create services for hierarchy testing", False, "Failed to create any services")
+        return False
+    
+    # 3. Create a template
+    template_data = {
+        "name": "Task Checklist Template",
+        "content": '{"title": "Task Checklist", "items": ["Item 1", "Item 2", "Item 3"]}',
+        "template_type": "task"
+    }
+    
+    response = make_request("POST", "/templates/", tokens["admin_token"], template_data)
+    template_id = None
+    if response.status_code == 200:
+        template_id = response.json()["id"]
+        print(f"  Created template with ID: {template_id}")
+    
+    # 4. Create tasks for each service
+    now = datetime.utcnow()
+    
+    for i, service_id in enumerate(service_ids):
+        # Create 2 tasks per service
+        for j in range(2):
+            task_data = {
+                "name": f"Task {j+1} for Service {i+1}",
+                "status": ["not_started", "in_progress", "completed"][min(i, 2)],
+                "start_date": (now - timedelta(days=5)).isoformat(),
+                "end_date": (now + timedelta(days=10)).isoformat(),
+                "description": f"Task {j+1} description for Service {i+1}"
+            }
+            
+            # Add template to some tasks
+            if template_id and j == 0:
+                task_data["template_id"] = template_id
+            
+            response = make_request("POST", f"/services/{service_id}/tasks/", tokens["admin_token"], task_data)
+            if response.status_code == 200:
+                task_id = response.json()["id"]
+                print(f"  Created task: {task_data['name']} with ID: {task_id}")
+    
+    # 5. Verify the complete hierarchy
+    # Get campaign
+    response = make_request("GET", f"/campaigns/{campaign_id}", tokens["admin_token"])
+    if response.status_code != 200:
+        print_test_result("Get campaign for hierarchy verification", False, 
+                         f"Failed: {response.status_code} - {response.text}")
+        return False
+    
+    campaign = response.json()
+    print(f"\nVerifying hierarchy for campaign: {campaign['name']}")
+    
+    # Get services (should be sorted by sort_order)
+    response = make_request("GET", f"/campaigns/{campaign_id}/services/", tokens["admin_token"])
+    if response.status_code != 200:
+        print_test_result("Get services for hierarchy verification", False, 
+                         f"Failed: {response.status_code} - {response.text}")
+        return False
+    
+    services = response.json()
+    print(f"  Found {len(services)} services:")
+    
+    # Verify services are sorted by sort_order
+    is_sorted = True
+    for i in range(1, len(services)):
+        if services[i-1]["sort_order"] > services[i]["sort_order"]:
+            is_sorted = False
+            break
+    
+    print_test_result("Verify services are sorted by sort_order", is_sorted)
+    
+    # Check tasks for each service
+    for service in services:
+        print(f"  Service: {service['name']} (sort_order: {service['sort_order']})")
+        
+        response = make_request("GET", f"/services/{service['id']}/tasks/", tokens["admin_token"])
+        if response.status_code != 200:
+            print_test_result(f"Get tasks for service {service['name']}", False, 
+                             f"Failed: {response.status_code} - {response.text}")
+            continue
+        
+        tasks = response.json()
+        print(f"    Found {len(tasks)} tasks:")
+        
+        for task in tasks:
+            template_info = f", Template: {task.get('template_name', 'None')}" if task.get('template_id') else ""
+            print(f"    - {task['name']} (Status: {task['status']}{template_info})")
+            
+            # Verify template enrichment if task has a template
+            if task.get('template_id') and not task.get('template_name'):
+                print_test_result(f"Verify template enrichment for task {task['name']}", False, 
+                                 "Template ID exists but template_name is missing")
+    
+    # 6. Test cascade delete of a service and its tasks
+    if service_ids:
+        service_id_to_delete = service_ids[0]
+        
+        # First, get all tasks for this service
+        response = make_request("GET", f"/services/{service_id_to_delete}/tasks/", tokens["admin_token"])
+        if response.status_code == 200:
+            tasks_before_delete = response.json()
+            
+            # Now delete the service
+            response = make_request("DELETE", f"/services/{service_id_to_delete}", tokens["admin_token"])
+            success = response.status_code == 200
+            print_test_result(f"Delete service with ID {service_id_to_delete}", success)
+            
+            if success:
+                # Verify service is deleted
+                response = make_request("GET", f"/campaigns/{campaign_id}/services/", tokens["admin_token"])
+                if response.status_code == 200:
+                    services_after = response.json()
+                    service_deleted = not any(s["id"] == service_id_to_delete for s in services_after)
+                    print_test_result("Verify service deletion", service_deleted)
+                
+                # Try to get tasks for the deleted service (should fail or return empty)
+                response = make_request("GET", f"/services/{service_id_to_delete}/tasks/", tokens["admin_token"])
+                if response.status_code == 404:
+                    print_test_result("Verify service tasks endpoint returns 404 after service deletion", True)
+                elif response.status_code == 200 and len(response.json()) == 0:
+                    print_test_result("Verify service tasks are empty after service deletion", True)
+                else:
+                    print_test_result("Verify service tasks are deleted", False, 
+                                     f"Unexpected response: {response.status_code}, tasks: {len(response.json())}")
+                
+                # Try to get each task directly by ID (should fail with 404)
+                all_tasks_deleted = True
+                for task in tasks_before_delete:
+                    task_id = task["id"]
+                    response = make_request("GET", f"/tasks/{task_id}", tokens["admin_token"])
+                    if response.status_code != 404:
+                        all_tasks_deleted = False
+                        print(f"    Task {task_id} was not deleted with service")
+                
+                print_test_result("Verify all tasks are cascade deleted with service", all_tasks_deleted)
+    
+    return True
+
 def run_all_tests():
     print("\n=== Starting Backend API Tests ===")
     
@@ -817,10 +1341,14 @@ def run_all_tests():
         # test_get_clients(tokens),
         # test_get_users(tokens),
         # test_project_search(tokens),
+        # test_campaign_crud(tokens),
+        # test_campaign_bulk_actions(tokens),
         
-        # Campaign tests
-        test_campaign_crud(tokens),
-        test_campaign_bulk_actions(tokens)
+        # Campaign hierarchy tests
+        test_service_crud(tokens),
+        test_task_crud(tokens),
+        test_template_crud(tokens),
+        test_campaign_hierarchy_integration(tokens)
     ]
     
     # Print summary
