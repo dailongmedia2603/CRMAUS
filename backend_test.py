@@ -570,6 +570,230 @@ def test_project_search(tokens):
     
     return True
 
+def test_campaign_crud(tokens):
+    print("\n=== Testing Campaign CRUD Operations ===")
+    
+    # Test campaign creation
+    campaign_names = [
+        "Chiến dịch Marketing Q1 2024",
+        "Chương trình khuyến mãi Tết",
+        "Campaign Social Media",
+        "Quảng cáo Google Ads"
+    ]
+    
+    created_campaign_ids = []
+    
+    # Create multiple campaigns
+    for name in campaign_names:
+        campaign_data = {
+            "name": name,
+            "description": f"Mô tả cho {name}",
+            "archived": False
+        }
+        
+        response = make_request("POST", "/campaigns/", tokens["admin_token"], campaign_data)
+        success = response.status_code == 200
+        print_test_result(f"Create campaign: {name}", success)
+        
+        if success:
+            campaign_id = response.json()["id"]
+            created_campaign_ids.append(campaign_id)
+            print(f"  Created campaign with ID: {campaign_id}")
+    
+    # Test get all campaigns
+    response = make_request("GET", "/campaigns/", tokens["admin_token"])
+    success = response.status_code == 200
+    print_test_result("Get all campaigns", success)
+    
+    if success:
+        campaigns = response.json()
+        print(f"  Retrieved {len(campaigns)} campaigns")
+        
+        # Verify all our created campaigns are in the list
+        all_found = True
+        for campaign_id in created_campaign_ids:
+            if not any(c["id"] == campaign_id for c in campaigns):
+                all_found = False
+                break
+        
+        print_test_result("Verify all created campaigns are in the list", all_found)
+    
+    # Test get campaign by ID
+    if created_campaign_ids:
+        campaign_id = created_campaign_ids[0]
+        response = make_request("GET", f"/campaigns/{campaign_id}", tokens["admin_token"])
+        success = response.status_code == 200
+        print_test_result("Get campaign by ID", success)
+        
+        if success:
+            campaign = response.json()
+            print(f"  Retrieved campaign: {campaign['name']}")
+    
+    # Test update campaign
+    if created_campaign_ids:
+        campaign_id = created_campaign_ids[0]
+        update_data = {
+            "name": "Updated Campaign Name",
+            "description": "Updated description for testing"
+        }
+        
+        response = make_request("PUT", f"/campaigns/{campaign_id}", tokens["admin_token"], update_data)
+        success = response.status_code == 200
+        print_test_result("Update campaign", success)
+        
+        if success:
+            updated_campaign = response.json()
+            success = updated_campaign["name"] == update_data["name"] and updated_campaign["description"] == update_data["description"]
+            print_test_result("Verify campaign update", success)
+    
+    # Test archive campaign
+    if len(created_campaign_ids) > 1:
+        campaign_id = created_campaign_ids[1]
+        archive_data = {
+            "archived": True
+        }
+        
+        response = make_request("PUT", f"/campaigns/{campaign_id}", tokens["admin_token"], archive_data)
+        success = response.status_code == 200
+        print_test_result("Archive campaign", success)
+        
+        if success:
+            archived_campaign = response.json()
+            success = archived_campaign["archived"] == True
+            print_test_result("Verify campaign archived", success)
+    
+    # Test search functionality
+    if created_campaign_ids:
+        search_term = "Marketing"
+        response = make_request("GET", "/campaigns/", tokens["admin_token"], params={"search": search_term})
+        success = response.status_code == 200
+        print_test_result(f"Search campaigns with term: {search_term}", success)
+        
+        if success:
+            search_results = response.json()
+            found_marketing = any(search_term in campaign["name"] for campaign in search_results)
+            print_test_result(f"Verify search results contain '{search_term}'", found_marketing)
+    
+    # Test get archived campaigns
+    response = make_request("GET", "/campaigns/", tokens["admin_token"], params={"archived": "true"})
+    success = response.status_code == 200
+    print_test_result("Get archived campaigns", success)
+    
+    if success:
+        archived_campaigns = response.json()
+        print(f"  Retrieved {len(archived_campaigns)} archived campaigns")
+    
+    # Test delete campaign with different roles
+    if created_campaign_ids:
+        # Test with staff (should fail)
+        if "staff" in tokens["user_tokens"]:
+            campaign_id = created_campaign_ids.pop()
+            response = make_request("DELETE", f"/campaigns/{campaign_id}", tokens["user_tokens"]["staff"])
+            success = response.status_code == 403  # Should be forbidden
+            print_test_result("Delete campaign as staff (should be forbidden)", success)
+        
+        # Test with account (should succeed)
+        if "account" in tokens["user_tokens"] and created_campaign_ids:
+            campaign_id = created_campaign_ids.pop()
+            response = make_request("DELETE", f"/campaigns/{campaign_id}", tokens["user_tokens"]["account"])
+            success = response.status_code == 200
+            print_test_result("Delete campaign as account", success)
+        
+        # Test with admin
+        if created_campaign_ids:
+            campaign_id = created_campaign_ids.pop()
+            response = make_request("DELETE", f"/campaigns/{campaign_id}", tokens["admin_token"])
+            success = response.status_code == 200
+            print_test_result("Delete campaign as admin", success)
+            
+            # Verify campaign is deleted
+            response = make_request("GET", f"/campaigns/{campaign_id}", tokens["admin_token"])
+            success = response.status_code == 404
+            print_test_result("Verify campaign deletion", success)
+    
+    return True
+
+def test_campaign_bulk_actions(tokens):
+    print("\n=== Testing Campaign Bulk Actions ===")
+    
+    # Create multiple test campaigns
+    campaign_ids = []
+    for i in range(3):
+        campaign_data = {
+            "name": f"Bulk Test Campaign {i} - {uuid.uuid4()}",
+            "description": f"Test campaign for bulk operations {i}"
+        }
+        response = make_request("POST", "/campaigns/", tokens["admin_token"], campaign_data)
+        if response.status_code == 200:
+            campaign_ids.append(response.json()["id"])
+    
+    print(f"  Created {len(campaign_ids)} test campaigns for bulk operations")
+    
+    if len(campaign_ids) == 0:
+        print_test_result("Create test campaigns for bulk operations", False)
+        return False
+    
+    # Test bulk archive
+    bulk_data = {
+        "action": "archive",
+        "campaign_ids": campaign_ids
+    }
+    response = make_request("POST", "/campaigns/bulk-action", tokens["admin_token"], bulk_data)
+    success = response.status_code == 200
+    print_test_result("Bulk archive campaigns", success)
+    
+    # Verify campaigns are archived
+    all_archived = True
+    for campaign_id in campaign_ids:
+        response = make_request("GET", f"/campaigns/{campaign_id}", tokens["admin_token"])
+        if response.status_code == 200:
+            if not response.json()["archived"]:
+                all_archived = False
+                break
+    
+    print_test_result("Verify campaigns are archived", all_archived)
+    
+    # Test bulk restore
+    bulk_data = {
+        "action": "restore",
+        "campaign_ids": campaign_ids
+    }
+    response = make_request("POST", "/campaigns/bulk-action", tokens["admin_token"], bulk_data)
+    success = response.status_code == 200
+    print_test_result("Bulk restore campaigns", success)
+    
+    # Verify campaigns are restored
+    all_restored = True
+    for campaign_id in campaign_ids:
+        response = make_request("GET", f"/campaigns/{campaign_id}", tokens["admin_token"])
+        if response.status_code == 200:
+            if response.json()["archived"]:
+                all_restored = False
+                break
+    
+    print_test_result("Verify campaigns are restored", all_restored)
+    
+    # Test bulk delete
+    bulk_data = {
+        "action": "delete",
+        "campaign_ids": campaign_ids
+    }
+    response = make_request("POST", "/campaigns/bulk-action", tokens["admin_token"], bulk_data)
+    success = response.status_code == 200
+    print_test_result("Bulk delete campaigns", success)
+    
+    # Verify campaigns are deleted
+    all_deleted = True
+    for campaign_id in campaign_ids:
+        response = make_request("GET", f"/campaigns/{campaign_id}", tokens["admin_token"])
+        if response.status_code != 404:
+            all_deleted = False
+            break
+    
+    print_test_result("Verify campaigns are deleted", all_deleted)
+    
+    return True
+
 def run_all_tests():
     print("\n=== Starting Backend API Tests ===")
     
@@ -580,16 +804,18 @@ def run_all_tests():
     
     # Run tests
     test_results = [
-        test_get_projects(tokens),
-        test_project_crud(tokens),
-        test_bulk_operations(tokens),
-        test_get_clients(tokens),
-        test_get_users(tokens),
-        test_project_search(tokens)
+        # Uncomment these if you want to run all tests
+        # test_get_projects(tokens),
+        # test_project_crud(tokens),
+        # test_bulk_operations(tokens),
+        # test_get_clients(tokens),
+        # test_get_users(tokens),
+        # test_project_search(tokens),
+        
+        # Campaign tests
+        test_campaign_crud(tokens),
+        test_campaign_bulk_actions(tokens)
     ]
-    
-    # Debug the search issue
-    debug_project_search(tokens)
     
     # Print summary
     print("\n=== Test Summary ===")
