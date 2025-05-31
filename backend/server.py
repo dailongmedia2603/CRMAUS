@@ -124,25 +124,6 @@ class Project(ProjectBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
 
-class TaskBase(BaseModel):
-    title: str
-    project_id: str
-    description: Optional[str] = None
-    assigned_to: Optional[str] = None
-    due_date: Optional[datetime] = None
-    priority: str = "medium"  # low, medium, high
-    status: str = "to_do"  # to_do, in_progress, review, completed
-
-class TaskCreate(TaskBase):
-    pass
-
-class Task(TaskBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-    created_by: Optional[str] = None
-    completion_date: Optional[datetime] = None
-
 class ContractBase(BaseModel):
     client_id: str
     project_id: Optional[str] = None
