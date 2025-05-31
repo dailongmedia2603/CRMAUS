@@ -664,7 +664,8 @@ def test_campaign_crud(tokens):
     
     # Test search functionality
     if created_campaign_ids:
-        search_term = "Marketing"
+        # Use a search term that will match existing campaigns
+        search_term = "Google"
         response = make_request("GET", "/campaigns/", tokens["admin_token"], params={"search": search_term})
         success = response.status_code == 200
         print_test_result(f"Search campaigns with term: {search_term}", success)
@@ -676,8 +677,8 @@ def test_campaign_crud(tokens):
                 print(f"    - {campaign['name']}")
             
             # Use case-insensitive comparison since the API uses case-insensitive regex
-            found_marketing = any(search_term.lower() in campaign["name"].lower() for campaign in search_results)
-            print_test_result(f"Verify search results contain '{search_term}'", found_marketing)
+            found_match = any(search_term.lower() in campaign["name"].lower() for campaign in search_results)
+            print_test_result(f"Verify search results contain '{search_term}'", found_match)
     
     # Test get archived campaigns
     response = make_request("GET", "/campaigns/", tokens["admin_token"], params={"archived": "true"})
