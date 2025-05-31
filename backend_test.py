@@ -981,6 +981,7 @@ def test_task_crud(tokens):
     task_data = [
         {
             "name": "Task 1 - Not Started",
+            "service_id": service_id,
             "status": "not_started",
             "start_date": (now - timedelta(days=5)).isoformat(),
             "end_date": (now + timedelta(days=10)).isoformat(),
@@ -988,6 +989,7 @@ def test_task_crud(tokens):
         },
         {
             "name": "Task 2 - In Progress",
+            "service_id": service_id,
             "status": "in_progress",
             "start_date": (now - timedelta(days=10)).isoformat(),
             "end_date": (now + timedelta(days=5)).isoformat(),
@@ -995,6 +997,7 @@ def test_task_crud(tokens):
         },
         {
             "name": "Task 3 - Completed",
+            "service_id": service_id,
             "status": "completed",
             "start_date": (now - timedelta(days=15)).isoformat(),
             "end_date": now.isoformat(),
