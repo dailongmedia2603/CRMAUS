@@ -806,8 +806,9 @@ const Projects = ({ user }) => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="relative">
                       <button 
-                        className="text-gray-400 hover:text-gray-600"
-                        onClick={() => setActionDropdownOpen(actionDropdownOpen === project.id ? null : project.id)}
+                        className="text-gray-400 hover:text-gray-600 p-1"
+                        onClick={(e) => handleDropdownToggle(project.id, e)}
+                        type="button"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -821,7 +822,10 @@ const Projects = ({ user }) => {
                             className="dropdown-backdrop" 
                             onClick={() => setActionDropdownOpen(null)}
                           />
-                          <div className="dropdown-menu">
+                          <div 
+                            className="dropdown-menu"
+                            style={dropdownPosition[project.id] || {}}
+                          >
                             <div className="py-1">
                               <button
                                 onClick={() => {
