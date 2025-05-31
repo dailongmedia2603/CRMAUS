@@ -217,6 +217,75 @@ class Campaign(CampaignBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
 
+# Service Models (thuộc Campaign)
+class ServiceBase(BaseModel):
+    name: str
+    campaign_id: str
+    sort_order: int = 0
+    description: Optional[str] = None
+
+class ServiceCreate(ServiceBase):
+    pass
+
+class ServiceUpdate(BaseModel):
+    name: Optional[str] = None
+    sort_order: Optional[int] = None
+    description: Optional[str] = None
+
+class Service(ServiceBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
+# Task Models (thuộc Service)
+class TaskBase(BaseModel):
+    name: str
+    service_id: str
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    status: str = "not_started"  # not_started, in_progress, completed
+    template_id: Optional[str] = None  # Link to service template
+    description: Optional[str] = None
+
+class TaskCreate(TaskBase):
+    pass
+
+class TaskUpdate(BaseModel):
+    name: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    status: Optional[str] = None
+    template_id: Optional[str] = None
+    description: Optional[str] = None
+
+class Task(TaskBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
+# Template Models (for service templates)
+class TemplateBase(BaseModel):
+    name: str
+    content: Optional[str] = None  # JSON content for template
+    template_type: str = "service"  # service, task, etc.
+    archived: bool = False
+
+class TemplateCreate(TemplateBase):
+    pass
+
+class TemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    content: Optional[str] = None
+    archived: Optional[bool] = None
+
+class Template(TemplateBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
 # Hàm tiện ích
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
