@@ -250,8 +250,13 @@ class TaskBase(BaseModel):
     template_id: Optional[str] = None  # Link to service template
     description: Optional[str] = None
 
-class TaskCreate(TaskBase):
-    pass
+class TaskCreate(BaseModel):
+    name: str
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    status: str = "not_started"  # not_started, in_progress, completed
+    template_id: Optional[str] = None  # Link to service template
+    description: Optional[str] = None
 
 class TaskUpdate(BaseModel):
     name: Optional[str] = None
