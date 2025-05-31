@@ -552,3 +552,7 @@ agent_communication:
     message: "Starting testing of Document Management UI. Will test 2-column layout, folder and document creation, search and filters, bulk operations, permissions, and responsive design."
   - agent: "testing"
     message: "All Document Management UI tests have been completed successfully. The 2-column layout displays correctly. Folder and document creation work as expected. Search and filters function properly. Bulk operations can be applied to selected documents. Permissions are enforced correctly. The UI is responsive on mobile devices."
+  - agent: "testing"
+    message: "Testing the replacement of 'Công việc' menu with 'Task' menu. Will verify menu structure, navigation, and page content."
+  - agent: "testing"
+    message: "Successfully verified the menu replacement. The 'Công việc' menu has been replaced with 'Task' menu in the sidebar. The Task menu is positioned correctly below the Client menu. The Task page shows the correct development message and the URL is correctly set to '/task'. However, there's still a 'Công việc gần đây' section in the Dashboard that should be reviewed."
