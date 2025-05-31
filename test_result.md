@@ -31,15 +31,18 @@ backend:
 
   - task: "Projects API - DELETE /api/projects/{project_id}"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the DELETE /api/projects/{project_id} endpoint and verify that only admin/account roles can delete projects"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the DELETE /api/projects/{project_id} endpoint. The API correctly deletes projects when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete projects. After deletion, attempting to access the deleted project returns a 404 Not Found response."
 
   - task: "Projects API - Bulk Operations"
     implemented: true
