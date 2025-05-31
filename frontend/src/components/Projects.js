@@ -27,6 +27,7 @@ const Projects = ({ user }) => {
   const [editingProject, setEditingProject] = useState(null);
   const [bulkActionOpen, setBulkActionOpen] = useState(false);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({});
   
   // Form state
   const [projectForm, setProjectForm] = useState({
