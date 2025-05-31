@@ -753,6 +753,13 @@ test_plan:
     - "Project model fields"
     - "Projects Bulk Operations"
     - "Projects Error Handling"
+    - "Projects UI - Header and Time Filter"
+    - "Projects UI - Statistics Widgets"
+    - "Projects UI - Toolbar Features"
+    - "Projects UI - Table Display"
+    - "Projects UI - CRUD Operations"
+    - "Projects UI - Bulk Operations"
+    - "Projects UI - Responsive Design"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
