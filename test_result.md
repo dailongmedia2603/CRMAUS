@@ -215,6 +215,66 @@ backend:
         agent: "testing"
         comment: "Performed real-world testing of the bulk delete functionality with actual task data. Successfully tested the POST /api/tasks/bulk-delete endpoint with 2-3 real task IDs. The endpoint correctly deleted the specified tasks and returned the proper response with deleted_count. Verified that the tasks were actually deleted by checking the task list after deletion. All edge cases were handled correctly: empty array returns 400 error, too many tasks (>50) returns 400 error, and non-existent task IDs returns 0 deleted_count. The frontend integration with this endpoint should work correctly."
 
+  - task: "Templates API - CRUD Operations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Template API CRUD operations including POST /api/templates/, GET /api/templates/, GET /api/templates/{id}, PUT /api/templates/{id}, and search functionality"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all Template API CRUD operations. The POST /api/templates/ endpoint correctly creates new templates with name, content, and template_type. The GET /api/templates/ endpoint returns all templates with proper filtering for archived status and search term. The GET /api/templates/{id} endpoint returns the specific template details. The PUT /api/templates/{id} endpoint correctly updates template name and content. The search functionality works properly, finding templates by name in a case-insensitive manner. All endpoints return the expected status codes and response formats."
+
+  - task: "Templates API - Bulk Operations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Template API bulk operations including bulk-archive, bulk-restore, and bulk-delete"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all Template API bulk operations. The POST /api/templates/bulk-archive endpoint correctly archives multiple templates at once. The POST /api/templates/bulk-restore endpoint correctly restores multiple archived templates. The POST /api/templates/bulk-delete endpoint correctly deletes multiple templates at once. All bulk operations return the proper count of affected templates in the response. The archived filter in GET /api/templates/?archived=true correctly returns only archived templates."
+
+  - task: "Templates API - Advanced Features"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Template API advanced features including template duplication and permission checks"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Template API advanced features. The POST /api/templates/{id}/duplicate endpoint correctly duplicates a template, creating a new template with '(Copy)' appended to the name and all other properties copied from the original. The permission checks are working properly - only the template creator or admin users can update templates, and only admin users can perform bulk delete operations. The creator_name field is correctly included in the template response."
+
+  - task: "Templates API - Error Handling"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Template API error handling for non-existent templates and permission issues"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Template API error handling. The API correctly returns a 404 Not Found response when attempting to access a non-existent template. The API correctly returns a 403 Forbidden response when a user without sufficient permissions attempts to update or delete a template. All error responses include appropriate detail messages explaining the issue."
+
 frontend:
   - task: "Tasks UI - Bulk Delete"
     implemented: true
@@ -439,6 +499,10 @@ test_plan:
     - "Campaigns UI - Actions Dropdown"
     - "Campaigns UI - Bulk Operations"
     - "Campaigns UI - Integration with Backend"
+    - "Templates API - CRUD Operations"
+    - "Templates API - Bulk Operations"
+    - "Templates API - Advanced Features"
+    - "Templates API - Error Handling"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -490,3 +554,5 @@ agent_communication:
     message: "Attempted to test the frontend bulk delete tasks functionality in the Campaign Detail page, but encountered issues with the Playwright testing tool. The tool consistently returns the error 'str' object has no attribute 'get' when trying to interact with page elements. This appears to be an issue with the Playwright environment rather than with the application itself. Based on code review, the bulk delete functionality in the frontend appears to be implemented correctly, but we were unable to verify it through automated testing."
   - agent: "testing"
     message: "Performed real-world testing of the bulk delete functionality with actual task data. Successfully tested the POST /api/tasks/bulk-delete endpoint with 2-3 real task IDs. The endpoint correctly deleted the specified tasks and returned the proper response with deleted_count. Verified that the tasks were actually deleted by checking the task list after deletion. All edge cases were handled correctly: empty array returns 400 error, too many tasks (>50) returns 400 error, and non-existent task IDs returns 0 deleted_count. The frontend integration with this endpoint should work correctly."
+  - agent: "testing"
+    message: "Completed testing of Template API features. All endpoints are working correctly: POST /api/templates/ creates new templates, GET /api/templates/ retrieves templates with search and archived filter, GET /api/templates/{id} retrieves template details, PUT /api/templates/{id} updates templates, and DELETE /api/templates/{id} deletes templates. Bulk operations (archive, restore, delete) work correctly. The template duplication feature works as expected, creating a copy with '(Copy)' appended to the name. Permission checks are properly enforced - only creators or admins can update templates, and only admins can bulk delete. Error handling returns appropriate status codes (404 for non-existent templates, 403 for permission issues)."
