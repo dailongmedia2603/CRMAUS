@@ -657,6 +657,294 @@ def test_bulk_delete_tasks():
     else:
         print("\n❌ Some tests failed. Check the logs above for details.")
 
+def test_template_api():
+    """Test template API functionality"""
+    print("\n=== TESTING TEMPLATE API ===\n")
+    
+    # Step 1: Get admin token
+    print("1. Getting admin authentication token...")
+    admin_token = get_token()
+    if not admin_token:
+        log_test("Admin Authentication", False, "Failed to get admin authentication token")
+        return
+    
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
+    
+    # Step 2: Create a new template (as admin)
+    print("\n2. Creating a new template as admin...")
+    template_data = {
+        "name": "Marketing Email Template",
+        "content": "This is a sample marketing email template content with {{variable}} placeholders.",
+        "template_type": "service"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/templates/", 
+        headers=admin_headers, 
+        json=template_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Template", False, f"Failed to create template: {response.text}", response)
+        return
+    
+    template = response.json()
+    template_id = template["id"]
+    log_test("Create Template", True, f"Successfully created template with ID: {template_id}", response)
+    
+    # Step 3: Create another template for testing bulk operations
+    print("\n3. Creating another template for bulk operations testing...")
+    template_data = {
+        "name": "Social Media Post Template",
+        "content": "This is a sample social media post template with {{hashtags}} and {{content}}.",
+        "template_type": "service"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/templates/", 
+        headers=admin_headers, 
+        json=template_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Second Template", False, f"Failed to create second template: {response.text}", response)
+    else:
+        second_template = response.json()
+        second_template_id = second_template["id"]
+        log_test("Create Second Template", True, f"Successfully created second template with ID: {second_template_id}", response)
+    
+    # Step 4: Get list of templates
+    print("\n4. Getting list of templates...")
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/", headers=admin_headers)
+    
+    if response.status_code != 200:
+        log_test("Get Templates", False, f"Failed to get templates: {response.text}", response)
+    else:
+        templates = response.json()
+        log_test("Get Templates", True, f"Successfully retrieved {len(templates)} templates", response)
+        
+        # Print the templates
+        print("\nTemplates:")
+        for idx, tmpl in enumerate(templates, 1):
+            print(f"{idx}. {tmpl['name']} (type: {tmpl['template_type']}) - Created by: {tmpl.get('creator_name', 'Unknown')}")
+    
+    # Step 5: Test search functionality
+    print("\n5. Testing search functionality...")
+    search_term = "Marketing"
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/?search={search_term}", headers=admin_headers)
+    
+    if response.status_code != 200:
+        log_test("Search Templates", False, f"Failed to search templates: {response.text}", response)
+    else:
+        search_results = response.json()
+        if any(search_term.lower() in template['name'].lower() for template in search_results):
+            log_test("Search Templates", True, f"Successfully found templates matching '{search_term}'", response)
+        else:
+            log_test("Search Templates", False, f"Search returned results but none match '{search_term}'", response)
+    
+    # Step 6: Get specific template
+    if 'template_id' in locals():
+        print(f"\n6. Getting specific template with ID: {template_id}...")
+        response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/{template_id}", headers=admin_headers)
+        
+        if response.status_code != 200:
+            log_test("Get Specific Template", False, f"Failed to get template: {response.text}", response)
+        else:
+            template_details = response.json()
+            log_test("Get Specific Template", True, f"Successfully retrieved template: {template_details['name']}", response)
+    
+    # Step 7: Update template
+    if 'template_id' in locals():
+        print(f"\n7. Updating template with ID: {template_id}...")
+        update_data = {
+            "name": "Updated Marketing Email Template",
+            "content": "This is an updated marketing email template with improved {{variable}} placeholders."
+        }
+        
+        response = requests.put(
+            f"{BASE_URL}{API_PREFIX}/templates/{template_id}", 
+            headers=admin_headers, 
+            json=update_data
+        )
+        
+        if response.status_code != 200:
+            log_test("Update Template", False, f"Failed to update template: {response.text}", response)
+        else:
+            updated_template = response.json()
+            log_test("Update Template", True, f"Successfully updated template: {updated_template['name']}", response)
+    
+    # Step 8: Test template duplication
+    if 'template_id' in locals():
+        print(f"\n8. Duplicating template with ID: {template_id}...")
+        response = requests.post(
+            f"{BASE_URL}{API_PREFIX}/templates/{template_id}/duplicate", 
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            log_test("Duplicate Template", False, f"Failed to duplicate template: {response.text}", response)
+        else:
+            duplicated_template = response.json()
+            duplicated_template_id = duplicated_template["id"]
+            log_test("Duplicate Template", True, f"Successfully duplicated template with new ID: {duplicated_template_id}", response)
+            
+            # Verify the duplicated template has "(Copy)" in the name
+            if "(Copy)" in duplicated_template["name"]:
+                log_test("Verify Duplicate Name", True, f"Duplicated template has correct name format: {duplicated_template['name']}", response)
+            else:
+                log_test("Verify Duplicate Name", False, f"Duplicated template does not have '(Copy)' in name: {duplicated_template['name']}", response)
+    
+    # Step 9: Test bulk archive
+    print("\n9. Testing bulk archive functionality...")
+    template_ids_to_archive = []
+    
+    # Collect template IDs to archive
+    if 'template_id' in locals():
+        template_ids_to_archive.append(template_id)
+    if 'second_template_id' in locals():
+        template_ids_to_archive.append(second_template_id)
+    
+    if template_ids_to_archive:
+        response = requests.post(
+            f"{BASE_URL}{API_PREFIX}/templates/bulk-archive", 
+            headers=admin_headers, 
+            json=template_ids_to_archive
+        )
+        
+        if response.status_code != 200:
+            log_test("Bulk Archive", False, f"Failed to bulk archive templates: {response.text}", response)
+        else:
+            result = response.json()
+            log_test("Bulk Archive", True, f"Successfully archived {result.get('message', 'templates')}", response)
+    
+    # Step 10: Get archived templates
+    print("\n10. Getting archived templates...")
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/?archived=true", headers=admin_headers)
+    
+    if response.status_code != 200:
+        log_test("Get Archived Templates", False, f"Failed to get archived templates: {response.text}", response)
+    else:
+        archived_templates = response.json()
+        log_test("Get Archived Templates", True, f"Successfully retrieved {len(archived_templates)} archived templates", response)
+        
+        # Verify our templates are in the archived list
+        archived_ids = [t["id"] for t in archived_templates]
+        all_archived = all(tid in archived_ids for tid in template_ids_to_archive)
+        
+        if all_archived:
+            log_test("Verify Archived Status", True, "All templates were successfully archived", response)
+        else:
+            log_test("Verify Archived Status", False, "Some templates were not archived correctly", response)
+    
+    # Step 11: Test bulk restore
+    print("\n11. Testing bulk restore functionality...")
+    if template_ids_to_archive:
+        response = requests.post(
+            f"{BASE_URL}{API_PREFIX}/templates/bulk-restore", 
+            headers=admin_headers, 
+            json=template_ids_to_archive
+        )
+        
+        if response.status_code != 200:
+            log_test("Bulk Restore", False, f"Failed to bulk restore templates: {response.text}", response)
+        else:
+            result = response.json()
+            log_test("Bulk Restore", True, f"Successfully restored {result.get('message', 'templates')}", response)
+    
+    # Step 12: Verify templates are restored
+    print("\n12. Verifying templates are restored...")
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/?archived=false", headers=admin_headers)
+    
+    if response.status_code != 200:
+        log_test("Verify Restored Templates", False, f"Failed to get active templates: {response.text}", response)
+    else:
+        active_templates = response.json()
+        active_ids = [t["id"] for t in active_templates]
+        all_restored = all(tid in active_ids for tid in template_ids_to_archive)
+        
+        if all_restored:
+            log_test("Verify Restored Status", True, "All templates were successfully restored", response)
+        else:
+            log_test("Verify Restored Status", False, "Some templates were not restored correctly", response)
+    
+    # Step 13: Test error case - get non-existent template
+    print("\n13. Testing error case - get non-existent template...")
+    non_existent_id = "non_existent_template_id"
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/{non_existent_id}", headers=admin_headers)
+    
+    if response.status_code == 404:
+        log_test("Error Case - Non-existent Template", True, "Correctly returned 404 for non-existent template", response)
+    else:
+        log_test("Error Case - Non-existent Template", False, f"Did not correctly handle non-existent template: {response.status_code}", response)
+    
+    # Step 14: Test bulk delete as admin
+    print("\n14. Testing bulk delete as admin...")
+    # Only delete the duplicated template to keep the original ones for other tests
+    templates_to_delete = []
+    if 'duplicated_template_id' in locals():
+        templates_to_delete.append(duplicated_template_id)
+    
+    if templates_to_delete:
+        response = requests.post(
+            f"{BASE_URL}{API_PREFIX}/templates/bulk-delete", 
+            headers=admin_headers,
+            json=templates_to_delete
+        )
+        
+        if response.status_code != 200:
+            log_test("Bulk Delete", False, f"Failed to bulk delete templates: {response.text}", response)
+        else:
+            result = response.json()
+            log_test("Bulk Delete", True, f"Successfully deleted templates: {result.get('message', '')}", response)
+    
+    # Step 15: Clean up - delete all test templates
+    print("\n15. Cleaning up - deleting all test templates...")
+    templates_to_delete = []
+    
+    # Get all templates
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/", headers=admin_headers)
+    if response.status_code == 200:
+        all_templates = response.json()
+        
+        # Find templates created during this test
+        test_template_names = [
+            "Marketing Email Template", 
+            "Updated Marketing Email Template",
+            "Social Media Post Template"
+        ]
+        
+        for template in all_templates:
+            if any(test_name in template["name"] for test_name in test_template_names) or "(Copy)" in template["name"]:
+                templates_to_delete.append(template["id"])
+        
+        if templates_to_delete:
+            response = requests.post(
+                f"{BASE_URL}{API_PREFIX}/templates/bulk-delete", 
+                headers=admin_headers,
+                json=templates_to_delete
+            )
+            
+            if response.status_code != 200:
+                log_test("Clean Up", False, f"Failed to clean up test templates: {response.text}", response)
+            else:
+                result = response.json()
+                log_test("Clean Up", True, f"Successfully cleaned up test templates: {result.get('message', '')}", response)
+    
+    # Print summary
+    print("\n=== Test Summary ===")
+    print(f"Total tests: {test_results['success'] + test_results['failure']}")
+    print(f"Passed: {test_results['success']}")
+    print(f"Failed: {test_results['failure']}")
+    
+    if test_results['failure'] == 0:
+        print("\n✅ All tests passed successfully!")
+    else:
+        print("\n❌ Some tests failed. Check the logs above for details.")
+
 if __name__ == "__main__":
     # Reset test results
     test_results = {
@@ -667,4 +955,5 @@ if __name__ == "__main__":
     
     # Run the tests
     # test_task_creation()
-    test_bulk_delete_tasks()
+    # test_bulk_delete_tasks()
+    test_template_api()
