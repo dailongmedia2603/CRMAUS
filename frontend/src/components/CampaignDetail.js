@@ -351,6 +351,39 @@ const CampaignDetail = () => {
     );
   };
 
+  // Bulk delete tasks
+  const handleBulkDeleteTasks = async () => {
+    if (selectedTasks.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một nhiệm vụ để xóa');
+      return;
+    }
+
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} nhiệm vụ đã chọn?`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/api/tasks/bulk`, {
+        data: selectedTasks,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      toast.success(`Đã xóa ${response.data.deleted_count} nhiệm vụ thành công`);
+      setSelectedTasks([]); // Clear selection
+      
+      // Refresh tasks list for all services
+      services.forEach(service => {
+        fetchTasks(service.id);
+      });
+    } catch (error) {
+      console.error('Error bulk deleting tasks:', error);
+      toast.error('Có lỗi xảy ra khi xóa nhiệm vụ');
+    }
+  };
+
   // Effects
   useEffect(() => {
     setLoading(true);
