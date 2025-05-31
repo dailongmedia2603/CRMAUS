@@ -1264,6 +1264,230 @@ async def bulk_campaign_action(
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
+# ================== SERVICE ENDPOINTS ==================
+
+@api_router.post("/campaigns/{campaign_id}/services/", response_model=Service)
+async def create_service(
+    campaign_id: str,
+    service: ServiceCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo dịch vụ mới trong chiến dịch"""
+    # Verify campaign exists
+    campaign = await db.campaigns.find_one({"id": campaign_id})
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    service_dict = service.dict()
+    service_dict["id"] = str(uuid.uuid4())
+    service_dict["campaign_id"] = campaign_id
+    service_dict["created_at"] = datetime.utcnow()
+    service_dict["updated_at"] = datetime.utcnow()
+    service_dict["created_by"] = current_user.id
+    
+    await db.services.insert_one(service_dict)
+    return Service(**service_dict)
+
+@api_router.get("/campaigns/{campaign_id}/services/", response_model=List[Service])
+async def get_services(
+    campaign_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách dịch vụ trong chiến dịch"""
+    services = await db.services.find({"campaign_id": campaign_id}).sort([("sort_order", 1), ("created_at", 1)]).to_list(length=None)
+    return [Service(**service) for service in services]
+
+@api_router.put("/services/{service_id}", response_model=Service)
+async def update_service(
+    service_id: str,
+    service_update: ServiceUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật dịch vụ"""
+    existing_service = await db.services.find_one({"id": service_id})
+    if not existing_service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    update_data = {k: v for k, v in service_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.services.update_one({"id": service_id}, {"$set": update_data})
+    
+    updated_service = await db.services.find_one({"id": service_id})
+    return Service(**updated_service)
+
+@api_router.delete("/services/{service_id}")
+async def delete_service(
+    service_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa dịch vụ và tất cả tasks thuộc dịch vụ"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Only admin and account users can delete services"
+        )
+    
+    # Delete all tasks in this service first
+    await db.tasks.delete_many({"service_id": service_id})
+    
+    # Delete the service
+    result = await db.services.delete_one({"id": service_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    return {"detail": "Service and all its tasks deleted successfully"}
+
+# ================== TASK ENDPOINTS ==================
+
+@api_router.post("/services/{service_id}/tasks/", response_model=Task)
+async def create_task(
+    service_id: str,
+    task: TaskCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo nhiệm vụ mới trong dịch vụ"""
+    # Verify service exists
+    service = await db.services.find_one({"id": service_id})
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    task_dict = task.dict()
+    task_dict["id"] = str(uuid.uuid4())
+    task_dict["service_id"] = service_id
+    task_dict["created_at"] = datetime.utcnow()
+    task_dict["updated_at"] = datetime.utcnow()
+    task_dict["created_by"] = current_user.id
+    
+    await db.tasks.insert_one(task_dict)
+    return Task(**task_dict)
+
+@api_router.get("/services/{service_id}/tasks/", response_model=List[Task])
+async def get_tasks(
+    service_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách nhiệm vụ trong dịch vụ"""
+    tasks = await db.tasks.find({"service_id": service_id}).sort([("created_at", 1)]).to_list(length=None)
+    
+    # Enrich with template info
+    for task in tasks:
+        if task.get("template_id"):
+            template = await db.templates.find_one({"id": task["template_id"]})
+            task["template_name"] = template.get("name", "Unknown") if template else "Unknown"
+        else:
+            task["template_name"] = None
+    
+    return [Task(**task) for task in tasks]
+
+@api_router.put("/tasks/{task_id}", response_model=Task)
+async def update_task(
+    task_id: str,
+    task_update: TaskUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Cập nhật nhiệm vụ"""
+    existing_task = await db.tasks.find_one({"id": task_id})
+    if not existing_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    update_data = {k: v for k, v in task_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.tasks.update_one({"id": task_id}, {"$set": update_data})
+    
+    updated_task = await db.tasks.find_one({"id": task_id})
+    
+    # Enrich with template info
+    if updated_task.get("template_id"):
+        template = await db.templates.find_one({"id": updated_task["template_id"]})
+        updated_task["template_name"] = template.get("name", "Unknown") if template else "Unknown"
+    else:
+        updated_task["template_name"] = None
+    
+    return Task(**updated_task)
+
+@api_router.delete("/tasks/{task_id}")
+async def delete_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Xóa nhiệm vụ"""
+    result = await db.tasks.delete_one({"id": task_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    return {"detail": "Task deleted successfully"}
+
+@api_router.post("/tasks/{task_id}/copy")
+async def copy_task(
+    task_id: str,
+    quantity: int = Body(..., embed=True),
+    current_user: User = Depends(get_current_user)
+):
+    """Sao chép nhiệm vụ"""
+    if quantity <= 0 or quantity > 20:
+        raise HTTPException(status_code=400, detail="Quantity must be between 1 and 20")
+    
+    original_task = await db.tasks.find_one({"id": task_id})
+    if not original_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    copied_tasks = []
+    for i in range(quantity):
+        task_dict = original_task.copy()
+        task_dict["id"] = str(uuid.uuid4())
+        task_dict["name"] = f"{original_task['name']} (Copy {i+1})"
+        task_dict["created_at"] = datetime.utcnow()
+        task_dict["updated_at"] = datetime.utcnow()
+        task_dict["created_by"] = current_user.id
+        task_dict["status"] = "not_started"  # Reset status for copies
+        
+        await db.tasks.insert_one(task_dict)
+        copied_tasks.append(task_dict)
+    
+    return {"detail": f"{quantity} tasks copied successfully", "copied_tasks": copied_tasks}
+
+# ================== TEMPLATE ENDPOINTS ==================
+
+@api_router.post("/templates/", response_model=Template)
+async def create_template(
+    template: TemplateCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Tạo template mới"""
+    template_dict = template.dict()
+    template_dict["id"] = str(uuid.uuid4())
+    template_dict["created_at"] = datetime.utcnow()
+    template_dict["updated_at"] = datetime.utcnow()
+    template_dict["created_by"] = current_user.id
+    
+    await db.templates.insert_one(template_dict)
+    return Template(**template_dict)
+
+@api_router.get("/templates/", response_model=List[Template])
+async def get_templates(
+    template_type: str = "service",
+    archived: bool = False,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy danh sách templates"""
+    query_filter = {"template_type": template_type, "archived": archived}
+    templates = await db.templates.find(query_filter).sort([("created_at", -1)]).to_list(length=None)
+    return [Template(**template) for template in templates]
+
+@api_router.get("/templates/{template_id}", response_model=Template)
+async def get_template(
+    template_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy thông tin chi tiết template"""
+    template = await db.templates.find_one({"id": template_id})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    return Template(**template)
+
 # Root endpoint
 @api_router.get("/")
 async def root():
