@@ -558,7 +558,7 @@ const SidebarContent = ({ user, logout }) => {
             <button
               onClick={() => toggleSubmenu("project")}
               className={`${
-                location.startsWith("/projects")
+                location.startsWith("/projects") || location.startsWith("/campaigns")
                   ? "bg-indigo-800 text-white"
                   : "text-indigo-100 hover:bg-indigo-600"
               } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
