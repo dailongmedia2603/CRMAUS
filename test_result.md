@@ -102,7 +102,41 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Tôi cần test backend CRM để tạo các tài khoản demo cho các role khác nhau. Hãy: 1. Kiểm tra API setup và tạo admin đầu tiên 2. Tạo các tài khoản demo với thông tin như sau: - Admin: admin@crm.com / admin123 (role: admin) - Sale: sale@crm.com / sale123 (role: account) - Editor: editor@crm.com / editor123 (role: creative) - Content: content@crm.com / content123 (role: staff) - Design: design@crm.com / design123 (role: creative) - Manager: manager@crm.com / manager123 (role: account) - Finance: finance@crm.com / finance123 (role: account) 3. Test đăng nhập từng tài khoản để đảm bảo hoạt động 4. Kiểm tra API dashboard và health check"
+user_problem_statement: "Test backend API cho tính năng Projects mới:
+
+1. **Test Projects API với filters mới:**
+   - GET /api/projects/ với các parameters mới:
+     - archived=false/true
+     - status=planning/in_progress/completed/pending/overdue
+     - year=2024, quarter=4, month=12
+     - search=\"test\"
+     - team_member=user_id
+   - Verify filtering hoạt động đúng
+
+2. **Test Projects Statistics API:**
+   - GET /api/projects/statistics
+   - GET /api/projects/statistics?year=2024
+   - GET /api/projects/statistics?year=2024&quarter=4
+   - GET /api/projects/statistics?year=2024&month=12
+   - Verify trả về đúng format: {total_projects, in_progress, completed, pending, overdue}
+
+3. **Test Project model fields mới:**
+   - POST /api/projects/ với data: {\"name\": \"Test Project\", \"client_id\": \"existing_client_id\", \"team\": [\"user_id1\"], \"contract_value\": 100000, \"debt\": 20000, \"archived\": false}
+   - PUT để update project với các fields mới
+   - Verify tất cả fields được save và retrieve đúng
+
+4. **Test Bulk Operations:**
+   - POST /api/projects/bulk-archive với array project IDs
+   - POST /api/projects/bulk-restore với array project IDs  
+   - POST /api/projects/bulk-delete với array project IDs (admin only)
+   - Verify permissions và functionality
+
+5. **Test Error handling:**
+   - Test với invalid year/quarter/month values
+   - Test với non-existent project IDs cho bulk operations
+   - Test permissions (non-admin trying bulk delete)
+
+Sử dụng admin@example.com token để test và tạo sample data nếu cần."
 
 backend:
   - task: "Setup API and create first admin"
