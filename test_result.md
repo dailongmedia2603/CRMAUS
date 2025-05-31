@@ -122,9 +122,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Projects UI - Time Filter Tabs"
-    - "Projects UI - Toolbar Layout"
-    - "Projects UI - Advanced Filter"
+    - "Projects API - GET /api/projects/"
+    - "Projects API - PUT /api/projects/{project_id}"
+    - "Projects API - DELETE /api/projects/{project_id}"
+    - "Projects API - Bulk Operations"
+    - "Clients API - GET /api/clients/"
+    - "Users API - GET /api/users/"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
