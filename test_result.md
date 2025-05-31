@@ -44,6 +44,8 @@ metadata:
 test_plan:
   current_focus:
     - "Projects UI - Time Filter Tabs"
+    - "Projects UI - Toolbar Layout"
+    - "Projects UI - Advanced Filter"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
