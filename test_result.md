@@ -213,6 +213,18 @@ backend:
         comment: "Successfully implemented and tested the bulk delete tasks functionality. Added Body(...) parameter to the endpoint definition and created an alternative POST /api/tasks/bulk-delete endpoint. The POST endpoint works correctly, accepting an array of task IDs in the request body. It properly handles all edge cases: empty array (returns 400 error), too many tasks (>50, returns 400 error), and non-existent task IDs (returns 0 deleted_count). The response format is correct, returning {detail: 'X tasks deleted successfully', deleted_count: X}. Verified that tasks are actually deleted by checking the task list after deletion."
 
 frontend:
+  - task: "Tasks UI - Bulk Delete"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/CampaignDetail.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk delete tasks functionality in the Campaign Detail page after the backend API was changed from DELETE to POST method."
+
   - task: "Campaigns UI - Toolbar Components"
     implemented: true
     working: true
