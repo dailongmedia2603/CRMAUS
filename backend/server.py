@@ -1447,7 +1447,7 @@ async def delete_task(
 
 @api_router.delete("/tasks/bulk")
 async def bulk_delete_tasks(
-    task_ids: List[str],
+    task_ids: List[str] = Body(...),
     current_user: User = Depends(get_current_user)
 ):
     """Xóa nhiều nhiệm vụ cùng lúc"""
