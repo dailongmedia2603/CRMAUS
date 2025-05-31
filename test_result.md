@@ -486,15 +486,18 @@ backend:
 
   - task: "Projects Bulk Operations"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test bulk operations: bulk-archive, bulk-restore, and bulk-delete for projects"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all bulk operations for projects. The bulk-archive endpoint correctly archives multiple projects at once. The bulk-restore endpoint correctly restores archived projects. The bulk-delete endpoint correctly deletes multiple projects at once. Permission restrictions are properly enforced - only admin users can perform bulk delete operations."
 
   - task: "Projects Error Handling"
     implemented: true
