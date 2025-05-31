@@ -671,7 +671,8 @@ def test_campaign_crud(tokens):
         
         if success:
             search_results = response.json()
-            found_marketing = any(search_term in campaign["name"] for campaign in search_results)
+            # Use case-insensitive comparison since the API uses case-insensitive regex
+            found_marketing = any(search_term.lower() in campaign["name"].lower() for campaign in search_results)
             print_test_result(f"Verify search results contain '{search_term}'", found_marketing)
     
     # Test get archived campaigns
