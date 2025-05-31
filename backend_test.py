@@ -588,6 +588,9 @@ def run_all_tests():
         test_project_search(tokens)
     ]
     
+    # Debug the search issue
+    debug_project_search(tokens)
+    
     # Print summary
     print("\n=== Test Summary ===")
     print(f"Total tests: {len(test_results)}")
@@ -595,6 +598,90 @@ def run_all_tests():
     print(f"Failed: {test_results.count(False)}")
     
     return all(test_results)
+
+def debug_project_search(tokens):
+    print("\n=== Debugging Project Search by Client Name ===")
+    
+    # Get all clients
+    response = make_request("GET", "/clients/", tokens["admin_token"])
+    if response.status_code != 200:
+        print(f"Failed to get clients: {response.status_code}")
+        return
+    
+    clients = response.json()
+    print(f"Found {len(clients)} clients:")
+    for client in clients:
+        print(f"  Client ID: {client['id']}, Name: {client['name']}")
+    
+    # Find Dai Long client
+    dai_long_client = None
+    for client in clients:
+        if "Dai Long" in client["name"]:
+            dai_long_client = client
+            break
+    
+    if not dai_long_client:
+        print("Dai Long client not found!")
+        return
+    
+    print(f"\nDai Long client details:")
+    print(f"  ID: {dai_long_client['id']}")
+    print(f"  Name: {dai_long_client['name']}")
+    
+    # Get all projects
+    response = make_request("GET", "/projects/", tokens["admin_token"])
+    if response.status_code != 200:
+        print(f"Failed to get projects: {response.status_code}")
+        return
+    
+    projects = response.json()
+    print(f"\nFound {len(projects)} projects:")
+    for project in projects:
+        print(f"  Project ID: {project['id']}, Name: {project['name']}, Client ID: {project['client_id']}")
+    
+    # Check if any project is associated with Dai Long client
+    dai_long_projects = [p for p in projects if p["client_id"] == dai_long_client["id"]]
+    print(f"\nProjects associated with Dai Long client: {len(dai_long_projects)}")
+    for project in dai_long_projects:
+        print(f"  Project ID: {project['id']}, Name: {project['name']}")
+    
+    # Try to create a new project for Dai Long client
+    project_data = {
+        "name": "Dai Long Test Project",
+        "client_id": dai_long_client["id"],
+        "description": "A test project for Dai Long client",
+        "status": "planning"
+    }
+    
+    response = make_request("POST", "/projects/", tokens["admin_token"], project_data)
+    if response.status_code == 200:
+        new_project = response.json()
+        print(f"\nCreated new project for Dai Long client:")
+        print(f"  Project ID: {new_project['id']}, Name: {new_project['name']}, Client ID: {new_project['client_id']}")
+    else:
+        print(f"\nFailed to create new project: {response.status_code} - {response.text}")
+    
+    # Now try searching for "Dai" again
+    print("\nSearching for 'Dai'...")
+    response = make_request("GET", "/projects/", tokens["admin_token"], params={"search": "Dai"})
+    if response.status_code == 200:
+        search_results = response.json()
+        print(f"Found {len(search_results)} projects in search results:")
+        for project in search_results:
+            print(f"  Project ID: {project['id']}, Name: {project['name']}, Client ID: {project['client_id']}")
+    else:
+        print(f"Search failed: {response.status_code} - {response.text}")
+    
+    # Try direct MongoDB query to see what's happening
+    print("\nTrying direct search for 'Dai Long' client...")
+    response = make_request("GET", "/clients/", tokens["admin_token"], params={"search": "Dai"})
+    if response.status_code == 200:
+        client_search_results = response.json()
+        print(f"Found {len(client_search_results)} clients in search results:")
+        for client in client_search_results:
+            print(f"  Client ID: {client['id']}, Name: {client['name']}")
+    else:
+        print(f"Client search failed: {response.status_code} - {response.text}")
 
 if __name__ == "__main__":
     run_all_tests()
