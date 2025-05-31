@@ -300,6 +300,14 @@ const Projects = ({ user }) => {
     setEditingProject(null);
   };
 
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedProjects(projects.map(project => project.id));
+    } else {
+      setSelectedProjects([]);
+    }
+  };
+
   // Helper functions
   const getClientName = (clientId) => {
     const client = clients.find(c => c.id === clientId);
