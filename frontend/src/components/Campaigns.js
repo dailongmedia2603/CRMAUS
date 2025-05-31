@@ -5,8 +5,8 @@ import { toast } from 'react-toastify';
 import axios from 'axios';
 
 const Campaigns = () => {
-  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
