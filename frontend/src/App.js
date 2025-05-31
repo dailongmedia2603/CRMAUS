@@ -3600,12 +3600,16 @@ const ProjectDetail = () => {
   return <div>Chi tiết dự án (đang phát triển)</div>;
 };
 
-const Tasks = () => {
-  const [tasks, setTasks] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const Task = () => {
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-4">Task</h1>
+      <p className="text-gray-600">Module Task đang được phát triển...</p>
+    </div>
+  );
+};
+
+const Contracts = () => {
   const [formData, setFormData] = useState({
     title: "",
     project_id: "",
