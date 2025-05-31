@@ -642,68 +642,81 @@ def test_bulk_delete_tasks():
     print("\n6. Testing edge case - empty array...")
     
     # Try different ways to send empty array
-    # Method 1: As JSON body
+    # Method 1: As JSON body with DELETE
     response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=[])
     
     if response.status_code == 400:
         log_test("Empty Array Edge Case", True, "Successfully handled empty array case (returned 400 error)", response)
     else:
-        print(f"Method 1 failed with status code {response.status_code}: {response.text}")
+        print(f"Method 1 (DELETE with JSON body) failed with status code {response.status_code}: {response.text}")
         
-        # Method 2: As form data
-        form_data = {"task_ids": []}
-        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
+        # Method 2: As JSON body with POST
+        response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=[])
         
         if response.status_code == 400:
             log_test("Empty Array Edge Case", True, "Method 2 succeeded: Successfully handled empty array case", response)
         else:
-            print(f"Method 2 failed with status code {response.status_code}: {response.text}")
+            print(f"Method 2 (POST to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
             
-            # Method 3: As query parameters
-            query_params = {"task_ids": ""}
-            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
+            # Method 3: Try a different URL format
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=[])
             
             if response.status_code == 400:
                 log_test("Empty Array Edge Case", True, "Method 3 succeeded: Successfully handled empty array case", response)
             else:
-                log_test("Empty Array Edge Case", False, f"All methods failed for empty array case", response)
+                print(f"Method 3 (DELETE to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
+                
+                # Method 4: Try with query parameters
+                response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk?task_ids=", headers=headers)
+                
+                if response.status_code == 400:
+                    log_test("Empty Array Edge Case", True, "Method 4 succeeded: Successfully handled empty array case", response)
+                else:
+                    log_test("Empty Array Edge Case", False, f"All methods failed for empty array case", response)
     
     # Step 7: Test edge case - too many tasks
     print("\n7. Testing edge case - too many tasks (>50)...")
     # Generate 51 fake IDs
     fake_ids = [f"fake_id_{i}" for i in range(51)]
     
-    # Method 1: As JSON body
+    # Method 1: As JSON body with DELETE
     response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=fake_ids)
     
     if response.status_code == 400:
         log_test("Too Many Tasks Edge Case", True, "Successfully handled too many tasks case (returned 400 error)", response)
     else:
-        print(f"Method 1 failed with status code {response.status_code}: {response.text}")
+        print(f"Method 1 (DELETE with JSON body) failed with status code {response.status_code}: {response.text}")
         
-        # Method 2: As form data
-        form_data = {"task_ids": fake_ids}
-        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
+        # Method 2: As JSON body with POST
+        response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=fake_ids)
         
         if response.status_code == 400:
             log_test("Too Many Tasks Edge Case", True, "Method 2 succeeded: Successfully handled too many tasks case", response)
         else:
-            print(f"Method 2 failed with status code {response.status_code}: {response.text}")
+            print(f"Method 2 (POST to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
             
-            # Method 3: As query parameters
-            query_params = {"task_ids": ",".join(fake_ids)}
-            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
+            # Method 3: Try a different URL format
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=fake_ids)
             
             if response.status_code == 400:
                 log_test("Too Many Tasks Edge Case", True, "Method 3 succeeded: Successfully handled too many tasks case", response)
             else:
-                log_test("Too Many Tasks Edge Case", False, f"All methods failed for too many tasks case", response)
+                print(f"Method 3 (DELETE to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
+                
+                # Method 4: Try with query parameters
+                task_ids_str = ",".join(fake_ids)
+                response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk?task_ids={task_ids_str}", headers=headers)
+                
+                if response.status_code == 400:
+                    log_test("Too Many Tasks Edge Case", True, "Method 4 succeeded: Successfully handled too many tasks case", response)
+                else:
+                    log_test("Too Many Tasks Edge Case", False, f"All methods failed for too many tasks case", response)
     
     # Step 8: Test edge case - non-existent task IDs
     print("\n8. Testing edge case - non-existent task IDs...")
     non_existent_ids = ["non_existent_id_1", "non_existent_id_2", "non_existent_id_3"]
     
-    # Method 1: As JSON body
+    # Method 1: As JSON body with DELETE
     response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, json=non_existent_ids)
     
     if response.status_code == 200:
@@ -713,11 +726,10 @@ def test_bulk_delete_tasks():
         else:
             log_test("Non-existent IDs Edge Case", False, f"Unexpected deleted_count for non-existent task IDs: {result['deleted_count']}", response)
     else:
-        print(f"Method 1 failed with status code {response.status_code}: {response.text}")
+        print(f"Method 1 (DELETE with JSON body) failed with status code {response.status_code}: {response.text}")
         
-        # Method 2: As form data
-        form_data = {"task_ids": non_existent_ids}
-        response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, data=form_data)
+        # Method 2: As JSON body with POST
+        response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=non_existent_ids)
         
         if response.status_code == 200:
             result = response.json()
@@ -726,11 +738,10 @@ def test_bulk_delete_tasks():
             else:
                 log_test("Non-existent IDs Edge Case", False, f"Method 2: Unexpected deleted_count: {result['deleted_count']}", response)
         else:
-            print(f"Method 2 failed with status code {response.status_code}: {response.text}")
+            print(f"Method 2 (POST to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
             
-            # Method 3: As query parameters
-            query_params = {"task_ids": ",".join(non_existent_ids)}
-            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk", headers=headers, params=query_params)
+            # Method 3: Try a different URL format
+            response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=non_existent_ids)
             
             if response.status_code == 200:
                 result = response.json()
@@ -739,7 +750,20 @@ def test_bulk_delete_tasks():
                 else:
                     log_test("Non-existent IDs Edge Case", False, f"Method 3: Unexpected deleted_count: {result['deleted_count']}", response)
             else:
-                log_test("Non-existent IDs Edge Case", False, f"All methods failed for non-existent task IDs", response)
+                print(f"Method 3 (DELETE to /tasks/bulk-delete) failed with status code {response.status_code}: {response.text}")
+                
+                # Method 4: Try with query parameters
+                task_ids_str = ",".join(non_existent_ids)
+                response = requests.delete(f"{BASE_URL}{API_PREFIX}/tasks/bulk?task_ids={task_ids_str}", headers=headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result["deleted_count"] == 0:
+                        log_test("Non-existent IDs Edge Case", True, "Method 4 succeeded: Successfully handled non-existent task IDs", response)
+                    else:
+                        log_test("Non-existent IDs Edge Case", False, f"Method 4: Unexpected deleted_count: {result['deleted_count']}", response)
+                else:
+                    log_test("Non-existent IDs Edge Case", False, f"All methods failed for non-existent task IDs", response)
     
     # Print summary
     print("\n=== Test Summary ===")
