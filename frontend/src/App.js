@@ -449,6 +449,7 @@ const MainLayout = () => {
                 <Route path="/contracts" element={<Contracts />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/campaigns" element={<CampaignsComponent />} />
+                <Route path="/campaigns/:id" element={<CampaignDetailComponent />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" />} />
