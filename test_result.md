@@ -426,6 +426,7 @@ test_plan:
     - "Campaigns API - POST /api/campaigns/bulk-action"
     - "Campaigns API - Services CRUD"
     - "Tasks API - Bulk Delete"
+    - "Tasks UI - Bulk Delete"
     - "Campaigns UI - Toolbar Components"
     - "Campaigns UI - Table Display"
     - "Campaigns UI - Create/Edit Modal"
