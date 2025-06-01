@@ -3699,6 +3699,7 @@ const Task = () => {
 };
 
 const Contracts = () => {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     project_id: "",
