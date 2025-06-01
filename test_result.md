@@ -317,6 +317,9 @@ agent_communication:
   - agent: "testing"
     message: "Completed comprehensive testing of the Project Detail functionality. Successfully tested the complete workflow including project details, associated client details, campaign details, services, and tasks. The API correctly returns project details with GET /api/projects/{project_id}, client details with GET /api/clients/{client_id}, campaign details with GET /api/campaigns/{campaign_id}, campaign services with GET /api/campaigns/{campaign_id}/services/, and tasks for each service with GET /api/services/{service_id}/tasks/. The campaign has the expected services (Thiết kế UI/UX, Phát triển Frontend, Tạo nội dung) and each service has tasks with different statuses. Documents can be filtered by project name. Error handling is properly implemented for invalid IDs. All tests passed successfully."
 
+  - agent: "testing"
+    message: "Completed testing of the Work Items API endpoints. Successfully tested all CRUD operations: creating work items (POST /api/projects/{project_id}/work-items/), listing work items (GET /api/projects/{project_id}/work-items/), getting specific work items (GET /api/work-items/{work_item_id}), updating work items (PUT /api/work-items/{work_item_id}), deleting work items (DELETE /api/work-items/{work_item_id}), and updating work item status (PATCH /api/work-items/{work_item_id}/status). The API correctly handles different priority levels (normal, high, urgent) and status transitions (not_started → in_progress → completed). Validation works correctly for required fields, project existence, and service/task linking. The only minor issue found is that the enriched response data (assigned_by_name, assigned_to_name, service_name, task_name) is not being populated in the response, but this doesn't affect core functionality. All tests passed with no critical issues."
+
 ## Update Report - Project Detail Enhancement (2025-06-01)
 
 ### ✅ COMPLETED PROJECT DETAIL FEATURES
