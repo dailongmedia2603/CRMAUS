@@ -307,6 +307,7 @@ test_plan:
     - "Templates UI - Designer"
     - "Templates UI - Data Persistence"
     - "Project Detail Workflow"
+    - "Work Items API - CRUD Operations"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
