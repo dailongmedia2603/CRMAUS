@@ -280,6 +280,40 @@ class Task(TaskBase):
     created_by: Optional[str] = None
     template_name: Optional[str] = None
 
+# Work Item Models (công việc trong dự án)
+class WorkItemBase(BaseModel):
+    name: str
+    description: Optional[str] = None  # Rich text content
+    project_id: str
+    service_id: Optional[str] = None  # Dịch vụ liên quan
+    task_id: Optional[str] = None     # Nhiệm vụ liên quan
+    assigned_by: str                  # Người giao
+    assigned_to: Optional[str] = None # Người nhận
+    deadline: Optional[datetime] = None
+    priority: str = "normal"          # urgent, high, normal
+    status: str = "not_started"       # not_started, in_progress, completed
+    result_checked: bool = False      # Đã check kết quả
+
+class WorkItemCreate(WorkItemBase):
+    pass
+
+class WorkItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    service_id: Optional[str] = None
+    task_id: Optional[str] = None
+    assigned_to: Optional[str] = None
+    deadline: Optional[datetime] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None
+    result_checked: Optional[bool] = None
+
+class WorkItem(WorkItemBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
 # Template Models (for service templates)
 class TemplateBase(BaseModel):
     name: str
