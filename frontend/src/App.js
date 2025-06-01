@@ -3231,23 +3231,6 @@ const ProjectDetail = () => {
     deadline: '',
     priority: 'normal'
   });
-  
-  // Work Items State
-  const [workItems, setWorkItems] = useState([]);
-  const [showWorkItemModal, setShowWorkItemModal] = useState(false);
-  const [editingWorkItem, setEditingWorkItem] = useState(null);
-  const [selectedWorkItems, setSelectedWorkItems] = useState([]);
-  const [showWorkItemDetail, setShowWorkItemDetail] = useState(false);
-  const [selectedWorkItemDetail, setSelectedWorkItemDetail] = useState(null);
-  const [projectUsers, setProjectUsers] = useState([]);
-  const [serviceTasks, setServiceTasks] = useState({});
-  
-  // Work Item Form State
-  const [workItemForm, setWorkItemForm] = useState({
-    name: '',
-    description: '',
-    service_id: '',
-    task_id: '',
     assigned_to: '',
     deadline: '',
     priority: 'normal'
