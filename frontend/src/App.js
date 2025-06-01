@@ -3231,10 +3231,6 @@ const ProjectDetail = () => {
     deadline: '',
     priority: 'normal'
   });
-    assigned_to: '',
-    deadline: '',
-    priority: 'normal'
-  });
 
   useEffect(() => {
     if (id) {
