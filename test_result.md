@@ -89,7 +89,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the GET /api/users/ endpoint. The API returns the list of users correctly when accessed by admin users. Authorization is properly implemented - non-admin users (account and staff) receive a 403 Forbidden response when attempting to access the users list. This ensures that only admin users can access user information."
 
-  - task: "Projects API - Campaign Integration"
+  - task: "Users API - GET /api/users/by-role/{role}"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -99,10 +99,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the integration between Projects and Campaigns, including campaign_id validation and association"
+        comment: "Need to test the GET /api/users/by-role/{role} endpoint to ensure it returns users filtered by role correctly"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the integration between Projects and Campaigns. The API correctly validates campaign_id when creating or updating projects, returning a 404 Not Found for non-existent campaign IDs. Projects can be created and updated with a valid campaign_id, and the association is maintained correctly. The campaign_id field is optional as required, allowing projects to be created without a campaign association."
+        comment: "Successfully tested the GET /api/users/by-role/{role} endpoint. The API correctly returns users filtered by role for all required roles: manager, account, content, design, editor, and sale. The endpoint also properly validates the role parameter, returning a 400 Bad Request for invalid roles. This endpoint is essential for the project form to populate role-based staff assignment dropdowns."
 
   - task: "Projects API - Staff Role Assignments"
     implemented: true
