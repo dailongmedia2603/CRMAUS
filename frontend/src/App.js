@@ -3603,6 +3603,8 @@ const ProjectDetail = ({ user }) => {
       toast.success('Feedback đã được gửi!');
     }
   };
+
+  const openWorkItemDetail = (workItem) => {
     setSelectedWorkItemDetail(workItem);
     setShowWorkItemDetail(true);
   };
