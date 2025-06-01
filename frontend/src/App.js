@@ -4589,16 +4589,28 @@ const ProjectDetail = ({ user }) => {
                   }}
                 />
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (newFeedbackMessage.trim()) {
-                      const newMessage = {
-                        content: newFeedbackMessage.trim(),
-                        sender: user?.full_name || 'Current User',
-                        time: format(new Date(), 'HH:mm'),
-                        isCurrentUser: true
-                      };
-                      setFeedbackMessages([...feedbackMessages, newMessage]);
-                      setNewFeedbackMessage('');
+                      try {
+                        // Send to backend
+                        await axios.post(`${API}/work-items/${selectedWorkItemForFeedback.id}/feedback/`, {
+                          message: newFeedbackMessage.trim()
+                        });
+                        
+                        // Add to local state
+                        const newMessage = {
+                          content: newFeedbackMessage.trim(),
+                          sender: user?.full_name || 'Current User',
+                          time: format(new Date(), 'HH:mm'),
+                          isCurrentUser: true
+                        };
+                        setFeedbackMessages([...feedbackMessages, newMessage]);
+                        setNewFeedbackMessage('');
+                        toast.success('Feedback đã được gửi!');
+                      } catch (error) {
+                        console.error('Error sending feedback:', error);
+                        toast.error('Không thể gửi feedback!');
+                      }
                     }
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
