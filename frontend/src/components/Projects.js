@@ -824,7 +824,12 @@ const Projects = ({ user }) => {
                     {getClientName(project.client_id)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{project.name}</div>
+                    <div 
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
+                      {project.name}
+                    </div>
                     {project.description && (
                       <div className="text-sm text-gray-500 max-w-xs truncate">{project.description}</div>
                     )}
