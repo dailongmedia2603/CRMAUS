@@ -3660,9 +3660,9 @@ const ProjectDetail = () => {
                 <h3 className="text-lg font-medium text-gray-900">Chi tiết nhiệm vụ: {selectedTask.name}</h3>
                 <button
                   onClick={() => setShowTaskModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
                 >
-                  <X className="h-6 w-6" />
+                  ×
                 </button>
               </div>
               
