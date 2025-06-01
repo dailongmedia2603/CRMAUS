@@ -4046,9 +4046,24 @@ const ProjectDetail = ({ user }) => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
-                              onClick={() => {
+                              onClick={async () => {
                                 setSelectedWorkItemForFeedback(workItem);
                                 setShowFeedbackModal(true);
+                                
+                                // Load existing feedback
+                                try {
+                                  const response = await axios.get(`${API}/work-items/${workItem.id}/feedback/`);
+                                  const formattedMessages = response.data.map(feedback => ({
+                                    content: feedback.message,
+                                    sender: feedback.user_name,
+                                    time: format(new Date(feedback.created_at), 'HH:mm'),
+                                    isCurrentUser: feedback.user_id === user?.id
+                                  }));
+                                  setFeedbackMessages(formattedMessages);
+                                } catch (error) {
+                                  console.error('Error loading feedback:', error);
+                                  setFeedbackMessages([]);
+                                }
                               }}
                               className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium hover:bg-gray-200"
                             >
