@@ -842,6 +842,131 @@ async def delete_invoice(invoice_id: str, current_user: User = Depends(get_curre
         raise HTTPException(status_code=404, detail="Invoice not found")
     return {"detail": "Invoice deleted successfully"}
 
+# Work Item Management endpoints
+@api_router.post("/projects/{project_id}/work-items/", response_model=WorkItem)
+async def create_work_item(
+    project_id: str, 
+    work_item: WorkItemCreate, 
+    current_user: User = Depends(get_current_active_user)
+):
+    # Kiểm tra project tồn tại
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Kiểm tra service tồn tại (nếu có)
+    if work_item.service_id:
+        service = await db.services.find_one({"id": work_item.service_id})
+        if not service:
+            raise HTTPException(status_code=404, detail="Service not found")
+    
+    # Kiểm tra task tồn tại (nếu có)
+    if work_item.task_id:
+        task = await db.tasks.find_one({"id": work_item.task_id})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+    
+    work_item_data = work_item.dict()
+    work_item_data["project_id"] = project_id
+    work_item_data["assigned_by"] = current_user.id
+    
+    work_item_obj = WorkItem(**work_item_data, created_by=current_user.id)
+    await db.work_items.insert_one(work_item_obj.dict())
+    return work_item_obj
+
+@api_router.get("/projects/{project_id}/work-items/", response_model=List[WorkItem])
+async def get_project_work_items(
+    project_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Kiểm tra project tồn tại
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    work_items = await db.work_items.find({"project_id": project_id}).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich với thông tin user
+    for item in work_items:
+        if item.get("assigned_by"):
+            user = await db.users.find_one({"id": item["assigned_by"]})
+            item["assigned_by_name"] = user["full_name"] if user else "Unknown"
+        
+        if item.get("assigned_to"):
+            user = await db.users.find_one({"id": item["assigned_to"]})
+            item["assigned_to_name"] = user["full_name"] if user else "Unknown"
+        
+        if item.get("service_id"):
+            service = await db.services.find_one({"id": item["service_id"]})
+            item["service_name"] = service["name"] if service else "Unknown"
+        
+        if item.get("task_id"):
+            task = await db.tasks.find_one({"id": item["task_id"]})
+            item["task_name"] = task["name"] if task else "Unknown"
+    
+    return work_items
+
+@api_router.get("/work-items/{work_item_id}", response_model=WorkItem)
+async def get_work_item(work_item_id: str, current_user: User = Depends(get_current_active_user)):
+    work_item = await db.work_items.find_one({"id": work_item_id})
+    if not work_item:
+        raise HTTPException(status_code=404, detail="Work item not found")
+    return work_item
+
+@api_router.put("/work-items/{work_item_id}", response_model=WorkItem)
+async def update_work_item(
+    work_item_id: str, 
+    work_item_update: WorkItemUpdate, 
+    current_user: User = Depends(get_current_active_user)
+):
+    db_work_item = await db.work_items.find_one({"id": work_item_id})
+    if not db_work_item:
+        raise HTTPException(status_code=404, detail="Work item not found")
+    
+    update_data = work_item_update.dict(exclude_unset=True)
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.work_items.update_one({"id": work_item_id}, {"$set": update_data})
+        
+        # Fetch updated work item
+        updated_work_item = await db.work_items.find_one({"id": work_item_id})
+        return updated_work_item
+    
+    return db_work_item
+
+@api_router.delete("/work-items/{work_item_id}")
+async def delete_work_item(work_item_id: str, current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.work_items.delete_one({"id": work_item_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Work item not found")
+    
+    return {"detail": "Work item deleted successfully"}
+
+@api_router.patch("/work-items/{work_item_id}/status")
+async def update_work_item_status(
+    work_item_id: str,
+    status: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật trạng thái công việc (cho nút kết quả)"""
+    if status not in ["not_started", "in_progress", "completed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    result = await db.work_items.update_one(
+        {"id": work_item_id},
+        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Work item not found")
+    
+    return {"detail": "Status updated successfully", "status": status}
+
 # Dashboard Data
 @api_router.get("/dashboard", response_model=Dict[str, Any])
 async def get_dashboard_data(current_user: User = Depends(get_current_active_user)):
