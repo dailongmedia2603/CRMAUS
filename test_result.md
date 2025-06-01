@@ -119,7 +119,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the integration between Projects and Campaigns. The API correctly validates campaign_id when creating or updating projects, returning a 404 Not Found for non-existent campaign IDs. Projects can be created and updated with a valid campaign_id, and the association is maintained correctly. The campaign_id field is optional as required, allowing projects to be created without a campaign association."
 
-  - task: "Projects API - Budget Field Removal"
+  - task: "Projects API - Staff Role Assignments"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -129,10 +129,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to verify that the budget field has been removed from the Project model as specified in the requirements"
+        comment: "Need to test the new staff role assignment fields in the Project model: manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids"
       - working: true
         agent: "testing"
-        comment: "Successfully verified that the budget field has been removed from the Project model. When creating a project with a budget field in the request, the field is correctly ignored and not included in the created project. The API response does not include a budget field, confirming that it has been completely removed from the model."
+        comment: "Successfully tested the new staff role assignment fields in the Project model. All role-based fields (manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids) are correctly saved when creating a project and can be updated. The fields are optional as required, allowing empty arrays. The API correctly handles arrays of user IDs for each role field."
 
   - task: "Projects API - Search Functionality"
     implemented: true
