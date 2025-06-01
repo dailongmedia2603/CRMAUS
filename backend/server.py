@@ -308,6 +308,8 @@ class WorkItemUpdate(BaseModel):
 
 class WorkItem(WorkItemBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str                   # Will be set by endpoint
+    assigned_by: str                  # Will be set by endpoint
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
