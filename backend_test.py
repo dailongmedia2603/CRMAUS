@@ -945,6 +945,387 @@ def test_template_api():
     else:
         print("\n❌ Some tests failed. Check the logs above for details.")
 
+def test_project_management_changes():
+    """Test the Project management changes"""
+    print("\n=== TESTING PROJECT MANAGEMENT CHANGES ===\n")
+    
+    # Step 1: Get admin token
+    print("1. Getting admin authentication token...")
+    admin_token = get_token()
+    if not admin_token:
+        log_test("Admin Authentication", False, "Failed to get admin authentication token")
+        return
+    
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
+    
+    # Step 2: Test GET /api/users/by-role/{role} endpoint
+    print("\n2. Testing GET /api/users/by-role/{role} endpoint...")
+    roles = ["manager", "account", "content", "design", "editor", "sale"]
+    
+    for role in roles:
+        response = requests.get(f"{BASE_URL}{API_PREFIX}/users/by-role/{role}", headers=admin_headers)
+        
+        if response.status_code == 200:
+            users = response.json()
+            log_test(
+                f"Get users by role: {role}",
+                True,
+                f"Successfully retrieved users with role {role}",
+                response
+            )
+        else:
+            log_test(
+                f"Get users by role: {role}",
+                False,
+                f"Failed to retrieve users with role {role}",
+                response
+            )
+    
+    # Test invalid role
+    response = requests.get(f"{BASE_URL}{API_PREFIX}/users/by-role/invalid_role", headers=admin_headers)
+    if response.status_code == 400:
+        log_test(
+            "Get users by invalid role",
+            True,
+            "Correctly rejected invalid role with 400 status code",
+            response
+        )
+    else:
+        log_test(
+            "Get users by invalid role",
+            False,
+            f"Expected 400 status code, got {response.status_code}",
+            response
+        )
+    
+    # Step 3: Create a test client for project testing
+    print("\n3. Creating a test client for project testing...")
+    client_data = {
+        "name": f"Test Client {int(time.time())}",
+        "company": "Test Company",
+        "industry": "Technology",
+        "contact_name": "Test Contact",
+        "contact_email": "test@example.com"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/clients/",
+        headers=admin_headers,
+        json=client_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Test Client", False, "Failed to create test client", response)
+        return
+    
+    client = response.json()
+    client_id = client["id"]
+    log_test("Create Test Client", True, f"Successfully created test client with ID: {client_id}", response)
+    
+    # Step 4: Create a test campaign for project testing
+    print("\n4. Creating a test campaign for project testing...")
+    campaign_data = {
+        "name": f"Test Campaign {int(time.time())}",
+        "description": "Campaign created for testing project integration"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/campaigns/",
+        headers=admin_headers,
+        json=campaign_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Test Campaign", False, "Failed to create test campaign", response)
+        return
+    
+    campaign = response.json()
+    campaign_id = campaign["id"]
+    log_test("Create Test Campaign", True, f"Successfully created test campaign with ID: {campaign_id}", response)
+    
+    # Step 5: Test creating a project with campaign_id and staff role assignments
+    print("\n5. Testing creating a project with campaign_id and staff role assignments...")
+    project_data = {
+        "name": f"Test Project {int(time.time())}",
+        "client_id": client_id,
+        "campaign_id": campaign_id,
+        "description": "Project created for testing new fields",
+        "status": "planning",
+        "manager_ids": ["manager1", "manager2"],
+        "account_ids": ["account1"],
+        "content_ids": ["content1", "content2"],
+        "design_ids": ["design1"],
+        "editor_ids": [],
+        "sale_ids": ["sale1"]
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/projects/",
+        headers=admin_headers,
+        json=project_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Create Project with New Fields", False, "Failed to create project with new fields", response)
+        return
+    
+    project = response.json()
+    project_id = project["id"]
+    log_test("Create Project with New Fields", True, f"Successfully created project with ID: {project_id}", response)
+    
+    # Verify all fields were saved correctly
+    for field in ["campaign_id", "manager_ids", "account_ids", "content_ids", "design_ids", "editor_ids", "sale_ids"]:
+        if project[field] == project_data[field]:
+            log_test(
+                f"Project field verification: {field}",
+                True,
+                f"Field {field} was saved correctly",
+                None
+            )
+        else:
+            log_test(
+                f"Project field verification: {field}",
+                False,
+                f"Field {field} was not saved correctly. Expected: {project_data[field]}, Got: {project[field]}",
+                None
+            )
+    
+    # Step 6: Test updating a project with new fields
+    print("\n6. Testing updating a project with new fields...")
+    update_data = {
+        "name": f"Updated Project {int(time.time())}",
+        "client_id": client_id,
+        "campaign_id": campaign_id,
+        "description": "Updated project description",
+        "status": "in_progress",
+        "manager_ids": ["manager3"],
+        "account_ids": ["account2", "account3"],
+        "content_ids": [],
+        "design_ids": ["design2", "design3"],
+        "editor_ids": ["editor1"],
+        "sale_ids": []
+    }
+    
+    response = requests.put(
+        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
+        headers=admin_headers,
+        json=update_data
+    )
+    
+    if response.status_code != 200:
+        log_test("Update Project with New Fields", False, "Failed to update project with new fields", response)
+    else:
+        updated_project = response.json()
+        log_test("Update Project with New Fields", True, "Successfully updated project with new fields", response)
+        
+        # Verify all fields were updated correctly
+        for field in ["campaign_id", "manager_ids", "account_ids", "content_ids", "design_ids", "editor_ids", "sale_ids"]:
+            if updated_project[field] == update_data[field]:
+                log_test(
+                    f"Project update verification: {field}",
+                    True,
+                    f"Field {field} was updated correctly",
+                    None
+                )
+            else:
+                log_test(
+                    f"Project update verification: {field}",
+                    False,
+                    f"Field {field} was not updated correctly. Expected: {update_data[field]}, Got: {updated_project[field]}",
+                    None
+                )
+    
+    # Step 7: Test that budget field is no longer accepted
+    print("\n7. Testing that budget field is no longer accepted...")
+    project_with_budget = {
+        "name": f"Budget Test Project {int(time.time())}",
+        "client_id": client_id,
+        "description": "Project with budget field",
+        "budget": 10000  # This field should be ignored
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/projects/",
+        headers=admin_headers,
+        json=project_with_budget
+    )
+    
+    if response.status_code != 200:
+        log_test("Budget Field Removal Test", False, "Failed to create project for budget test", response)
+    else:
+        budget_project = response.json()
+        budget_project_id = budget_project["id"]
+        
+        # Check if budget field is present in the response
+        if "budget" not in budget_project:
+            log_test(
+                "Budget Field Removal",
+                True,
+                "Budget field is correctly not included in the project model",
+                response
+            )
+        else:
+            log_test(
+                "Budget Field Removal",
+                False,
+                f"Budget field is still present in the project model with value: {budget_project.get('budget')}",
+                response
+            )
+    
+    # Step 8: Test campaign_id validation
+    print("\n8. Testing campaign_id validation...")
+    invalid_campaign_project = {
+        "name": f"Invalid Campaign Project {int(time.time())}",
+        "client_id": client_id,
+        "campaign_id": "non_existent_campaign_id",
+        "description": "Project with invalid campaign_id"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}{API_PREFIX}/projects/",
+        headers=admin_headers,
+        json=invalid_campaign_project
+    )
+    
+    if response.status_code == 404:
+        log_test(
+            "Campaign ID Validation",
+            True,
+            "Correctly rejected project with invalid campaign_id",
+            response
+        )
+    else:
+        log_test(
+            "Campaign ID Validation",
+            False,
+            f"Expected 404 status code for invalid campaign_id, got {response.status_code}",
+            response
+        )
+    
+    # Step 9: Test that existing project API functionality still works
+    print("\n9. Testing that existing project API functionality still works...")
+    
+    # Get project by ID
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 200:
+        log_test("Get Project by ID", True, "Successfully retrieved project by ID", response)
+    else:
+        log_test("Get Project by ID", False, "Failed to retrieve project by ID", response)
+    
+    # Get projects list
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/projects/",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 200:
+        projects = response.json()
+        log_test("Get Projects List", True, f"Successfully retrieved projects list with {len(projects)} projects", response)
+    else:
+        log_test("Get Projects List", False, "Failed to retrieve projects list", response)
+    
+    # Test project filters
+    filters = [
+        {"name": "Status filter", "params": {"status": "in_progress"}},
+        {"name": "Archived filter", "params": {"archived": "false"}},
+        {"name": "Search filter", "params": {"search": "Test"}}
+    ]
+    
+    for filter_info in filters:
+        response = requests.get(
+            f"{BASE_URL}{API_PREFIX}/projects/",
+            headers=admin_headers,
+            params=filter_info["params"]
+        )
+        
+        if response.status_code == 200:
+            log_test(f"Project filter: {filter_info['name']}", True, f"Successfully filtered projects with {filter_info['name']}", response)
+        else:
+            log_test(f"Project filter: {filter_info['name']}", False, f"Failed to filter projects with {filter_info['name']}", response)
+    
+    # Step 10: Test that campaigns API endpoint works
+    print("\n10. Testing that campaigns API endpoint works...")
+    
+    # Get campaigns list
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 200:
+        campaigns = response.json()
+        log_test("Get Campaigns List", True, f"Successfully retrieved campaigns list with {len(campaigns)} campaigns", response)
+    else:
+        log_test("Get Campaigns List", False, "Failed to retrieve campaigns list", response)
+    
+    # Get campaign by ID
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 200:
+        campaign_detail = response.json()
+        log_test("Get Campaign by ID", True, f"Successfully retrieved campaign by ID: {campaign_detail['name']}", response)
+    else:
+        log_test("Get Campaign by ID", False, "Failed to retrieve campaign by ID", response)
+    
+    # Step 11: Clean up - delete test projects and campaign
+    print("\n11. Cleaning up - deleting test projects and campaign...")
+    
+    # Delete the test projects
+    if 'project_id' in locals():
+        response = requests.delete(
+            f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
+            headers=admin_headers
+        )
+        
+        if response.status_code == 200:
+            log_test("Delete Test Project", True, "Successfully deleted test project", response)
+        else:
+            log_test("Delete Test Project", False, "Failed to delete test project", response)
+    
+    if 'budget_project_id' in locals():
+        response = requests.delete(
+            f"{BASE_URL}{API_PREFIX}/projects/{budget_project_id}",
+            headers=admin_headers
+        )
+        
+        if response.status_code == 200:
+            log_test("Delete Budget Test Project", True, "Successfully deleted budget test project", response)
+        else:
+            log_test("Delete Budget Test Project", False, "Failed to delete budget test project", response)
+    
+    # Delete the test campaign
+    response = requests.delete(
+        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 200:
+        log_test("Delete Test Campaign", True, "Successfully deleted test campaign", response)
+    else:
+        log_test("Delete Test Campaign", False, "Failed to delete test campaign", response)
+    
+    # Print summary
+    print("\n=== Test Summary ===")
+    print(f"Total tests: {test_results['success'] + test_results['failure']}")
+    print(f"Passed: {test_results['success']}")
+    print(f"Failed: {test_results['failure']}")
+    
+    if test_results['failure'] == 0:
+        print("\n✅ All tests passed successfully!")
+    else:
+        print("\n❌ Some tests failed. Check the logs above for details.")
+
 if __name__ == "__main__":
     # Reset test results
     test_results = {
@@ -956,4 +1337,5 @@ if __name__ == "__main__":
     # Run the tests
     # test_task_creation()
     # test_bulk_delete_tasks()
-    test_template_api()
+    # test_template_api()
+    test_project_management_changes()
