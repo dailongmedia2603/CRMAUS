@@ -717,12 +717,12 @@ const TemplateDesigner = ({ templateId, onClose, onSave }) => {
 
           {/* Template Components */}
           <div className="space-y-4">
-            {components.length === 0 ? (
+            {!components || components.length === 0 ? (
               <div className="text-center py-20 text-gray-500">
                 <p>Chưa có thành phần nào. Hãy thêm thành phần từ bảng bên trái.</p>
               </div>
             ) : (
-              components.map((component, index) => (
+              Array.isArray(components) && components.map((component, index) => (
                 <TemplateComponent
                   key={component.id}
                   component={component}
