@@ -3550,7 +3550,59 @@ const ProjectDetail = ({ user }) => {
     }
   };
 
-  const openWorkItemDetail = (workItem) => {
+  // Feedback Functions
+  const fetchFeedback = async (workItemId) => {
+    try {
+      const response = await axios.get(`${API}/work-items/${workItemId}/feedback/`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      return [];
+    }
+  };
+
+  const sendFeedback = async (workItemId, message) => {
+    try {
+      await axios.post(`${API}/work-items/${workItemId}/feedback/`, { message });
+      return true;
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+      toast.error('Không thể gửi feedback!');
+      return false;
+    }
+  };
+
+  const openFeedbackModal = async (workItem) => {
+    setSelectedWorkItemForFeedback(workItem);
+    setShowFeedbackModal(true);
+    
+    // Load existing feedback
+    const feedbackData = await fetchFeedback(workItem.id);
+    const formattedMessages = feedbackData.map(feedback => ({
+      content: feedback.message,
+      sender: feedback.user_name,
+      time: format(new Date(feedback.created_at), 'HH:mm'),
+      isCurrentUser: feedback.user_id === user?.id
+    }));
+    setFeedbackMessages(formattedMessages);
+  };
+
+  const handleSendFeedback = async () => {
+    if (!newFeedbackMessage.trim() || !selectedWorkItemForFeedback) return;
+    
+    const success = await sendFeedback(selectedWorkItemForFeedback.id, newFeedbackMessage.trim());
+    if (success) {
+      const newMessage = {
+        content: newFeedbackMessage.trim(),
+        sender: user?.full_name || 'Current User',
+        time: format(new Date(), 'HH:mm'),
+        isCurrentUser: true
+      };
+      setFeedbackMessages([...feedbackMessages, newMessage]);
+      setNewFeedbackMessage('');
+      toast.success('Feedback đã được gửi!');
+    }
+  };
     setSelectedWorkItemDetail(workItem);
     setShowWorkItemDetail(true);
   };
