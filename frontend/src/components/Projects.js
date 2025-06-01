@@ -230,9 +230,9 @@ const Projects = ({ user }) => {
         ...projectForm,
         start_date: projectForm.start_date ? new Date(projectForm.start_date).toISOString() : null,
         end_date: projectForm.end_date ? new Date(projectForm.end_date).toISOString() : null,
-        budget: projectForm.budget ? parseFloat(projectForm.budget) : null,
         contract_value: projectForm.contract_value ? parseFloat(projectForm.contract_value) : null,
-        debt: projectForm.debt ? parseFloat(projectForm.debt) : null
+        debt: projectForm.debt ? parseFloat(projectForm.debt) : null,
+        campaign_id: projectForm.campaign_id || null
       };
 
       if (editingProject) {
