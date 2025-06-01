@@ -74,20 +74,65 @@ backend:
         agent: "testing"
         comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
 
-  - task: "Users API - GET /api/users/"
+  - task: "Users API - GET /api/users/by-role/{role}"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/users/ endpoint to ensure it returns the list of users correctly for project form dropdowns and verify that only admin can access this endpoint"
+        comment: "Need to test the GET /api/users/by-role/{role} endpoint to ensure it returns users filtered by role correctly"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the GET /api/users/ endpoint. The API returns the list of users correctly when accessed by admin users. Authorization is properly implemented - non-admin users (account and staff) receive a 403 Forbidden response when attempting to access the users list. This ensures that only admin users can access user information."
+        comment: "Successfully tested the GET /api/users/by-role/{role} endpoint. The API correctly returns users filtered by role for all required roles: manager, account, content, design, editor, and sale. The endpoint also properly validates the role parameter, returning a 400 Bad Request for invalid roles. This endpoint is essential for the project form to populate role-based staff assignment dropdowns."
+
+  - task: "Projects API - Campaign Integration"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the integration between Projects and Campaigns, including campaign_id validation and association"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the integration between Projects and Campaigns. The API correctly validates campaign_id when creating or updating projects, returning a 404 Not Found for non-existent campaign IDs. Projects can be created and updated with a valid campaign_id, and the association is maintained correctly. The campaign_id field is optional as required, allowing projects to be created without a campaign association."
+
+  - task: "Projects API - Staff Role Assignments"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new staff role assignment fields in the Project model: manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the new staff role assignment fields in the Project model. All role-based fields (manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids) are correctly saved when creating a project and can be updated. The fields are optional as required, allowing empty arrays. The API correctly handles arrays of user IDs for each role field."
+
+  - task: "Projects API - Budget Field Removal"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to verify that the budget field has been removed from the Project model as specified in the requirements"
+      - working: true
+        agent: "testing"
+        comment: "Successfully verified that the budget field has been removed from the Project model. When creating a project with a budget field in the request, the field is correctly ignored and not included in the created project. The API response does not include a budget field, confirming that it has been completely removed from the model."
 
   - task: "Projects API - Search Functionality"
     implemented: true
