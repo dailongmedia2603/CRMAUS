@@ -284,10 +284,8 @@ class Task(TaskBase):
 class WorkItemBase(BaseModel):
     name: str
     description: Optional[str] = None  # Rich text content
-    project_id: str
     service_id: Optional[str] = None  # Dịch vụ liên quan
     task_id: Optional[str] = None     # Nhiệm vụ liên quan
-    assigned_by: str                  # Người giao
     assigned_to: Optional[str] = None # Người nhận
     deadline: Optional[datetime] = None
     priority: str = "normal"          # urgent, high, normal
