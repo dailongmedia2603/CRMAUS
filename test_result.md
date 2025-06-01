@@ -1,5 +1,17 @@
-backend:
-  - task: "Projects API - PUT /api/projects/{project_id}"
+  - task: "Projects API - GET /api/projects/"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/projects/ endpoint to ensure it returns the list of projects correctly with all filters working"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/projects/ endpoint. The API returns the list of projects correctly. All filters are working properly, including archived, status, year, and search filters. The endpoint is accessible by all authenticated users regardless of role."
     implemented: true
     working: true
     file: "/app/backend/server.py"
