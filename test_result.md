@@ -29,20 +29,20 @@ backend:
         agent: "testing"
         comment: "Successfully tested the PUT /api/projects/{project_id} endpoint. The API correctly updates project information. The archive/restore functionality works as expected - setting archived=true archives the project and setting archived=false restores it. All authenticated users can update projects regardless of role."
 
-  - task: "Projects API - DELETE /api/projects/{project_id}"
+  - task: "Clients API - GET /api/clients/"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "high"
+    priority: "medium"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the DELETE /api/projects/{project_id} endpoint and verify that only admin/account roles can delete projects"
+        comment: "Need to test the GET /api/clients/ endpoint to ensure it returns the list of clients correctly for project form dropdowns"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the DELETE /api/projects/{project_id} endpoint. The API correctly deletes projects when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete projects. After deletion, attempting to access the deleted project returns a 404 Not Found response."
+        comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
 
   - task: "Projects API - Bulk Operations"
     implemented: true
