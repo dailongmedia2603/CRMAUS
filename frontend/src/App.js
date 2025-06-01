@@ -3238,6 +3238,13 @@ const ProjectDetail = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (project) {
+      fetchWorkItems();
+      fetchProjectUsers();
+    }
+  }, [project]);
+
   const fetchProjectDetails = async () => {
     try {
       setLoading(true);
