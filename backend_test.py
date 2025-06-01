@@ -1343,8 +1343,31 @@ def test_project_detail_workflow():
     }
     log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
     
-    # Step 2: Test GET /api/projects/{project_id} for project 3babc6e7-1c1f-459e-b64e-b2b9aa36c45b
-    project_id = "3babc6e7-1c1f-459e-b64e-b2b9aa36c45b"
+    # Step 1.5: Get all projects to find available project IDs
+    print("\n1.5. Getting all projects to find available project IDs...")
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/projects/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get All Projects", False, f"Failed to get all projects: {response.text}", response)
+        return
+    
+    projects = response.json()
+    log_test("Get All Projects", True, f"Successfully retrieved {len(projects)} projects", response)
+    
+    if not projects:
+        log_test("Available Projects", False, "No projects found in the database", None)
+        return
+    
+    print("Available projects:")
+    for p in projects:
+        print(f"- ID: {p.get('id')}, Name: {p.get('name')}")
+    
+    # Step 2: Test GET /api/projects/{project_id} for a specific project
+    # Use the first project from the list or the specified one if it exists
+    project_id = next((p["id"] for p in projects if p["id"] == "3babc6e7-1c1f-459e-b64e-b2b9aa36c45b"), projects[0]["id"])
     print(f"\n2. Testing GET /api/projects/{project_id}...")
     
     response = requests.get(
