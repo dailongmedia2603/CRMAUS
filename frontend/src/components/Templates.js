@@ -619,9 +619,13 @@ const TemplateDesigner = ({ templateId, onClose, onSave }) => {
       id: Date.now().toString(),
       type: type,
       content: getDefaultContent(type),
-      position: components.length
+      position: Array.isArray(components) ? components.length : 0
     };
-    setComponents([...components, newComponent]);
+    if (Array.isArray(components)) {
+      setComponents([...components, newComponent]);
+    } else {
+      setComponents([newComponent]);
+    }
   };
 
   const getDefaultContent = (type) => {
