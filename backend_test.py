@@ -1737,10 +1737,23 @@ def test_project_campaign_integration():
         
         # Create update data
         update_data = {
-            "campaign_id": campaign_to_link["id"]
+            "campaign_id": campaign_to_link["id"],
+            # Include all required fields for PUT
+            "name": project_to_update["name"],
+            "client_id": project_to_update["client_id"],
+            "description": project_to_update.get("description", ""),
+            "start_date": project_to_update.get("start_date", ""),
+            "end_date": project_to_update.get("end_date", ""),
+            "status": project_to_update.get("status", "active"),
+            "manager_ids": project_to_update.get("manager_ids", []),
+            "account_ids": project_to_update.get("account_ids", []),
+            "content_ids": project_to_update.get("content_ids", []),
+            "design_ids": project_to_update.get("design_ids", []),
+            "editor_ids": project_to_update.get("editor_ids", []),
+            "sale_ids": project_to_update.get("sale_ids", [])
         }
         
-        response = requests.patch(
+        response = requests.put(
             f"{BASE_URL}{API_PREFIX}/projects/{project_to_update['id']}",
             headers=admin_headers,
             json=update_data
