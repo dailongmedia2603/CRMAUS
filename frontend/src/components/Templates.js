@@ -578,11 +578,20 @@ const TemplateDesigner = ({ templateId, onClose, onSave }) => {
       if (response.data.content) {
         try {
           const parsedContent = JSON.parse(response.data.content);
-          setComponents(parsedContent);
+          // Ensure parsedContent is an array
+          if (Array.isArray(parsedContent)) {
+            setComponents(parsedContent);
+          } else {
+            console.log("Parsed content is not an array, starting with empty array");
+            setComponents([]);
+          }
         } catch (e) {
           console.log("Content is not valid JSON, starting with empty array");
           setComponents([]);
         }
+      } else {
+        // If no content, start with empty array
+        setComponents([]);
       }
     } catch (error) {
       console.error("Error fetching template:", error);
