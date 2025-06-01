@@ -3744,34 +3744,182 @@ const ProjectDetail = () => {
             </div>
           ))}
 
-          {/* Tasks Tab */}
+          {/* Tasks Tab - Work Items Management */}
           {activeTab === 'tasks' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Tất cả công việc</h3>
-              <div className="grid gap-4">
-                {tasks.map(task => (
-                  <div 
-                    key={task.id}
-                    onClick={() => openTaskDetail(task)}
-                    className="border rounded-lg p-4 hover:shadow-sm cursor-pointer transition-all"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{task.name}</h4>
-                        <p className="text-sm text-gray-600">Dịch vụ: {task.service_name}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : 'Chưa xác định'} - 
-                          {task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
-                        {getStatusText(task.status)}
-                      </span>
-                    </div>
+            <div className="space-y-6">
+              {/* Thanh công cụ */}
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg border">
+                <h3 className="text-lg font-medium text-gray-900">Quản lý công việc</h3>
+                <button
+                  onClick={() => {
+                    resetWorkItemForm();
+                    setShowWorkItemModal(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                >
+                  <span>+</span>
+                  Thêm công việc
+                </button>
+              </div>
+
+              {/* Danh sách công việc */}
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedWorkItems(workItems.map(item => item.id));
+                            } else {
+                              setSelectedWorkItems([]);
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tên công việc
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Mô tả
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Người giao
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Người nhận
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Deadline
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Dịch vụ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ưu tiên
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tiến độ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Kết quả
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Hành động
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {workItems.map((workItem) => (
+                      <tr key={workItem.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedWorkItems.includes(workItem.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedWorkItems([...selectedWorkItems, workItem.id]);
+                              } else {
+                                setSelectedWorkItems(selectedWorkItems.filter(id => id !== workItem.id));
+                              }
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{workItem.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => openWorkItemDetail(workItem)}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Xem
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {workItem.assigned_by_name || 'Unknown'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {workItem.assigned_to_name || 'Chưa giao'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {workItem.deadline ? format(new Date(workItem.deadline), 'dd/MM/yyyy - HH:mm') : 'Chưa có'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {workItem.service_name && (
+                            <button
+                              onClick={() => {
+                                // Navigate to service tab
+                                if (workItem.service_id) {
+                                  setActiveTab(`service-${workItem.service_id}`);
+                                }
+                              }}
+                              className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium hover:bg-blue-200"
+                            >
+                              {workItem.service_name}
+                            </button>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            workItem.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                            workItem.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {workItem.priority === 'urgent' ? 'Gấp' :
+                             workItem.priority === 'high' ? 'Cao' : 'Bình thường'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            workItem.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            workItem.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {workItem.status === 'completed' ? 'Hoàn thành' :
+                             workItem.status === 'in_progress' ? 'Đang làm' : 'Chưa làm'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => handleStatusUpdate(workItem.id, workItem.status)}
+                            className="text-green-600 hover:text-green-800 text-lg"
+                            title="Click để chuyển trạng thái"
+                          >
+                            ✓
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEditWorkItem(workItem)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                              title="Sửa"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteWorkItem(workItem.id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Xóa"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                {workItems.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">Chưa có công việc nào</p>
                   </div>
-                ))}
-                {tasks.length === 0 && (
-                  <p className="text-gray-500 italic text-center py-8">Chưa có công việc nào</p>
                 )}
               </div>
             </div>
