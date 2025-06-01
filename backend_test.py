@@ -1683,6 +1683,166 @@ def test_campaign_services_workflow():
     else:
         print("\n❌ Some tests failed. Check the logs above for details.")
 
+def test_project_campaign_integration():
+    """Test the integration between projects and campaigns"""
+    print("\n=== TESTING PROJECT-CAMPAIGN INTEGRATION ===\n")
+    
+    # Step 1: Get admin token
+    print("1. Getting admin authentication token...")
+    admin_token = get_token()
+    if not admin_token:
+        log_test("Admin Authentication", False, "Failed to get admin authentication token")
+        return
+    
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
+    
+    # Step 2: Get all projects
+    print("\n2. Getting all projects...")
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/projects/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get All Projects", False, f"Failed to get all projects: {response.text}", response)
+        return
+    
+    projects = response.json()
+    log_test("Get All Projects", True, f"Successfully retrieved {len(projects)} projects", response)
+    
+    # Step 3: Get all campaigns
+    print("\n3. Getting all campaigns...")
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get All Campaigns", False, f"Failed to get all campaigns: {response.text}", response)
+        return
+    
+    campaigns = response.json()
+    log_test("Get All Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
+    
+    # Step 4: Update a project to associate it with a campaign
+    if projects and campaigns:
+        project_to_update = projects[0]
+        campaign_to_link = campaigns[0]
+        
+        print(f"\n4. Updating project '{project_to_update['name']}' to link with campaign '{campaign_to_link['name']}'...")
+        
+        # Create update data
+        update_data = {
+            "campaign_id": campaign_to_link["id"]
+        }
+        
+        response = requests.patch(
+            f"{BASE_URL}{API_PREFIX}/projects/{project_to_update['id']}",
+            headers=admin_headers,
+            json=update_data
+        )
+        
+        if response.status_code != 200:
+            log_test("Update Project with Campaign", False, f"Failed to update project: {response.text}", response)
+        else:
+            updated_project = response.json()
+            log_test("Update Project with Campaign", True, f"Successfully updated project with campaign_id: {updated_project.get('campaign_id')}", response)
+            
+            # Step 5: Verify the project has been updated with the campaign ID
+            print(f"\n5. Verifying project has been updated with campaign ID...")
+            
+            response = requests.get(
+                f"{BASE_URL}{API_PREFIX}/projects/{project_to_update['id']}",
+                headers=admin_headers
+            )
+            
+            if response.status_code != 200:
+                log_test("Verify Project Update", False, f"Failed to get updated project: {response.text}", response)
+            else:
+                verified_project = response.json()
+                if verified_project.get("campaign_id") == campaign_to_link["id"]:
+                    log_test("Verify Project Update", True, f"Project successfully updated with campaign_id: {verified_project.get('campaign_id')}", response)
+                else:
+                    log_test("Verify Project Update", False, f"Project not updated correctly. Expected campaign_id: {campaign_to_link['id']}, got: {verified_project.get('campaign_id')}", response)
+            
+            # Step 6: Test the complete project detail workflow with the updated project
+            print(f"\n6. Testing complete project detail workflow with updated project...")
+            
+            # Get project details
+            project_id = project_to_update["id"]
+            response = requests.get(
+                f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
+                headers=admin_headers
+            )
+            
+            if response.status_code != 200:
+                log_test("Get Project Details", False, f"Failed to get project details: {response.text}", response)
+                return
+            
+            project = response.json()
+            log_test("Get Project Details", True, f"Successfully retrieved project: {project['name']}", response)
+            
+            # Get associated campaign
+            campaign_id = project.get("campaign_id")
+            if not campaign_id:
+                log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
+            else:
+                response = requests.get(
+                    f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
+                    headers=admin_headers
+                )
+                
+                if response.status_code != 200:
+                    log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
+                else:
+                    campaign = response.json()
+                    log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
+                    
+                    # Get campaign services
+                    response = requests.get(
+                        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
+                        headers=admin_headers
+                    )
+                    
+                    if response.status_code != 200:
+                        log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
+                    else:
+                        services = response.json()
+                        log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
+                        
+                        # Get tasks for each service
+                        for service in services:
+                            service_id = service["id"]
+                            service_name = service["name"]
+                            
+                            response = requests.get(
+                                f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
+                                headers=admin_headers
+                            )
+                            
+                            if response.status_code != 200:
+                                log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
+                            else:
+                                tasks = response.json()
+                                log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
+    else:
+        log_test("Project-Campaign Integration", False, "Not enough projects or campaigns to test integration", None)
+    
+    # Print summary
+    print("\n=== Test Summary ===")
+    print(f"Total tests: {test_results['success'] + test_results['failure']}")
+    print(f"Passed: {test_results['success']}")
+    print(f"Failed: {test_results['failure']}")
+    
+    if test_results['failure'] == 0:
+        print("\n✅ All tests passed successfully!")
+    else:
+        print("\n❌ Some tests failed. Check the logs above for details.")
+
 if __name__ == "__main__":
     # Reset test results
     test_results = {
@@ -1697,4 +1857,5 @@ if __name__ == "__main__":
     # test_template_api()
     # test_project_management_changes()
     # test_project_detail_workflow()
-    test_campaign_services_workflow()
+    # test_campaign_services_workflow()
+    test_project_campaign_integration()
