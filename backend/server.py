@@ -981,6 +981,48 @@ async def update_work_item_status(
     
     return {"detail": "Status updated successfully", "status": status}
 
+# Feedback Management endpoints  
+@api_router.post("/work-items/{work_item_id}/feedback/", response_model=Feedback)
+async def create_feedback(
+    work_item_id: str,
+    feedback: FeedbackCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Kiểm tra work item tồn tại
+    work_item = await db.work_items.find_one({"id": work_item_id})
+    if not work_item:
+        raise HTTPException(status_code=404, detail="Work item not found")
+    
+    feedback_data = feedback.dict()
+    feedback_obj = Feedback(
+        **feedback_data,
+        work_item_id=work_item_id,
+        user_id=current_user.id,
+        user_name=current_user.full_name
+    )
+    await db.feedbacks.insert_one(feedback_obj.dict())
+    return feedback_obj
+
+@api_router.get("/work-items/{work_item_id}/feedback/", response_model=List[Feedback])
+async def get_work_item_feedback(
+    work_item_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Kiểm tra work item tồn tại
+    work_item = await db.work_items.find_one({"id": work_item_id})
+    if not work_item:
+        raise HTTPException(status_code=404, detail="Work item not found")
+    
+    feedbacks = await db.feedbacks.find({"work_item_id": work_item_id}).sort("created_at", 1).to_list(length=100)
+    
+    # Enrich với user names
+    for feedback in feedbacks:
+        if feedback.get("user_id"):
+            user = await db.users.find_one({"id": feedback["user_id"]})
+            feedback["user_name"] = user["full_name"] if user else "Unknown User"
+    
+    return feedbacks
+
 # Dashboard Data
 @api_router.get("/dashboard", response_model=Dict[str, Any])
 async def get_dashboard_data(current_user: User = Depends(get_current_active_user)):
