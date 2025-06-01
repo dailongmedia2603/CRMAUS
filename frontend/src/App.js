@@ -3307,6 +3307,152 @@ const ProjectDetail = () => {
     return Math.round((elapsed / total) * 100);
   };
 
+  // Work Item Functions
+  const fetchWorkItems = async () => {
+    try {
+      const response = await axios.get(`${API}/projects/${id}/work-items/`);
+      setWorkItems(response.data);
+    } catch (error) {
+      console.error('Error fetching work items:', error);
+    }
+  };
+
+  const fetchProjectUsers = async () => {
+    try {
+      if (!project) return;
+      
+      const allUsers = [];
+      const roleFields = ['manager_ids', 'account_ids', 'content_ids', 'design_ids', 'editor_ids', 'sale_ids'];
+      
+      for (const field of roleFields) {
+        const userIds = project[field] || [];
+        for (const userId of userIds) {
+          const response = await axios.get(`${API}/users/${userId}`);
+          if (response.data && !allUsers.find(u => u.id === response.data.id)) {
+            allUsers.push(response.data);
+          }
+        }
+      }
+      setProjectUsers(allUsers);
+    } catch (error) {
+      console.error('Error fetching project users:', error);
+    }
+  };
+
+  const fetchServiceTasks = async (serviceId) => {
+    try {
+      const response = await axios.get(`${API}/services/${serviceId}/tasks/`);
+      setServiceTasks(prev => ({...prev, [serviceId]: response.data}));
+    } catch (error) {
+      console.error('Error fetching service tasks:', error);
+      setServiceTasks(prev => ({...prev, [serviceId]: []}));
+    }
+  };
+
+  const handleWorkItemSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const workItemData = {
+        ...workItemForm,
+        deadline: workItemForm.deadline ? new Date(workItemForm.deadline).toISOString() : null
+      };
+
+      if (editingWorkItem) {
+        await axios.put(`${API}/work-items/${editingWorkItem.id}`, workItemData);
+        toast.success('Cập nhật công việc thành công!');
+      } else {
+        await axios.post(`${API}/projects/${id}/work-items/`, workItemData);
+        toast.success('Tạo công việc thành công!');
+      }
+
+      setShowWorkItemModal(false);
+      resetWorkItemForm();
+      fetchWorkItems();
+    } catch (error) {
+      console.error('Error saving work item:', error);
+      toast.error('Có lỗi xảy ra khi lưu công việc!');
+    }
+  };
+
+  const resetWorkItemForm = () => {
+    setWorkItemForm({
+      name: '',
+      description: '',
+      service_id: '',
+      task_id: '',
+      assigned_to: '',
+      deadline: '',
+      priority: 'normal'
+    });
+    setEditingWorkItem(null);
+  };
+
+  const handleEditWorkItem = (workItem) => {
+    setEditingWorkItem(workItem);
+    setWorkItemForm({
+      name: workItem.name,
+      description: workItem.description || '',
+      service_id: workItem.service_id || '',
+      task_id: workItem.task_id || '',
+      assigned_to: workItem.assigned_to || '',
+      deadline: workItem.deadline ? new Date(workItem.deadline).toISOString().slice(0, 16) : '',
+      priority: workItem.priority
+    });
+    
+    // Load tasks for selected service
+    if (workItem.service_id) {
+      fetchServiceTasks(workItem.service_id);
+    }
+    
+    setShowWorkItemModal(true);
+  };
+
+  const handleDeleteWorkItem = async (workItemId) => {
+    if (window.confirm('Bạn có chắc muốn xóa công việc này?')) {
+      try {
+        await axios.delete(`${API}/work-items/${workItemId}`);
+        toast.success('Xóa công việc thành công!');
+        fetchWorkItems();
+      } catch (error) {
+        console.error('Error deleting work item:', error);
+        toast.error('Có lỗi xảy ra khi xóa công việc!');
+      }
+    }
+  };
+
+  const handleStatusUpdate = async (workItemId, currentStatus) => {
+    const statusFlow = {
+      'not_started': 'in_progress',
+      'in_progress': 'completed',
+      'completed': 'not_started'
+    };
+    
+    const newStatus = statusFlow[currentStatus];
+    
+    try {
+      await axios.patch(`${API}/work-items/${workItemId}/status`, null, {
+        params: { status: newStatus }
+      });
+      fetchWorkItems();
+      toast.success('Cập nhật trạng thái thành công!');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Có lỗi xảy ra khi cập nhật trạng thái!');
+    }
+  };
+
+  const handleServiceChange = (serviceId) => {
+    setWorkItemForm({...workItemForm, service_id: serviceId, task_id: ''});
+    if (serviceId) {
+      fetchServiceTasks(serviceId);
+    }
+  };
+
+  const openWorkItemDetail = (workItem) => {
+    setSelectedWorkItemDetail(workItem);
+    setShowWorkItemDetail(true);
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'planning': 'bg-yellow-100 text-yellow-800',
