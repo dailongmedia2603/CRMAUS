@@ -314,6 +314,20 @@ class WorkItem(WorkItemBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
 
+# Feedback Models (feedback cho work items)
+class FeedbackBase(BaseModel):
+    work_item_id: str
+    user_id: str
+    message: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class FeedbackCreate(BaseModel):
+    message: str
+
+class Feedback(FeedbackBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_name: Optional[str] = None  # Enriched field
+
 # Template Models (for service templates)
 class TemplateBase(BaseModel):
     name: str
