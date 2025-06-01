@@ -164,7 +164,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the search functionality in the Projects API. The API correctly searches by project name (e.g., 'Say', 'vvv'), project description, and client name (e.g., 'Test'). The search is case-insensitive, working with both lowercase and uppercase queries. The search functionality also works correctly when combined with other filters (e.g., status). Found an interesting edge case with Vietnamese characters: searching for 'Dai' doesn't match 'Đại' due to character differences, which is expected behavior."
 
-  - task: "Campaigns API - GET /api/campaigns/"
+  - task: "Campaigns API - POST /api/campaigns/"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -174,10 +174,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/campaigns/ endpoint to ensure it returns the list of campaigns correctly with search and archived filter"
+        comment: "Need to test the POST /api/campaigns/ endpoint to ensure it creates new campaigns correctly"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the GET /api/campaigns/ endpoint. The API returns the list of campaigns correctly. The search functionality works properly with case-insensitive search. The archived filter correctly returns only archived or non-archived campaigns based on the parameter. The endpoint is accessible by all authenticated users."
+        comment: "Successfully tested the POST /api/campaigns/ endpoint. The API correctly creates new campaigns with the provided name, description, and archived status. The created_by field is automatically set to the current user's ID. The API returns the created campaign with all fields including the generated UUID."
 
   - task: "Campaigns API - GET /api/campaigns/{campaign_id}"
     implemented: true
