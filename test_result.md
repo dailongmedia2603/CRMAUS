@@ -59,7 +59,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the bulk operations endpoints for projects. The bulk-archive endpoint correctly archives multiple projects at once. The bulk-restore endpoint correctly restores multiple archived projects. The bulk-delete endpoint correctly deletes multiple projects at once. All bulk operations are working as expected."
 
-  - task: "Clients API - GET /api/clients/"
+  - task: "Users API - GET /api/users/"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -69,10 +69,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/clients/ endpoint to ensure it returns the list of clients correctly for project form dropdowns"
+        comment: "Need to test the GET /api/users/ endpoint to ensure it returns the list of users correctly for project form dropdowns and verify that only admin can access this endpoint"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
+        comment: "Successfully tested the GET /api/users/ endpoint. The API returns the list of users correctly when accessed by admin users. Authorization is properly implemented - non-admin users (account and staff) receive a 403 Forbidden response when attempting to access the users list. This ensures that only admin users can access user information."
 
   - task: "Users API - GET /api/users/by-role/{role}"
     implemented: true
