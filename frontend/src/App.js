@@ -4107,24 +4107,85 @@ const ProjectDetail = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
-                  <ReactQuill
-                    value={workItemForm.description}
-                    onChange={(value) => setWorkItemForm({...workItemForm, description: value})}
-                    modules={{
-                      toolbar: [
-                        [{ 'header': [1, 2, false] }],
-                        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-                        ['link', 'image'],
-                        ['clean']
-                      ],
-                    }}
-                    formats={[
-                      'header', 'bold', 'italic', 'underline', 'strike', 'blockquote',
-                      'list', 'bullet', 'indent', 'link', 'image'
-                    ]}
-                    style={{ height: '200px', marginBottom: '50px' }}
-                  />
+                  <div className="border border-gray-300 rounded-md">
+                    {/* Toolbar */}
+                    <div className="border-b border-gray-200 p-2 bg-gray-50 flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => document.execCommand('bold')}
+                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
+                        title="Bold"
+                      >
+                        <strong>B</strong>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => document.execCommand('italic')}
+                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
+                        title="Italic"
+                      >
+                        <em>I</em>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => document.execCommand('underline')}
+                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
+                        title="Underline"
+                      >
+                        <u>U</u>
+                      </button>
+                      <div className="border-l border-gray-300 h-6 mx-1"></div>
+                      <button
+                        type="button"
+                        onClick={() => document.execCommand('insertUnorderedList')}
+                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
+                        title="Bullet List"
+                      >
+                        • List
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => document.execCommand('insertOrderedList')}
+                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
+                        title="Numbered List"
+                      >
+                        1. List
+                      </button>
+                      <div className="border-l border-gray-300 h-6 mx-1"></div>
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            document.execCommand('formatBlock', false, e.target.value);
+                          }
+                        }}
+                        className="text-sm border rounded px-2 py-1"
+                        defaultValue=""
+                      >
+                        <option value="">Định dạng</option>
+                        <option value="h1">Tiêu đề 1</option>
+                        <option value="h2">Tiêu đề 2</option>
+                        <option value="h3">Tiêu đề 3</option>
+                        <option value="p">Đoạn văn</option>
+                      </select>
+                    </div>
+                    
+                    {/* Editor */}
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning={true}
+                      onInput={(e) => {
+                        setWorkItemForm({...workItemForm, description: e.target.innerHTML});
+                      }}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const text = e.clipboardData.getData('text/plain');
+                        document.execCommand('insertText', false, text);
+                      }}
+                      className="min-h-[200px] p-3 focus:outline-none"
+                      style={{ minHeight: '200px' }}
+                      dangerouslySetInnerHTML={{ __html: workItemForm.description }}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-4 pt-6">
