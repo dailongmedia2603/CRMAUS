@@ -3262,6 +3262,25 @@ const ProjectDetail = () => {
     }
   }, [showWorkItemModal, editingWorkItem]);
 
+  useEffect(() => {
+    // Initialize rich text editor content when editing
+    if (showWorkItemModal && editingWorkItem) {
+      setTimeout(() => {
+        const editor = document.getElementById('workItemEditor');
+        if (editor) {
+          editor.innerHTML = workItemForm.description || '';
+        }
+      }, 100);
+    } else if (showWorkItemModal && !editingWorkItem) {
+      setTimeout(() => {
+        const editor = document.getElementById('workItemEditor');
+        if (editor) {
+          editor.innerHTML = '';
+        }
+      }, 100);
+    }
+  }, [showWorkItemModal, editingWorkItem]);
+
   const fetchProjectDetails = async () => {
     try {
       setLoading(true);
