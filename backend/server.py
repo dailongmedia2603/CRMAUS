@@ -57,7 +57,7 @@ app.add_middleware(
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
-    role: str = "staff"  # admin, account, creative, staff
+    role: str = "staff"  # admin, account, creative, staff, manager, content, design, editor, sale
 
 class UserCreate(UserBase):
     password: str
