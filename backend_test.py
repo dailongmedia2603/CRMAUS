@@ -1556,6 +1556,133 @@ def test_project_detail_workflow():
     else:
         print("\n❌ Some tests failed. Check the logs above for details.")
 
+def test_campaign_services_workflow():
+    """Test the Campaign Services workflow"""
+    print("\n=== TESTING CAMPAIGN SERVICES WORKFLOW ===\n")
+    
+    # Step 1: Get admin token
+    print("1. Getting admin authentication token...")
+    admin_token = get_token()
+    if not admin_token:
+        log_test("Admin Authentication", False, "Failed to get admin authentication token")
+        return
+    
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
+    
+    # Step 2: Get all campaigns
+    print("\n2. Getting all campaigns...")
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get All Campaigns", False, f"Failed to get all campaigns: {response.text}", response)
+        return
+    
+    campaigns = response.json()
+    log_test("Get All Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
+    
+    if not campaigns:
+        log_test("Available Campaigns", False, "No campaigns found in the database", None)
+        return
+    
+    print("Available campaigns:")
+    for c in campaigns:
+        print(f"- ID: {c.get('id')}, Name: {c.get('name')}")
+    
+    # Step 3: Test GET /api/campaigns/{campaign_id} for a specific campaign
+    # Use the first campaign from the list or the specified one if it exists
+    campaign_id = next((c["id"] for c in campaigns if c["id"] == "0a78e48d-a54a-44d3-a7d0-7cc83b2d3e1c"), campaigns[0]["id"])
+    print(f"\n3. Testing GET /api/campaigns/{campaign_id}...")
+    
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
+        return
+    
+    campaign = response.json()
+    log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
+    
+    # Step 4: Test GET /api/campaigns/{campaign_id}/services/ to get services
+    print(f"\n4. Testing GET /api/campaigns/{campaign_id}/services/...")
+    
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
+        return
+    
+    services = response.json()
+    log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
+    
+    if not services:
+        log_test("Campaign Services", False, "No services found for this campaign", None)
+        return
+    
+    print("Available services:")
+    for s in services:
+        print(f"- ID: {s.get('id')}, Name: {s.get('name')}")
+    
+    # Check if the campaign has the expected services
+    expected_services = ["Thiết kế UI/UX", "Phát triển Frontend", "Tạo nội dung"]
+    found_services = [service["name"] for service in services]
+    
+    if all(service in found_services for service in expected_services):
+        log_test("Campaign Services Verification", True, f"Campaign has all expected services: {expected_services}", None)
+    else:
+        log_test("Campaign Services Verification", False, f"Campaign is missing some expected services. Found: {found_services}, Expected: {expected_services}", None)
+    
+    # Step 5: Test GET /api/services/{service_id}/tasks/ for each service to get tasks
+    print("\n5. Testing GET /api/services/{service_id}/tasks/ for each service...")
+    
+    for service in services:
+        service_id = service["id"]
+        service_name = service["name"]
+        
+        print(f"   Testing tasks for service: {service_name} (ID: {service_id})...")
+        
+        response = requests.get(
+            f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
+            continue
+        
+        tasks = response.json()
+        log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
+        
+        # Verify tasks have different statuses
+        if tasks:
+            statuses = set(task["status"] for task in tasks)
+            log_test(f"Task Statuses for Service '{service_name}'", True, f"Tasks have {len(statuses)} different statuses: {statuses}", None)
+        else:
+            log_test(f"Task Statuses for Service '{service_name}'", False, "No tasks found for this service", None)
+    
+    # Print summary
+    print("\n=== Test Summary ===")
+    print(f"Total tests: {test_results['success'] + test_results['failure']}")
+    print(f"Passed: {test_results['success']}")
+    print(f"Failed: {test_results['failure']}")
+    
+    if test_results['failure'] == 0:
+        print("\n✅ All tests passed successfully!")
+    else:
+        print("\n❌ Some tests failed. Check the logs above for details.")
+
 if __name__ == "__main__":
     # Reset test results
     test_results = {
@@ -1569,4 +1696,5 @@ if __name__ == "__main__":
     # test_bulk_delete_tasks()
     # test_template_api()
     # test_project_management_changes()
-    test_project_detail_workflow()
+    # test_project_detail_workflow()
+    test_campaign_services_workflow()
