@@ -68,6 +68,8 @@ const Projects = ({ user }) => {
   useEffect(() => {
     fetchClients();
     fetchUsers();
+    fetchCampaigns();
+    fetchUsersByRole();
   }, []);
 
   // Close dropdown when clicking outside
