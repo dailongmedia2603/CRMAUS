@@ -4,6 +4,8 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { format } from "date-fns";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import "./App.css";
 import DocumentsComponent from "./components/Documents";
 import ProjectsComponent from "./components/Projects";
