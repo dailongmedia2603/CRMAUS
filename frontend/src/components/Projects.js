@@ -330,14 +330,20 @@ const Projects = ({ user }) => {
     setProjectForm({
       name: '',
       client_id: '',
+      campaign_id: '',
       description: '',
       start_date: '',
       end_date: '',
-      budget: '',
       status: 'planning',
       team: [],
       contract_value: '',
-      debt: ''
+      debt: '',
+      manager_ids: [],
+      account_ids: [],
+      content_ids: [],
+      design_ids: [],
+      editor_ids: [],
+      sale_ids: []
     });
     setEditingProject(null);
   };
