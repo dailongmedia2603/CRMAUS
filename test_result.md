@@ -246,6 +246,21 @@ frontend:
         agent: "main"
         comment: "Need to test the search functionality in the projects toolbar to ensure it works correctly"
 
+  - task: "Work Items API - CRUD Operations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Work Items API endpoints for CRUD operations: POST /api/projects/{project_id}/work-items/, GET /api/projects/{project_id}/work-items/, GET /api/work-items/{work_item_id}, PUT /api/work-items/{work_item_id}, DELETE /api/work-items/{work_item_id}, PATCH /api/work-items/{work_item_id}/status"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all Work Items API endpoints. The API correctly creates, retrieves, updates, and deletes work items. The status update endpoint correctly transitions work items between statuses (not_started → in_progress → completed). The API properly validates required fields, project existence, and service/task linking. The only minor issue found is that the enriched response data (assigned_by_name, assigned_to_name, service_name, task_name) is not being populated in the response, but this doesn't affect core functionality."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
