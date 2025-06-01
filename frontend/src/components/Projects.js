@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const Projects = ({ user }) => {
+  const navigate = useNavigate();
   // State management
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
