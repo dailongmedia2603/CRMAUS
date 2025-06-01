@@ -9,6 +9,15 @@ const Projects = ({ user }) => {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [users, setUsers] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);  // Thêm campaigns
+  const [usersByRole, setUsersByRole] = useState({  // Thêm users theo role
+    manager: [],
+    account: [],
+    content: [],
+    design: [],
+    editor: [],
+    sale: []
+  });
   const [statistics, setStatistics] = useState({});
   const [loading, setLoading] = useState(true);
   
