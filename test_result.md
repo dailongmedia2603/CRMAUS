@@ -44,7 +44,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the DELETE /api/projects/{project_id} endpoint. The API correctly deletes projects when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete projects. After deletion, attempting to access the deleted project returns a 404 Not Found response."
 
-  - task: "Clients API - GET /api/clients/"
+  - task: "Projects API - Bulk Operations"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -54,10 +54,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/clients/ endpoint to ensure it returns the list of clients correctly for project form dropdowns"
+        comment: "Need to test the bulk operations endpoints for projects: bulk-archive, bulk-restore, and bulk-delete"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
+        comment: "Successfully tested the bulk operations endpoints for projects. The bulk-archive endpoint correctly archives multiple projects at once. The bulk-restore endpoint correctly restores multiple archived projects. The bulk-delete endpoint correctly deletes multiple projects at once. All bulk operations are working as expected."
 
   - task: "Users API - GET /api/users/"
     implemented: true
