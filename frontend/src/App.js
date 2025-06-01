@@ -4438,6 +4438,116 @@ const ProjectDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && selectedWorkItemForFeedback && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  💬 Feedback: {selectedWorkItemForFeedback.name}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowFeedbackModal(false);
+                    setSelectedWorkItemForFeedback(null);
+                    setFeedbackMessages([]);
+                    setNewFeedbackMessage('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Chat Messages Area */}
+              <div className="bg-gray-50 rounded-lg p-4 h-80 overflow-y-auto mb-4 border">
+                {feedbackMessages.length === 0 ? (
+                  <div className="text-center text-gray-500 mt-16">
+                    <div className="text-4xl mb-2">💭</div>
+                    <p>Chưa có feedback nào</p>
+                    <p className="text-sm">Hãy bắt đầu cuộc trò chuyện!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {feedbackMessages.map((message, index) => (
+                      <div key={index} className={`flex ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          message.isCurrentUser 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-white border shadow-sm'
+                        }`}>
+                          <div className="text-sm">{message.content}</div>
+                          <div className={`text-xs mt-1 ${
+                            message.isCurrentUser ? 'text-blue-200' : 'text-gray-500'
+                          }`}>
+                            {message.sender} • {message.time}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Message Input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newFeedbackMessage}
+                  onChange={(e) => setNewFeedbackMessage(e.target.value)}
+                  placeholder="Nhập feedback của bạn..."
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newFeedbackMessage.trim()) {
+                      const newMessage = {
+                        content: newFeedbackMessage.trim(),
+                        sender: user?.full_name || 'Current User',
+                        time: format(new Date(), 'HH:mm'),
+                        isCurrentUser: true
+                      };
+                      setFeedbackMessages([...feedbackMessages, newMessage]);
+                      setNewFeedbackMessage('');
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newFeedbackMessage.trim()) {
+                      const newMessage = {
+                        content: newFeedbackMessage.trim(),
+                        sender: user?.full_name || 'Current User',
+                        time: format(new Date(), 'HH:mm'),
+                        isCurrentUser: true
+                      };
+                      setFeedbackMessages([...feedbackMessages, newMessage]);
+                      setNewFeedbackMessage('');
+                    }
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                >
+                  📤 Gửi
+                </button>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowFeedbackModal(false);
+                    setSelectedWorkItemForFeedback(null);
+                    setFeedbackMessages([]);
+                    setNewFeedbackMessage('');
+                  }}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
