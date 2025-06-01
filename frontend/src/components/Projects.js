@@ -1057,6 +1057,96 @@ const Projects = ({ user }) => {
                       rows="3"
                     />
                   </div>
+
+                  {/* Nhân sự triển khai */}
+                  <div className="md:col-span-2">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Nhân sự triển khai</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Quản lý</label>
+                        <select
+                          multiple
+                          value={projectForm.manager_ids}
+                          onChange={(e) => setProjectForm({...projectForm, manager_ids: Array.from(e.target.selectedOptions, option => option.value)})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-24"
+                        >
+                          {usersByRole.manager.map(user => (
+                            <option key={user.id} value={user.id}>{user.full_name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Account</label>
+                        <select
+                          multiple
+                          value={projectForm.account_ids}
+                          onChange={(e) => setProjectForm({...projectForm, account_ids: Array.from(e.target.selectedOptions, option => option.value)})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-24"
+                        >
+                          {usersByRole.account.map(user => (
+                            <option key={user.id} value={user.id}>{user.full_name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Content</label>
+                        <select
+                          multiple
+                          value={projectForm.content_ids}
+                          onChange={(e) => setProjectForm({...projectForm, content_ids: Array.from(e.target.selectedOptions, option => option.value)})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-24"
+                        >
+                          {usersByRole.content.map(user => (
+                            <option key={user.id} value={user.id}>{user.full_name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Design</label>
+                        <select
+                          multiple
+                          value={projectForm.design_ids}
+                          onChange={(e) => setProjectForm({...projectForm, design_ids: Array.from(e.target.selectedOptions, option => option.value)})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-24"
+                        >
+                          {usersByRole.design.map(user => (
+                            <option key={user.id} value={user.id}>{user.full_name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Editor</label>
+                        <select
+                          multiple
+                          value={projectForm.editor_ids}
+                          onChange={(e) => setProjectForm({...projectForm, editor_ids: Array.from(e.target.selectedOptions, option => option.value)})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-24"
+                        >
+                          {usersByRole.editor.map(user => (
+                            <option key={user.id} value={user.id}>{user.full_name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Sale</label>
+                        <select
+                          multiple
+                          value={projectForm.sale_ids}
+                          onChange={(e) => setProjectForm({...projectForm, sale_ids: Array.from(e.target.selectedOptions, option => option.value)})}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-24"
+                        >
+                          {usersByRole.sale.map(user => (
+                            <option key={user.id} value={user.id}>{user.full_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6">
