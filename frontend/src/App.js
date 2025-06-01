@@ -4009,6 +4009,209 @@ const ProjectDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Work Item Modal */}
+      {showWorkItemModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {editingWorkItem ? 'Sửa công việc' : 'Thêm công việc mới'}
+                </h3>
+                <button
+                  onClick={() => setShowWorkItemModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleWorkItemSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Tên công việc *</label>
+                    <input
+                      type="text"
+                      value={workItemForm.name}
+                      onChange={(e) => setWorkItemForm({...workItemForm, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Ưu tiên</label>
+                    <select
+                      value={workItemForm.priority}
+                      onChange={(e) => setWorkItemForm({...workItemForm, priority: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="normal">Bình thường</option>
+                      <option value="high">Cao</option>
+                      <option value="urgent">Gấp</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Dịch vụ liên quan</label>
+                    <select
+                      value={workItemForm.service_id}
+                      onChange={(e) => handleServiceChange(e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Chọn dịch vụ</option>
+                      {services.map(service => (
+                        <option key={service.id} value={service.id}>{service.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nhiệm vụ</label>
+                    <select
+                      value={workItemForm.task_id}
+                      onChange={(e) => setWorkItemForm({...workItemForm, task_id: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      disabled={!workItemForm.service_id}
+                    >
+                      <option value="">Chọn nhiệm vụ</option>
+                      {workItemForm.service_id && serviceTasks[workItemForm.service_id] && serviceTasks[workItemForm.service_id].map(task => (
+                        <option key={task.id} value={task.id}>{task.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Giao cho</label>
+                    <select
+                      value={workItemForm.assigned_to}
+                      onChange={(e) => setWorkItemForm({...workItemForm, assigned_to: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Chọn người nhận</option>
+                      {projectUsers.map(user => (
+                        <option key={user.id} value={user.id}>{user.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Deadline</label>
+                    <input
+                      type="datetime-local"
+                      value={workItemForm.deadline}
+                      onChange={(e) => setWorkItemForm({...workItemForm, deadline: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+                  <ReactQuill
+                    value={workItemForm.description}
+                    onChange={(value) => setWorkItemForm({...workItemForm, description: value})}
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [1, 2, false] }],
+                        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                        ['link', 'image'],
+                        ['clean']
+                      ],
+                    }}
+                    formats={[
+                      'header', 'bold', 'italic', 'underline', 'strike', 'blockquote',
+                      'list', 'bullet', 'indent', 'link', 'image'
+                    ]}
+                    style={{ height: '200px', marginBottom: '50px' }}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-4 pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowWorkItemModal(false)}
+                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    {editingWorkItem ? 'Cập nhật' : 'Tạo mới'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Work Item Detail Modal */}
+      {showWorkItemDetail && selectedWorkItemDetail && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Chi tiết công việc: {selectedWorkItemDetail.name}</h3>
+                <button
+                  onClick={() => setShowWorkItemDetail(false)}
+                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="prose max-w-none">
+                <div 
+                  dangerouslySetInnerHTML={{ __html: selectedWorkItemDetail.description || '<p>Chưa có mô tả</p>' }}
+                  style={{
+                    fontFamily: 'inherit',
+                    lineHeight: '1.6',
+                    color: '#374151'
+                  }}
+                />
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <label className="font-medium text-gray-700">Người giao:</label>
+                  <p className="text-gray-900">{selectedWorkItemDetail.assigned_by_name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Người nhận:</label>
+                  <p className="text-gray-900">{selectedWorkItemDetail.assigned_to_name || 'Chưa giao'}</p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Deadline:</label>
+                  <p className="text-gray-900">
+                    {selectedWorkItemDetail.deadline ? format(new Date(selectedWorkItemDetail.deadline), 'dd/MM/yyyy - HH:mm') : 'Chưa có'}
+                  </p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Ưu tiên:</label>
+                  <p className="text-gray-900">
+                    {selectedWorkItemDetail.priority === 'urgent' ? 'Gấp' :
+                     selectedWorkItemDetail.priority === 'high' ? 'Cao' : 'Bình thường'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowWorkItemDetail(false)}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
