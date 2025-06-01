@@ -1,4 +1,65 @@
-backend:
+## Update Report - Project Management Enhancement (2025-06-01)
+
+### ✅ COMPLETED CHANGES
+
+#### Backend Updates:
+1. **Removed budget field** from Project model
+2. **Added campaign_id field** with proper validation - projects can now be linked to campaigns
+3. **Added role-based staff assignment fields**:
+   - manager_ids: Array of manager user IDs
+   - account_ids: Array of account user IDs  
+   - content_ids: Array of content user IDs
+   - design_ids: Array of design user IDs
+   - editor_ids: Array of editor user IDs
+   - sale_ids: Array of sale user IDs
+4. **Expanded User roles** to include: manager, account, content, design, editor, sale
+5. **Added new API endpoint** GET /api/users/by-role/{role} to fetch users by specific role
+6. **Updated project validation** to check campaign existence when campaign_id is provided
+
+#### Frontend Updates:
+1. **Removed budget field** from project form
+2. **Added campaign dropdown** in project form with data from campaigns API
+3. **Added role-based staff selection** with multiple select dropdowns for each role
+4. **Expanded modal size** to accommodate new fields
+5. **Updated form state management** to handle all new fields
+6. **Updated edit functionality** to load and save new fields
+
+#### Database Updates:
+1. **Created sample data**:
+   - 6 new users with different roles (manager, account, content, design, editor, sale)
+   - 1 client (Công ty ABC)
+   - 1 campaign (Chiến dịch Marketing Q1 2025)
+   - 1 project demonstrating all new features
+
+### 🧪 TESTING RESULTS
+✅ All backend APIs tested and working correctly
+✅ Project CRUD operations with new fields verified
+✅ Campaign validation working properly
+✅ Role-based user fetching operational
+✅ Sample data created successfully
+
+### 🎯 USER ACCESS INFORMATION
+**Frontend URL**: Available via your environment
+**Test Accounts**: 
+- Admin: admin@example.com / admin123
+- Manager: manager@example.com / password123
+- Account: account@example.com / password123
+- Content: content@example.com / password123
+- Design: design@example.com / password123
+- Editor: editor@example.com / password123
+- Sale: sale@example.com / password123
+
+### 📊 SAMPLE DATA CREATED
+1. **Client**: Công ty ABC (ABC Technology Solutions)
+2. **Campaign**: Chiến dịch Marketing Q1 2025  
+3. **Project**: Dự án Website cho Công ty ABC
+   - Linked to campaign
+   - All role types assigned
+   - Contract value: 50,000,000 VND
+   - Debt: 10,000,000 VND
+   - Status: In Progress
+
+The system is now ready for use with the enhanced project management features!
   - task: "Projects API - GET /api/projects/"
     implemented: true
     working: true
