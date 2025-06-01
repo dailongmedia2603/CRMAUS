@@ -3196,7 +3196,496 @@ const Projects = () => {
 };
 
 const ProjectDetail = () => {
-  return <div>Chi tiết dự án (đang phát triển)</div>;
+  const { id } = useParams();
+  const [project, setProject] = useState(null);
+  const [campaign, setCampaign] = useState(null);
+  const [services, setServices] = useState([]);
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [tasks, setTasks] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      fetchProjectDetails();
+    }
+  }, [id]);
+
+  const fetchProjectDetails = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch project details
+      const projectResponse = await axios.get(`${API}/projects/${id}`);
+      const projectData = projectResponse.data;
+      setProject(projectData);
+
+      // Fetch client info
+      if (projectData.client_id) {
+        const clientResponse = await axios.get(`${API}/clients/${projectData.client_id}`);
+        setClient(clientResponse.data);
+      }
+
+      // Fetch campaign and services if project has campaign
+      if (projectData.campaign_id) {
+        const campaignResponse = await axios.get(`${API}/campaigns/${projectData.campaign_id}`);
+        setCampaign(campaignResponse.data);
+
+        const servicesResponse = await axios.get(`${API}/campaigns/${projectData.campaign_id}/services/`);
+        setServices(servicesResponse.data);
+
+        // Fetch tasks for each service
+        const allTasks = [];
+        for (const service of servicesResponse.data) {
+          try {
+            const tasksResponse = await axios.get(`${API}/services/${service.id}/tasks/`);
+            allTasks.push(...tasksResponse.data.map(task => ({...task, service_name: service.name, service_id: service.id})));
+          } catch (error) {
+            console.log(`No tasks found for service ${service.id}`);
+          }
+        }
+        setTasks(allTasks);
+      }
+
+      // Fetch documents related to project
+      try {
+        const documentsResponse = await axios.get(`${API}/documents/`);
+        setDocuments(documentsResponse.data.filter(doc => 
+          doc.title.toLowerCase().includes(projectData.name.toLowerCase()) ||
+          doc.description?.toLowerCase().includes(projectData.name.toLowerCase())
+        ));
+      } catch (error) {
+        console.log('No documents found');
+      }
+
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+      toast.error('Không thể tải thông tin dự án');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProjectProgress = () => {
+    if (!project) return 0;
+    const now = new Date();
+    const start = new Date(project.start_date);
+    const end = new Date(project.end_date);
+    
+    if (now < start) return 0;
+    if (now > end) return 100;
+    
+    const total = end - start;
+    const elapsed = now - start;
+    return Math.round((elapsed / total) * 100);
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'planning': 'bg-yellow-100 text-yellow-800',
+      'in_progress': 'bg-blue-100 text-blue-800',
+      'on_hold': 'bg-gray-100 text-gray-800',
+      'completed': 'bg-green-100 text-green-800',
+      'cancelled': 'bg-red-100 text-red-800',
+      'overdue': 'bg-red-100 text-red-800',
+      'pending': 'bg-purple-100 text-purple-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusText = (status) => {
+    const texts = {
+      'planning': 'Đang lập kế hoạch',
+      'in_progress': 'Đang thực hiện',
+      'on_hold': 'Tạm dừng',
+      'completed': 'Hoàn thành',
+      'cancelled': 'Đã hủy',
+      'overdue': 'Quá hạn',
+      'pending': 'Chờ xử lý'
+    };
+    return texts[status] || status;
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return '0 ₫';
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+  };
+
+  const calculatePaidAmount = () => {
+    if (!project) return 0;
+    return (project.contract_value || 0) - (project.debt || 0);
+  };
+
+  const openTaskDetail = (task) => {
+    setSelectedTask(task);
+    setShowTaskModal(true);
+  };
+
+  const renderTaskContent = (task) => {
+    if (!task.template_id) {
+      return <div className="text-gray-500 italic">Chưa có template cho nhiệm vụ này</div>;
+    }
+
+    // This would be the template content rendered
+    // For now, we'll show a placeholder
+    return (
+      <div className="space-y-4">
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Chi tiết nhiệm vụ</h4>
+          <p className="text-gray-700">{task.description || 'Chưa có mô tả chi tiết'}</p>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
+            <p className="text-gray-900">{task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : 'Chưa xác định'}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
+            <p className="text-gray-900">{task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}</p>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
+            {getStatusText(task.status)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-900">Không tìm thấy dự án</h2>
+          <p className="text-gray-600 mt-2">Dự án không tồn tại hoặc đã bị xóa</p>
+        </div>
+      </div>
+    );
+  }
+
+  const progress = getProjectProgress();
+  
+  // Create tabs dynamically
+  const tabs = [
+    { id: 'overview', name: 'Tổng quan', icon: '📊' },
+    ...services.map(service => ({
+      id: `service-${service.id}`,
+      name: service.name,
+      icon: '🔧',
+      serviceId: service.id
+    })),
+    { id: 'tasks', name: 'Công việc', icon: '✅' },
+    { id: 'documents', name: 'Tài liệu', icon: '📄' },
+    { id: 'files', name: 'Hồ sơ dự án', icon: '📁' },
+    { id: 'log', name: 'Log', icon: '📝' }
+  ];
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Project Header */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+            <p className="text-gray-600 mt-1">{client?.name}</p>
+          </div>
+          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}>
+            {getStatusText(project.status)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-blue-600 mb-1">Thời gian triển khai</h3>
+            <p className="text-lg font-semibold text-blue-900">
+              {project.start_date ? format(new Date(project.start_date), 'dd/MM/yyyy') : 'Chưa xác định'} - 
+              {project.end_date ? format(new Date(project.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+            </p>
+          </div>
+
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-green-600 mb-1">Giá trị hợp đồng</h3>
+            <p className="text-lg font-semibold text-green-900">{formatCurrency(project.contract_value)}</p>
+          </div>
+
+          <div className="bg-indigo-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-indigo-600 mb-1">Đã thanh toán</h3>
+            <p className="text-lg font-semibold text-indigo-900">{formatCurrency(calculatePaidAmount())}</p>
+          </div>
+
+          <div className="bg-red-50 p-4 rounded-lg">
+            <h3 className="text-sm font-medium text-red-600 mb-1">Còn lại</h3>
+            <p className="text-lg font-semibold text-red-900">{formatCurrency(project.debt)}</p>
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Chiến dịch</h4>
+            <p className="text-gray-900">{campaign?.name || 'Chưa liên kết'}</p>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Dịch vụ triển khai</h4>
+            <div className="flex flex-wrap gap-2">
+              {services.map(service => (
+                <span key={service.id} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
+                  {service.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Hồ sơ</h4>
+            <p className="text-gray-900">{documents.length} tài liệu</p>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium text-gray-700">Tiến độ dự án</h4>
+            <span className="text-sm font-medium text-gray-900">{progress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div 
+              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8 px-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.name}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Tổng quan dự án</h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-700">{project.description || 'Chưa có mô tả dự án'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Thông tin khách hàng</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Tên:</span> {client?.name}</p>
+                    <p><span className="font-medium">Công ty:</span> {client?.company}</p>
+                    <p><span className="font-medium">Email:</span> {client?.contact_email}</p>
+                    <p><span className="font-medium">Điện thoại:</span> {client?.phone}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Thống kê</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Tổng nhiệm vụ:</span> {tasks.length}</p>
+                    <p><span className="font-medium">Hoàn thành:</span> {tasks.filter(t => t.status === 'completed').length}</p>
+                    <p><span className="font-medium">Đang thực hiện:</span> {tasks.filter(t => t.status === 'in_progress').length}</p>
+                    <p><span className="font-medium">Chưa bắt đầu:</span> {tasks.filter(t => t.status === 'not_started').length}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Service Tabs */}
+          {services.map(service => activeTab === `service-${service.id}` && (
+            <div key={service.id} className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Dịch vụ: {service.name}</h3>
+              <p className="text-gray-600">{service.description}</p>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Danh sách nhiệm vụ</h4>
+                <div className="space-y-2">
+                  {tasks.filter(task => task.service_id === service.id).map(task => (
+                    <div 
+                      key={task.id}
+                      onClick={() => openTaskDetail(task)}
+                      className="flex items-center justify-between p-3 bg-white rounded border hover:shadow-sm cursor-pointer transition-all"
+                    >
+                      <div>
+                        <h5 className="font-medium text-gray-900">{task.name}</h5>
+                        <p className="text-sm text-gray-600">
+                          {task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : 'Chưa xác định'} - 
+                          {task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
+                        {getStatusText(task.status)}
+                      </span>
+                    </div>
+                  ))}
+                  {tasks.filter(task => task.service_id === service.id).length === 0 && (
+                    <p className="text-gray-500 italic">Chưa có nhiệm vụ nào</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Tasks Tab */}
+          {activeTab === 'tasks' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Tất cả công việc</h3>
+              <div className="grid gap-4">
+                {tasks.map(task => (
+                  <div 
+                    key={task.id}
+                    onClick={() => openTaskDetail(task)}
+                    className="border rounded-lg p-4 hover:shadow-sm cursor-pointer transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{task.name}</h4>
+                        <p className="text-sm text-gray-600">Dịch vụ: {task.service_name}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : 'Chưa xác định'} - 
+                          {task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
+                        {getStatusText(task.status)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {tasks.length === 0 && (
+                  <p className="text-gray-500 italic text-center py-8">Chưa có công việc nào</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Documents Tab */}
+          {activeTab === 'documents' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Tài liệu dự án</h3>
+              <div className="grid gap-4">
+                {documents.map(doc => (
+                  <div key={doc.id} className="border rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900">{doc.title}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
+                    {doc.link && (
+                      <a 
+                        href={doc.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
+                      >
+                        Mở tài liệu →
+                      </a>
+                    )}
+                  </div>
+                ))}
+                {documents.length === 0 && (
+                  <p className="text-gray-500 italic text-center py-8">Chưa có tài liệu nào</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Project Files Tab */}
+          {activeTab === 'files' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Hồ sơ dự án</h3>
+              <div className="bg-gray-50 p-6 rounded-lg text-center">
+                <p className="text-gray-500">Chức năng quản lý hồ sơ dự án đang được phát triển</p>
+              </div>
+            </div>
+          )}
+
+          {/* Log Tab */}
+          {activeTab === 'log' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Nhật ký hoạt động</h3>
+              <div className="bg-gray-50 p-6 rounded-lg text-center">
+                <p className="text-gray-500">Chức năng nhật ký hoạt động đang được phát triển</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Task Detail Modal */}
+      {showTaskModal && selectedTask && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Chi tiết nhiệm vụ: {selectedTask.name}</h3>
+                <button
+                  onClick={() => setShowTaskModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <span className="text-sm text-gray-600">Thuộc dịch vụ: </span>
+                <span className="font-medium">{selectedTask.service_name}</span>
+              </div>
+
+              {renderTaskContent(selectedTask)}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowTaskModal(false)}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const Task = () => {
