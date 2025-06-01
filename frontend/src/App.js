@@ -4367,13 +4367,13 @@ const ProjectDetail = () => {
         </div>
       )}
 
-      {/* Work Item Detail Modal */}
+      {/* Work Item Detail Modal - Only Description */}
       {showWorkItemDetail && selectedWorkItemDetail && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Chi tiết công việc: {selectedWorkItemDetail.name}</h3>
+                <h3 className="text-lg font-medium text-gray-900">Mô tả công việc: {selectedWorkItemDetail.name}</h3>
                 <button
                   onClick={() => setShowWorkItemDetail(false)}
                   className="text-gray-400 hover:text-gray-600 text-xl font-bold"
@@ -4382,38 +4382,47 @@ const ProjectDetail = () => {
                 </button>
               </div>
 
-              <div className="prose max-w-none">
+              {/* Rich Text Viewer with Editor-like Interface */}
+              <div className="border border-gray-300 rounded-md bg-white">
+                {/* Toolbar (Read-only) */}
+                <div className="border-b border-gray-200 p-2 bg-gray-50 flex items-center gap-2 flex-wrap">
+                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
+                    <strong>B</strong>
+                  </button>
+                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
+                    <em>I</em>
+                  </button>
+                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
+                    <u>U</u>
+                  </button>
+                  <div className="border-l border-gray-300 h-6 mx-1"></div>
+                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
+                    • List
+                  </button>
+                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
+                    1. List
+                  </button>
+                  <div className="border-l border-gray-300 h-6 mx-1"></div>
+                  <select className="text-sm border rounded px-2 py-1 bg-gray-100 cursor-not-allowed" disabled>
+                    <option>Định dạng</option>
+                  </select>
+                  <div className="ml-auto text-xs text-gray-500">Chế độ xem</div>
+                </div>
+                
+                {/* Content Viewer */}
                 <div 
-                  dangerouslySetInnerHTML={{ __html: selectedWorkItemDetail.description || '<p>Chưa có mô tả</p>' }}
+                  className="min-h-[300px] p-4 bg-white prose max-w-none"
                   style={{
-                    fontFamily: 'inherit',
+                    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
                     lineHeight: '1.6',
-                    color: '#374151'
+                    fontSize: '14px'
                   }}
-                />
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <label className="font-medium text-gray-700">Người giao:</label>
-                  <p className="text-gray-900">{selectedWorkItemDetail.assigned_by_name || 'Unknown'}</p>
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Người nhận:</label>
-                  <p className="text-gray-900">{selectedWorkItemDetail.assigned_to_name || 'Chưa giao'}</p>
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Deadline:</label>
-                  <p className="text-gray-900">
-                    {selectedWorkItemDetail.deadline ? format(new Date(selectedWorkItemDetail.deadline), 'dd/MM/yyyy - HH:mm') : 'Chưa có'}
-                  </p>
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Ưu tiên:</label>
-                  <p className="text-gray-900">
-                    {selectedWorkItemDetail.priority === 'urgent' ? 'Gấp' :
-                     selectedWorkItemDetail.priority === 'high' ? 'Cao' : 'Bình thường'}
-                  </p>
+                >
+                  <div 
+                    dangerouslySetInnerHTML={{ 
+                      __html: selectedWorkItemDetail.description || '<p style="color: #9CA3AF; font-style: italic;">Chưa có mô tả</p>' 
+                    }}
+                  />
                 </div>
               </div>
 
