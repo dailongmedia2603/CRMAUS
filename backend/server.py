@@ -105,15 +105,22 @@ class Client(ClientBase):
 class ProjectBase(BaseModel):
     name: str
     client_id: str
+    campaign_id: Optional[str] = None  # Liên kết với chiến dịch
     description: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
-    budget: Optional[float] = None
     status: str = "planning"  # planning, in_progress, on_hold, completed, cancelled, overdue, pending
-    team: Optional[List[str]] = []  # List of user IDs assigned to project
+    team: Optional[List[str]] = []  # List of user IDs assigned to project (backward compatibility)
     contract_value: Optional[float] = None  # Giá trị hợp đồng
     debt: Optional[float] = None  # Công nợ
     archived: bool = False  # Dự án lưu trữ
+    # Nhân sự triển khai theo vai trò
+    manager_ids: Optional[List[str]] = []  # Quản lý
+    account_ids: Optional[List[str]] = []  # Account
+    content_ids: Optional[List[str]] = []  # Content
+    design_ids: Optional[List[str]] = []  # Design
+    editor_ids: Optional[List[str]] = []  # Editor
+    sale_ids: Optional[List[str]] = []  # Sale
 
 class ProjectCreate(ProjectBase):
     pass
