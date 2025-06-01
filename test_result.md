@@ -134,7 +134,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the new staff role assignment fields in the Project model. All role-based fields (manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids) are correctly saved when creating a project and can be updated. The fields are optional as required, allowing empty arrays. The API correctly handles arrays of user IDs for each role field."
 
-  - task: "Projects API - Search Functionality"
+  - task: "Projects API - Budget Field Removal"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -144,10 +144,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the search functionality in the Projects API to ensure it can search by project name, project description, and client name"
+        comment: "Need to verify that the budget field has been removed from the Project model as specified in the requirements"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the search functionality in the Projects API. The API correctly searches by project name (e.g., 'Say', 'vvv'), project description, and client name (e.g., 'Test'). The search is case-insensitive, working with both lowercase and uppercase queries. The search functionality also works correctly when combined with other filters (e.g., status). Found an interesting edge case with Vietnamese characters: searching for 'Dai' doesn't match 'Đại' due to character differences, which is expected behavior."
+        comment: "Successfully verified that the budget field has been removed from the Project model. When creating a project with a budget field in the request, the field is correctly ignored and not included in the created project. The API response does not include a budget field, confirming that it has been completely removed from the model."
 
   - task: "Campaigns API - POST /api/campaigns/"
     implemented: true
