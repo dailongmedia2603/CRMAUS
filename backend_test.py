@@ -1326,6 +1326,213 @@ def test_project_management_changes():
     else:
         print("\n❌ Some tests failed. Check the logs above for details.")
 
+def test_project_detail_workflow():
+    """Test the complete Project Detail workflow"""
+    print("\n=== TESTING PROJECT DETAIL WORKFLOW ===\n")
+    
+    # Step 1: Get admin token
+    print("1. Getting admin authentication token...")
+    admin_token = get_token()
+    if not admin_token:
+        log_test("Admin Authentication", False, "Failed to get admin authentication token")
+        return
+    
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
+    
+    # Step 2: Test GET /api/projects/{project_id} for project 3babc6e7-1c1f-459e-b64e-b2b9aa36c45b
+    project_id = "3babc6e7-1c1f-459e-b64e-b2b9aa36c45b"
+    print(f"\n2. Testing GET /api/projects/{project_id}...")
+    
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        log_test("Get Project Details", False, f"Failed to get project details: {response.text}", response)
+        return
+    
+    project = response.json()
+    log_test("Get Project Details", True, f"Successfully retrieved project: {project['name']}", response)
+    
+    # Verify project has campaign_id and staff assignments
+    if not project.get("campaign_id"):
+        log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
+    else:
+        log_test("Project Campaign ID", True, f"Project has campaign_id: {project['campaign_id']}", None)
+    
+    # Check staff assignments
+    staff_fields = ["manager_ids", "account_ids", "content_ids", "design_ids", "editor_ids", "sale_ids"]
+    for field in staff_fields:
+        if field in project and isinstance(project[field], list):
+            log_test(f"Project {field}", True, f"Project has {field}: {project[field]}", None)
+        else:
+            log_test(f"Project {field}", False, f"Project does not have valid {field}", None)
+    
+    # Step 3: Test GET /api/clients/{client_id} for associated client
+    client_id = project.get("client_id")
+    if not client_id:
+        log_test("Project Client ID", False, "Project does not have a client_id", None)
+    else:
+        print(f"\n3. Testing GET /api/clients/{client_id}...")
+        
+        response = requests.get(
+            f"{BASE_URL}{API_PREFIX}/clients/{client_id}",
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            log_test("Get Client Details", False, f"Failed to get client details: {response.text}", response)
+        else:
+            client = response.json()
+            log_test("Get Client Details", True, f"Successfully retrieved client: {client['name']}", response)
+    
+    # Step 4: Test GET /api/campaigns/{campaign_id} for associated campaign
+    campaign_id = project.get("campaign_id")
+    if not campaign_id:
+        log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
+    else:
+        print(f"\n4. Testing GET /api/campaigns/{campaign_id}...")
+        
+        response = requests.get(
+            f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
+            return
+        
+        campaign = response.json()
+        log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
+        
+        # Step 5: Test GET /api/campaigns/{campaign_id}/services/ to get services
+        print(f"\n5. Testing GET /api/campaigns/{campaign_id}/services/...")
+        
+        response = requests.get(
+            f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
+            return
+        
+        services = response.json()
+        log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
+        
+        # Verify campaign has 3 services (Thiết kế UI/UX, Phát triển Frontend, Tạo nội dung)
+        expected_services = ["Thiết kế UI/UX", "Phát triển Frontend", "Tạo nội dung"]
+        found_services = [service["name"] for service in services]
+        
+        if all(service in found_services for service in expected_services):
+            log_test("Campaign Services Verification", True, f"Campaign has all expected services: {expected_services}", None)
+        else:
+            log_test("Campaign Services Verification", False, f"Campaign is missing some expected services. Found: {found_services}, Expected: {expected_services}", None)
+        
+        # Step 6: Test GET /api/services/{service_id}/tasks/ for each service to get tasks
+        print("\n6. Testing GET /api/services/{service_id}/tasks/ for each service...")
+        
+        for service in services:
+            service_id = service["id"]
+            service_name = service["name"]
+            
+            print(f"   Testing tasks for service: {service_name} (ID: {service_id})...")
+            
+            response = requests.get(
+                f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
+                headers=admin_headers
+            )
+            
+            if response.status_code != 200:
+                log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
+                continue
+            
+            tasks = response.json()
+            log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
+            
+            # Verify tasks have different statuses
+            if tasks:
+                statuses = set(task["status"] for task in tasks)
+                log_test(f"Task Statuses for Service '{service_name}'", True, f"Tasks have {len(statuses)} different statuses: {statuses}", None)
+            else:
+                log_test(f"Task Statuses for Service '{service_name}'", False, "No tasks found for this service", None)
+    
+    # Step 7: Test documents API filtering by project name
+    print("\n7. Testing GET /api/documents/ with filtering by project name...")
+    
+    # Get project name for filtering
+    project_name = project.get("name", "")
+    if not project_name:
+        log_test("Project Name for Document Filtering", False, "Project does not have a name", None)
+    else:
+        response = requests.get(
+            f"{BASE_URL}{API_PREFIX}/documents/?search={project_name}",
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            log_test("Get Documents by Project Name", False, f"Failed to get documents: {response.text}", response)
+        else:
+            documents = response.json()
+            log_test("Get Documents by Project Name", True, f"Successfully retrieved {len(documents)} documents related to project '{project_name}'", response)
+    
+    # Step 8: Test error handling - Invalid project ID
+    print("\n8. Testing error handling - Invalid project ID...")
+    
+    invalid_project_id = "invalid-project-id"
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/projects/{invalid_project_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 404:
+        log_test("Invalid Project ID Error Handling", True, "Correctly returned 404 for invalid project ID", response)
+    else:
+        log_test("Invalid Project ID Error Handling", False, f"Expected 404 status code for invalid project ID, got {response.status_code}", response)
+    
+    # Step 9: Test error handling - Missing campaign/client references
+    print("\n9. Testing error handling - Missing campaign/client references...")
+    
+    # Test with non-existent campaign ID
+    non_existent_campaign_id = "non-existent-campaign-id"
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/campaigns/{non_existent_campaign_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 404:
+        log_test("Non-existent Campaign ID Error Handling", True, "Correctly returned 404 for non-existent campaign ID", response)
+    else:
+        log_test("Non-existent Campaign ID Error Handling", False, f"Expected 404 status code for non-existent campaign ID, got {response.status_code}", response)
+    
+    # Test with non-existent client ID
+    non_existent_client_id = "non-existent-client-id"
+    response = requests.get(
+        f"{BASE_URL}{API_PREFIX}/clients/{non_existent_client_id}",
+        headers=admin_headers
+    )
+    
+    if response.status_code == 404:
+        log_test("Non-existent Client ID Error Handling", True, "Correctly returned 404 for non-existent client ID", response)
+    else:
+        log_test("Non-existent Client ID Error Handling", False, f"Expected 404 status code for non-existent client ID, got {response.status_code}", response)
+    
+    # Print summary
+    print("\n=== Test Summary ===")
+    print(f"Total tests: {test_results['success'] + test_results['failure']}")
+    print(f"Passed: {test_results['success']}")
+    print(f"Failed: {test_results['failure']}")
+    
+    if test_results['failure'] == 0:
+        print("\n✅ All tests passed successfully!")
+    else:
+        print("\n❌ Some tests failed. Check the logs above for details.")
+
 if __name__ == "__main__":
     # Reset test results
     test_results = {
@@ -1338,4 +1545,5 @@ if __name__ == "__main__":
     # test_task_creation()
     # test_bulk_delete_tasks()
     # test_template_api()
-    test_project_management_changes()
+    # test_project_management_changes()
+    test_project_detail_workflow()
