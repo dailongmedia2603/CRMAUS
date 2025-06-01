@@ -4563,16 +4563,28 @@ const ProjectDetail = ({ user }) => {
                   onChange={(e) => setNewFeedbackMessage(e.target.value)}
                   placeholder="Nhập feedback của bạn..."
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={(e) => {
+                  onKeyPress={async (e) => {
                     if (e.key === 'Enter' && newFeedbackMessage.trim()) {
-                      const newMessage = {
-                        content: newFeedbackMessage.trim(),
-                        sender: user?.full_name || 'Current User',
-                        time: format(new Date(), 'HH:mm'),
-                        isCurrentUser: true
-                      };
-                      setFeedbackMessages([...feedbackMessages, newMessage]);
-                      setNewFeedbackMessage('');
+                      try {
+                        // Send to backend
+                        await axios.post(`${API}/work-items/${selectedWorkItemForFeedback.id}/feedback/`, {
+                          message: newFeedbackMessage.trim()
+                        });
+                        
+                        // Add to local state
+                        const newMessage = {
+                          content: newFeedbackMessage.trim(),
+                          sender: user?.full_name || 'Current User',
+                          time: format(new Date(), 'HH:mm'),
+                          isCurrentUser: true
+                        };
+                        setFeedbackMessages([...feedbackMessages, newMessage]);
+                        setNewFeedbackMessage('');
+                        toast.success('Feedback đã được gửi!');
+                      } catch (error) {
+                        console.error('Error sending feedback:', error);
+                        toast.error('Không thể gửi feedback!');
+                      }
                     }
                   }}
                 />
