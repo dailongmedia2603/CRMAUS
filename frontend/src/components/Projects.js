@@ -258,14 +258,20 @@ const Projects = ({ user }) => {
     setProjectForm({
       name: project.name,
       client_id: project.client_id,
+      campaign_id: project.campaign_id || '',
       description: project.description || '',
       start_date: project.start_date ? new Date(project.start_date).toISOString().slice(0, 10) : '',
       end_date: project.end_date ? new Date(project.end_date).toISOString().slice(0, 10) : '',
-      budget: project.budget || '',
       status: project.status,
       team: project.team || [],
       contract_value: project.contract_value || '',
-      debt: project.debt || ''
+      debt: project.debt || '',
+      manager_ids: project.manager_ids || [],
+      account_ids: project.account_ids || [],
+      content_ids: project.content_ids || [],
+      design_ids: project.design_ids || [],
+      editor_ids: project.editor_ids || [],
+      sale_ids: project.sale_ids || []
     });
     setShowProjectModal(true);
   };
