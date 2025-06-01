@@ -3816,6 +3816,7 @@ const ProjectDetail = () => {
                   {tasks.filter(task => task.service_id === service.id).map(task => (
                     <div 
                       key={task.id}
+                      id={`task-${task.id}`}
                       onClick={() => openTaskDetail(task)}
                       className="flex items-center justify-between p-3 bg-white rounded border hover:shadow-sm cursor-pointer transition-all"
                     >
