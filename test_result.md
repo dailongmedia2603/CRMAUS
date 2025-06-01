@@ -14,7 +14,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the GET /api/projects/ endpoint. The API returns the list of projects correctly. All filters are working properly, including archived, status, year, and search filters. The endpoint is accessible by all authenticated users regardless of role."
 
-  - task: "Projects API - PUT /api/projects/{project_id}"
+  - task: "Projects API - DELETE /api/projects/{project_id}"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -24,10 +24,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the PUT /api/projects/{project_id} endpoint for updating projects, including the archive/restore functionality"
+        comment: "Need to test the DELETE /api/projects/{project_id} endpoint and verify that only admin/account roles can delete projects"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the PUT /api/projects/{project_id} endpoint. The API correctly updates project information. The archive/restore functionality works as expected - setting archived=true archives the project and setting archived=false restores it. All authenticated users can update projects regardless of role."
+        comment: "Successfully tested the DELETE /api/projects/{project_id} endpoint. The API correctly deletes projects when called by admin or account users. Authorization is properly implemented - staff users receive a 403 Forbidden response when attempting to delete projects. After deletion, attempting to access the deleted project returns a 404 Not Found response."
 
   - task: "Clients API - GET /api/clients/"
     implemented: true
