@@ -644,13 +644,17 @@ const TemplateDesigner = ({ templateId, onClose, onSave }) => {
   };
 
   const updateComponent = (id, newContent) => {
-    setComponents(components.map(comp => 
-      comp.id === id ? { ...comp, content: newContent } : comp
-    ));
+    if (Array.isArray(components)) {
+      setComponents(components.map(comp => 
+        comp.id === id ? { ...comp, content: newContent } : comp
+      ));
+    }
   };
 
   const deleteComponent = (id) => {
-    setComponents(components.filter(comp => comp.id !== id));
+    if (Array.isArray(components)) {
+      setComponents(components.filter(comp => comp.id !== id));
+    }
   };
 
   if (loading) {
