@@ -33,14 +33,21 @@ const Projects = ({ user }) => {
   const [projectForm, setProjectForm] = useState({
     name: '',
     client_id: '',
+    campaign_id: '',  // Thêm campaign_id
     description: '',
     start_date: '',
     end_date: '',
-    budget: '',
     status: 'planning',
     team: [],
     contract_value: '',
-    debt: ''
+    debt: '',
+    // Nhân sự triển khai theo vai trò
+    manager_ids: [],
+    account_ids: [],
+    content_ids: [],
+    design_ids: [],
+    editor_ids: [],
+    sale_ids: []
   });
 
   // Fetch data
