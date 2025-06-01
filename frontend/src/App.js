@@ -3464,13 +3464,20 @@ const ProjectDetail = () => {
   };
 
   const handleStatusUpdate = async (workItemId, currentStatus) => {
-    const statusFlow = {
-      'not_started': 'in_progress',
-      'in_progress': 'completed',
-      'completed': 'not_started'
-    };
-    
-    const newStatus = statusFlow[currentStatus];
+    let newStatus;
+    switch (currentStatus) {
+      case 'not_started':
+        newStatus = 'in_progress';
+        break;
+      case 'in_progress':
+        newStatus = 'completed';
+        break;
+      case 'completed':
+        newStatus = 'not_started'; // Reset cycle
+        break;
+      default:
+        newStatus = 'in_progress';
+    }
     
     try {
       await axios.patch(`${API}/work-items/${workItemId}/status`, null, {
@@ -3482,6 +3489,52 @@ const ProjectDetail = () => {
       console.error('Error updating status:', error);
       toast.error('Có lỗi xảy ra khi cập nhật trạng thái!');
     }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'not_started':
+        return '▶️'; // Play icon for start
+      case 'in_progress':
+        return '✅'; // Check for complete
+      case 'completed':
+        return '🔄'; // Reset icon
+      default:
+        return '▶️';
+    }
+  };
+
+  const getStatusTooltip = (status) => {
+    switch (status) {
+      case 'not_started':
+        return 'Click để bắt đầu';
+      case 'in_progress':
+        return 'Click để hoàn thành';
+      case 'completed':
+        return 'Click để reset';
+      default:
+        return 'Click để bắt đầu';
+    }
+  };
+
+  const navigateToServiceTask = (serviceId, taskId) => {
+    // Navigate to service tab
+    setActiveTab(`service-${serviceId}`);
+    
+    // Scroll to task after tab change
+    setTimeout(() => {
+      if (taskId) {
+        const taskElement = document.getElementById(`task-${taskId}`);
+        if (taskElement) {
+          taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight the task temporarily
+          taskElement.style.backgroundColor = '#fef3c7';
+          setTimeout(() => {
+            taskElement.style.backgroundColor = '';
+          }, 2000);
+        }
+      }
+    }, 300);
   };
 
   const handleServiceChange = (serviceId) => {
