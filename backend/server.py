@@ -398,6 +398,16 @@ async def read_users(skip: int = 0, limit: int = 100, current_user: User = Depen
     users = await db.users.find().skip(skip).limit(limit).to_list(length=limit)
     return users
 
+@api_router.get("/users/by-role/{role}", response_model=List[User])
+async def read_users_by_role(role: str, current_user: User = Depends(get_current_active_user)):
+    """Lấy danh sách users theo role cụ thể"""
+    allowed_roles = ["manager", "account", "content", "design", "editor", "sale", "admin", "creative", "staff"]
+    if role not in allowed_roles:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    users = await db.users.find({"role": role, "is_active": True}).to_list(length=100)
+    return users
+
 # Client routes
 @api_router.post("/clients/", response_model=Client)
 async def create_client(client: ClientCreate, current_user: User = Depends(get_current_active_user)):
