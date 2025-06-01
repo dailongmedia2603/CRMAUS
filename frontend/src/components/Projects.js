@@ -178,6 +178,30 @@ const Projects = ({ user }) => {
     }
   };
 
+  const fetchCampaigns = async () => {
+    try {
+      const response = await axios.get(`${API}/campaigns/`);
+      setCampaigns(response.data.filter(campaign => !campaign.archived));
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+    }
+  };
+
+  const fetchUsersByRole = async () => {
+    const roles = ['manager', 'account', 'content', 'design', 'editor', 'sale'];
+    const roleUsers = {};
+    
+    try {
+      for (const role of roles) {
+        const response = await axios.get(`${API}/users/by-role/${role}`);
+        roleUsers[role] = response.data;
+      }
+      setUsersByRole(roleUsers);
+    } catch (error) {
+      console.error('Error fetching users by role:', error);
+    }
+  };
+
   // Time filter helpers
   const getTimeFilterLabel = () => {
     if (timeFilter.type === 'year') {
