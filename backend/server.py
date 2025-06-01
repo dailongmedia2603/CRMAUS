@@ -448,6 +448,12 @@ async def create_project(project: ProjectCreate, current_user: User = Depends(ge
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
+    # Kiểm tra campaign tồn tại (nếu có)
+    if project.campaign_id:
+        campaign = await db.campaigns.find_one({"id": project.campaign_id})
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+    
     project_data = project.dict()
     project_obj = Project(**project_data, created_by=current_user.id)
     result = await db.projects.insert_one(project_obj.dict())
