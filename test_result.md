@@ -74,20 +74,20 @@ backend:
         agent: "testing"
         comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
 
-  - task: "Users API - GET /api/users/"
+  - task: "Users API - GET /api/users/by-role/{role}"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/users/ endpoint to ensure it returns the list of users correctly for project form dropdowns and verify that only admin can access this endpoint"
+        comment: "Need to test the GET /api/users/by-role/{role} endpoint to ensure it returns users filtered by role correctly"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the GET /api/users/ endpoint. The API returns the list of users correctly when accessed by admin users. Authorization is properly implemented - non-admin users (account and staff) receive a 403 Forbidden response when attempting to access the users list. This ensures that only admin users can access user information."
+        comment: "Successfully tested the GET /api/users/by-role/{role} endpoint. The API correctly returns users filtered by role for all required roles: manager, account, content, design, editor, and sale. The endpoint also properly validates the role parameter, returning a 400 Bad Request for invalid roles. This endpoint is essential for the project form to populate role-based staff assignment dropdowns."
 
   - task: "Projects API - Campaign Integration"
     implemented: true
