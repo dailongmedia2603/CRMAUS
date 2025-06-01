@@ -320,6 +320,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Based on code review, the Templates UI designer functionality is implemented correctly. The component includes: 1) A component palette with different component types (title, text, image, link, date, feedback), 2) Ability to add components to the template by clicking on palette items, 3) Inline editing of components with appropriate input fields for each component type, 4) Delete functionality for individual components, 5) Save button that persists template content to the backend, 6) Close button to return to the templates list. The designer has a clean layout with the palette on the left and the canvas on the right. The code correctly handles all the required functionality for template design. Although we were unable to verify it through automated testing due to issues with the Playwright testing tool, the code implementation appears to be correct and should work as expected."
+      - working: true
+        agent: "testing"
+        comment: "Analyzed the code to verify the fix for the 'components.map is not a function' error. The fix has been properly implemented with multiple safeguards: 1) When parsing template content, it explicitly checks if the parsed content is an array using Array.isArray(), 2) When adding, updating, or deleting components, it checks if components is an array before performing operations, 3) When rendering components, it checks if components is an array before calling map(). These comprehensive checks ensure that the 'components.map is not a function' error should no longer occur, as the code now handles all cases where components might not be an array. The empty state message 'Chưa có thành phần nào. Hãy thêm thành phần từ bảng bên trái.' is also properly displayed when there are no components."
 
   - task: "Templates UI - Data Persistence"
     implemented: true
