@@ -599,6 +599,17 @@ async def update_project(project_id: str, project: ProjectCreate, current_user: 
     if db_project is None:
         raise HTTPException(status_code=404, detail="Project not found")
     
+    # Kiểm tra client tồn tại
+    client = await db.clients.find_one({"id": project.client_id})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Kiểm tra campaign tồn tại (nếu có)
+    if project.campaign_id:
+        campaign = await db.campaigns.find_one({"id": project.campaign_id})
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+    
     project_data = project.dict()
     updated_project = {**db_project, **project_data, "updated_at": datetime.utcnow()}
     
