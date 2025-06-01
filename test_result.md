@@ -104,7 +104,7 @@ backend:
         agent: "testing"
         comment: "Successfully tested the GET /api/users/by-role/{role} endpoint. The API correctly returns users filtered by role for all required roles: manager, account, content, design, editor, and sale. The endpoint also properly validates the role parameter, returning a 400 Bad Request for invalid roles. This endpoint is essential for the project form to populate role-based staff assignment dropdowns."
 
-  - task: "Projects API - Campaign Integration"
+  - task: "Projects API - Staff Role Assignments"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -114,10 +114,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the integration between Projects and Campaigns, including campaign_id validation and association"
+        comment: "Need to test the new staff role assignment fields in the Project model: manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids"
       - working: true
         agent: "testing"
-        comment: "Successfully tested the integration between Projects and Campaigns. The API correctly validates campaign_id when creating or updating projects, returning a 404 Not Found for non-existent campaign IDs. Projects can be created and updated with a valid campaign_id, and the association is maintained correctly. The campaign_id field is optional as required, allowing projects to be created without a campaign association."
+        comment: "Successfully tested the new staff role assignment fields in the Project model. All role-based fields (manager_ids, account_ids, content_ids, design_ids, editor_ids, sale_ids) are correctly saved when creating a project and can be updated. The fields are optional as required, allowing empty arrays. The API correctly handles arrays of user IDs for each role field."
 
   - task: "Projects API - Budget Field Removal"
     implemented: true
