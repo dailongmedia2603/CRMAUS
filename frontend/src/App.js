@@ -4112,7 +4112,13 @@ const ProjectDetail = () => {
                     <div className="border-b border-gray-200 p-2 bg-gray-50 flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
-                        onClick={() => document.execCommand('bold')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const editor = document.getElementById('workItemEditor');
+                          editor.focus();
+                          document.execCommand('bold');
+                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
+                        }}
                         className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
                         title="Bold"
                       >
@@ -4120,7 +4126,13 @@ const ProjectDetail = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => document.execCommand('italic')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const editor = document.getElementById('workItemEditor');
+                          editor.focus();
+                          document.execCommand('italic');
+                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
+                        }}
                         className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
                         title="Italic"
                       >
@@ -4128,7 +4140,13 @@ const ProjectDetail = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => document.execCommand('underline')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const editor = document.getElementById('workItemEditor');
+                          editor.focus();
+                          document.execCommand('underline');
+                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
+                        }}
                         className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
                         title="Underline"
                       >
@@ -4137,7 +4155,13 @@ const ProjectDetail = () => {
                       <div className="border-l border-gray-300 h-6 mx-1"></div>
                       <button
                         type="button"
-                        onClick={() => document.execCommand('insertUnorderedList')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const editor = document.getElementById('workItemEditor');
+                          editor.focus();
+                          document.execCommand('insertUnorderedList');
+                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
+                        }}
                         className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
                         title="Bullet List"
                       >
@@ -4145,7 +4169,13 @@ const ProjectDetail = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => document.execCommand('insertOrderedList')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const editor = document.getElementById('workItemEditor');
+                          editor.focus();
+                          document.execCommand('insertOrderedList');
+                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
+                        }}
                         className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
                         title="Numbered List"
                       >
@@ -4155,7 +4185,10 @@ const ProjectDetail = () => {
                       <select
                         onChange={(e) => {
                           if (e.target.value) {
+                            const editor = document.getElementById('workItemEditor');
+                            editor.focus();
                             document.execCommand('formatBlock', false, e.target.value);
+                            setWorkItemForm({...workItemForm, description: editor.innerHTML});
                           }
                         }}
                         className="text-sm border rounded px-2 py-1"
@@ -4171,6 +4204,7 @@ const ProjectDetail = () => {
                     
                     {/* Editor */}
                     <div
+                      id="workItemEditor"
                       contentEditable
                       suppressContentEditableWarning={true}
                       onInput={(e) => {
@@ -4180,12 +4214,20 @@ const ProjectDetail = () => {
                         e.preventDefault();
                         const text = e.clipboardData.getData('text/plain');
                         document.execCommand('insertText', false, text);
+                        setWorkItemForm({...workItemForm, description: e.target.innerHTML});
                       }}
                       className="min-h-[200px] p-3 focus:outline-none"
                       style={{ minHeight: '200px' }}
-                      dangerouslySetInnerHTML={{ __html: workItemForm.description }}
                     />
                   </div>
+                  
+                  {/* Hidden textarea for form submission */}
+                  <textarea
+                    value={workItemForm.description}
+                    onChange={() => {}} // Read-only, updated by contentEditable
+                    style={{ display: 'none' }}
+                    name="description"
+                  />
                 </div>
 
                 <div className="flex justify-end gap-4 pt-6">
