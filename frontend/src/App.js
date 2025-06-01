@@ -3196,7 +3196,7 @@ const Projects = () => {
   return <ProjectsComponent user={user} />;
 };
 
-const ProjectDetail = () => {
+const ProjectDetail = ({ user }) => {
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [campaign, setCampaign] = useState(null);
