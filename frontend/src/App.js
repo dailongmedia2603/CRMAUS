@@ -3225,6 +3225,12 @@ const ProjectDetail = () => {
   const [feedbackMessages, setFeedbackMessages] = useState([]);
   const [newFeedbackMessage, setNewFeedbackMessage] = useState('');
   
+  // Feedback State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedWorkItemForFeedback, setSelectedWorkItemForFeedback] = useState(null);
+  const [feedbackMessages, setFeedbackMessages] = useState([]);
+  const [newFeedbackMessage, setNewFeedbackMessage] = useState('');
+  
   // Work Item Form State
   const [workItemForm, setWorkItemForm] = useState({
     name: '',
