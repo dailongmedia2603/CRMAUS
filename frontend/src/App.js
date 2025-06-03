@@ -662,13 +662,19 @@ const SidebarContent = ({ user, logout }) => {
                   onClick={() => navigate("/invoices")}
                   className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
                 >
-                  Hóa đơn
+                  Hợp đồng - Hóa đơn
                 </button>
                 <button
-                  onClick={() => navigate("/contracts")}
+                  onClick={() => navigate("/revenue")}
                   className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
                 >
-                  Hợp đồng
+                  Thu
+                </button>
+                <button
+                  onClick={() => navigate("/expense")}
+                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
+                >
+                  Chi
                 </button>
                 <button
                   onClick={() => navigate("/finance-reports")}
