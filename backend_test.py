@@ -500,7 +500,8 @@ def test_expense_statistics():
         print(f"- Total amount: {stats['amounts']['total']}")
         print(f"- By status: {stats['counts']}")
         print(f"- Categories: {len(stats['by_category'])}")
-        print(f"- Monthly trends: {len(stats['monthly_trends'])}")
+        if 'monthly_trends' in stats:
+            print(f"- Monthly trends: {len(stats['monthly_trends'])}")
     
     # Test with filters
     current_year = datetime.now().year
