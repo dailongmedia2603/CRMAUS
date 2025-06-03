@@ -1,2096 +1,610 @@
 import requests
 import json
-import time
 from datetime import datetime, timedelta
+import time
+import uuid
 
-# Base URL for API
-BASE_URL = "https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com"
-API_PREFIX = "/api"
+# Backend URL
+BACKEND_URL = "https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com/api"
 
-# Admin credentials
-admin_credentials = {
-    "username": "admin@example.com",
-    "password": "admin123"
-}
+# Test user credentials
+EMAIL = "admin@example.com"
+PASSWORD = "admin123"
 
-# Test results
-test_results = {
-    "success": 0,
-    "failure": 0,
-    "tests": []
-}
-
-def log_test(name, success, message, response=None):
-    """Log test results"""
-    status = "✅ PASS" if success else "❌ FAIL"
-    test_results["tests"].append({
-        "name": name,
-        "success": success,
-        "message": message,
-        "response": response.json() if response and hasattr(response, 'json') else None,
-        "status_code": response.status_code if response else None
-    })
-    
-    if success:
-        test_results["success"] += 1
-    else:
-        test_results["failure"] += 1
-    
-    print(f"{status} - {name}: {message}")
+# Global variables
+token = None
+created_category_ids = []
+created_folder_ids = []
+created_expense_ids = []
 
 def get_token():
     """Get authentication token"""
-    response = requests.post(f"{BASE_URL}{API_PREFIX}/token", data=admin_credentials)
+    global token
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": EMAIL, "password": PASSWORD}
+    )
     if response.status_code == 200:
-        return response.json()["access_token"]
+        token = response.json()["access_token"]
+        return token
     else:
-        print(f"Failed to get token: {response.text}")
+        print(f"Failed to get token: {response.status_code} - {response.text}")
         return None
 
-def test_campaign_services():
-    """Test campaign services functionality"""
-    token = get_token()
+def get_headers():
+    """Get headers with authentication token"""
     if not token:
-        log_test("Authentication", False, "Failed to get authentication token")
-        return
-    
-    headers = {
+        get_token()
+    return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    
-    # Step 1: Get list of campaigns to obtain a campaign_id
-    print("\n1. Getting list of campaigns...")
-    response = requests.get(f"{BASE_URL}/campaigns/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Campaigns", False, f"Failed to get campaigns: {response.text}", response)
-        return
-    
-    campaigns = response.json()
-    log_test("Get Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
-    
-    # If no campaigns exist, create one
-    if len(campaigns) == 0:
-        print("No campaigns found. Creating a new campaign...")
-        campaign_data = {
-            "name": "Test Campaign",
-            "description": "Campaign for testing services"
-        }
-        response = requests.post(f"{BASE_URL}/campaigns/", headers=headers, json=campaign_data)
-        
-        if response.status_code != 200:
-            log_test("Create Campaign", False, f"Failed to create campaign: {response.text}", response)
-            return
-        
-        campaign = response.json()
-        campaign_id = campaign["id"]
-        log_test("Create Campaign", True, f"Successfully created campaign with ID: {campaign_id}", response)
+
+def print_test_result(test_name, response, expected_status=200):
+    """Print test result"""
+    if response.status_code == expected_status:
+        print(f"✅ {test_name} - Status: {response.status_code}")
+        return True
     else:
-        # Use the first campaign
-        campaign_id = campaigns[0]["id"]
-        print(f"Using existing campaign with ID: {campaign_id}")
+        print(f"❌ {test_name} - Status: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+
+def test_expense_categories():
+    """Test Expense Categories API endpoints"""
+    print("\n=== Testing Expense Categories API ===")
     
-    # Step 2: Create a new service
-    print("\n2. Creating a new service - Facebook Ads...")
-    service_data = {
-        "name": "Facebook Ads",
-        "sort_order": 1,
-        "description": "Dịch vụ quảng cáo Facebook"
+    # Test POST /api/expense-categories/
+    category_data = {
+        "name": f"Test Category {uuid.uuid4().hex[:8]}",
+        "description": "Test category description",
+        "color": "#FF5733",
+        "is_active": True
     }
     
     response = requests.post(
-        f"{BASE_URL}/campaigns/{campaign_id}/services/", 
-        headers=headers, 
-        json=service_data
+        f"{BACKEND_URL}/expense-categories/",
+        headers=get_headers(),
+        json=category_data
     )
     
-    if response.status_code != 200:
-        log_test("Create Service", False, f"Failed to create service: {response.text}", response)
-        return
+    success = print_test_result("Create Expense Category", response)
+    if success:
+        category_id = response.json()["id"]
+        created_category_ids.append(category_id)
+        print(f"Created category ID: {category_id}")
     
-    service = response.json()
-    service_id = service["id"]
-    log_test("Create Service", True, f"Successfully created Facebook Ads service with ID: {service_id}", response)
-    
-    # Step 3: Create another service - Google Ads
-    print("\n3. Creating another service - Google Ads...")
-    service_data = {
-        "name": "Google Ads",
-        "sort_order": 2,
-        "description": "Dịch vụ quảng cáo Google"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/campaigns/{campaign_id}/services/", 
-        headers=headers, 
-        json=service_data
+    # Test GET /api/expense-categories/
+    response = requests.get(
+        f"{BACKEND_URL}/expense-categories/",
+        headers=get_headers()
     )
     
-    if response.status_code != 200:
-        log_test("Create Second Service", False, f"Failed to create Google Ads service: {response.text}", response)
-    else:
-        second_service = response.json()
-        second_service_id = second_service["id"]
-        log_test("Create Second Service", True, f"Successfully created Google Ads service with ID: {second_service_id}", response)
+    success = print_test_result("Get Expense Categories", response)
+    if success:
+        categories = response.json()
+        print(f"Found {len(categories)} categories")
     
-    # Step 4: Create a third service - Content Marketing
-    print("\n4. Creating a third service - Content Marketing...")
-    service_data = {
-        "name": "Content Marketing",
-        "sort_order": 3,
-        "description": "Dịch vụ Content Marketing"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/campaigns/{campaign_id}/services/", 
-        headers=headers, 
-        json=service_data
+    # Test GET /api/expense-categories/ with is_active filter
+    response = requests.get(
+        f"{BACKEND_URL}/expense-categories/?is_active=true",
+        headers=get_headers()
     )
     
-    if response.status_code != 200:
-        log_test("Create Third Service", False, f"Failed to create Content Marketing service: {response.text}", response)
-    else:
-        third_service = response.json()
-        third_service_id = third_service["id"]
-        log_test("Create Third Service", True, f"Successfully created Content Marketing service with ID: {third_service_id}", response)
+    print_test_result("Get Active Expense Categories", response)
     
-    # Step 5: Get list of services for the campaign
-    print("\n5. Getting list of services for the campaign...")
-    response = requests.get(f"{BASE_URL}/campaigns/{campaign_id}/services/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Services", False, f"Failed to get services: {response.text}", response)
-    else:
-        services = response.json()
-        log_test("Get Services", True, f"Successfully retrieved {len(services)} services", response)
+    if created_category_ids:
+        category_id = created_category_ids[0]
         
-        # Print the services
-        print("\nServices for campaign:")
-        for idx, svc in enumerate(services, 1):
-            print(f"{idx}. {svc['name']} (sort_order: {svc['sort_order']}) - {svc['description']}")
-    
-    # Step 6: Update a service
-    if 'service_id' in locals():
-        print("\n6. Updating the Facebook Ads service...")
+        # Test PUT /api/expense-categories/{id}
         update_data = {
-            "name": "Facebook Ads Premium",
-            "description": "Dịch vụ quảng cáo Facebook cao cấp",
-            "sort_order": 0  # Move to top
+            "name": f"Updated Category {uuid.uuid4().hex[:8]}",
+            "description": "Updated description",
+            "color": "#33FF57"
         }
         
         response = requests.put(
-            f"{BASE_URL}/services/{service_id}", 
-            headers=headers, 
+            f"{BACKEND_URL}/expense-categories/{category_id}",
+            headers=get_headers(),
             json=update_data
         )
         
-        if response.status_code != 200:
-            log_test("Update Service", False, f"Failed to update service: {response.text}", response)
-        else:
-            updated_service = response.json()
-            log_test("Update Service", True, f"Successfully updated service: {updated_service['name']}", response)
+        print_test_result("Update Expense Category", response)
         
-        # Get services again to verify the update
-        response = requests.get(f"{BASE_URL}/campaigns/{campaign_id}/services/", headers=headers)
-        if response.status_code == 200:
-            services = response.json()
-            print("\nUpdated services for campaign:")
-            for idx, svc in enumerate(services, 1):
-                print(f"{idx}. {svc['name']} (sort_order: {svc['sort_order']}) - {svc['description']}")
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
-
-def test_task_creation():
-    """Test task creation functionality"""
-    token = get_token()
-    if not token:
-        log_test("Authentication", False, "Failed to get authentication token")
-        return
-    
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    
-    # Step 1: Get list of campaigns to obtain a campaign_id
-    print("\n1. Getting list of campaigns...")
-    response = requests.get(f"{BASE_URL}/campaigns/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Campaigns", False, f"Failed to get campaigns: {response.text}", response)
-        return
-    
-    campaigns = response.json()
-    log_test("Get Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
-    
-    # If no campaigns exist, create one
-    if len(campaigns) == 0:
-        print("No campaigns found. Creating a new campaign...")
-        campaign_data = {
-            "name": "Test Campaign",
-            "description": "Campaign for testing tasks"
+        # Test DELETE /api/expense-categories/{id}
+        # We'll create a new category for deletion to avoid affecting other tests
+        temp_category_data = {
+            "name": f"Temp Category for Deletion {uuid.uuid4().hex[:8]}",
+            "description": "This category will be deleted",
+            "color": "#3357FF"
         }
-        response = requests.post(f"{BASE_URL}/campaigns/", headers=headers, json=campaign_data)
         
-        if response.status_code != 200:
-            log_test("Create Campaign", False, f"Failed to create campaign: {response.text}", response)
-            return
-        
-        campaign = response.json()
-        campaign_id = campaign["id"]
-        log_test("Create Campaign", True, f"Successfully created campaign with ID: {campaign_id}", response)
-    else:
-        # Use the first campaign
-        campaign_id = campaigns[0]["id"]
-        print(f"Using existing campaign with ID: {campaign_id}")
-    
-    # Step 2: Get list of services in the campaign
-    print("\n2. Getting list of services for the campaign...")
-    response = requests.get(f"{BASE_URL}/campaigns/{campaign_id}/services/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Services", False, f"Failed to get services: {response.text}", response)
-        return
-    
-    services = response.json()
-    log_test("Get Services", True, f"Successfully retrieved {len(services)} services", response)
-    
-    # If no services exist, create one
-    if len(services) == 0:
-        print("No services found. Creating a new service...")
-        service_data = {
-            "name": "Facebook Marketing",
-            "sort_order": 1,
-            "description": "Dịch vụ marketing trên Facebook"
-        }
         response = requests.post(
-            f"{BASE_URL}/campaigns/{campaign_id}/services/", 
-            headers=headers, 
-            json=service_data
+            f"{BACKEND_URL}/expense-categories/",
+            headers=get_headers(),
+            json=temp_category_data
         )
         
-        if response.status_code != 200:
-            log_test("Create Service", False, f"Failed to create service: {response.text}", response)
-            return
+        if response.status_code == 200:
+            temp_category_id = response.json()["id"]
+            
+            # Now delete this category
+            response = requests.delete(
+                f"{BACKEND_URL}/expense-categories/{temp_category_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Delete Expense Category", response)
+            
+            # Test deleting a category that has expenses (should fail)
+            # We'll create this in the expense test and try to delete it there
+    
+    return created_category_ids
+
+def test_expense_folders():
+    """Test Expense Folders API endpoints"""
+    print("\n=== Testing Expense Folders API ===")
+    
+    # Test POST /api/expense-folders/
+    folder_data = {
+        "name": f"Test Folder {uuid.uuid4().hex[:8]}",
+        "description": "Test folder description",
+        "color": "#5733FF",
+        "is_active": True
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/expense-folders/",
+        headers=get_headers(),
+        json=folder_data
+    )
+    
+    success = print_test_result("Create Expense Folder", response)
+    if success:
+        folder_id = response.json()["id"]
+        created_folder_ids.append(folder_id)
+        print(f"Created folder ID: {folder_id}")
+    
+    # Test GET /api/expense-folders/
+    response = requests.get(
+        f"{BACKEND_URL}/expense-folders/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Expense Folders", response)
+    if success:
+        folders = response.json()
+        print(f"Found {len(folders)} folders")
+    
+    # Test GET /api/expense-folders/ with is_active filter
+    response = requests.get(
+        f"{BACKEND_URL}/expense-folders/?is_active=true",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Active Expense Folders", response)
+    
+    if created_folder_ids:
+        folder_id = created_folder_ids[0]
         
-        service = response.json()
-        service_id = service["id"]
-        log_test("Create Service", True, f"Successfully created service with ID: {service_id}", response)
-    else:
-        # Use the first service
-        service_id = services[0]["id"]
-        print(f"Using existing service with ID: {service_id}")
-    
-    # Step 3: Create a new task
-    print("\n3. Creating a new task - Thiết kế banner Facebook...")
-    task_data = {
-        "name": "Thiết kế banner Facebook",
-        "start_date": "2025-01-06T01:00:00Z",
-        "end_date": "2025-01-08T02:00:00Z",
-        "status": "not_started",
-        "description": "Thiết kế banner cho chiến dịch quảng cáo Facebook"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/services/{service_id}/tasks/", 
-        headers=headers, 
-        json=task_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Task", False, f"Failed to create task: {response.text}", response)
-        return
-    
-    task = response.json()
-    task_id = task["id"]
-    log_test("Create Task", True, f"Successfully created task with ID: {task_id}", response)
-    
-    # Step 4: Create more sample tasks
-    print("\n4. Creating more sample tasks...")
-    
-    # Task 2: Viết nội dung bài đăng
-    task_data = {
-        "name": "Viết nội dung bài đăng",
-        "start_date": "2025-01-07T01:00:00Z",
-        "end_date": "2025-01-09T02:00:00Z",
-        "status": "in_progress",
-        "description": "Viết nội dung cho các bài đăng trên Facebook"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/services/{service_id}/tasks/", 
-        headers=headers, 
-        json=task_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Task 2", False, f"Failed to create task 2: {response.text}", response)
-    else:
-        task2 = response.json()
-        task2_id = task2["id"]
-        log_test("Create Task 2", True, f"Successfully created task 2 with ID: {task2_id}", response)
-    
-    # Task 3: Chạy ads Facebook
-    task_data = {
-        "name": "Chạy ads Facebook",
-        "start_date": "2025-01-10T01:00:00Z",
-        "end_date": "2025-01-20T02:00:00Z",
-        "status": "not_started",
-        "description": "Thiết lập và chạy quảng cáo trên Facebook"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/services/{service_id}/tasks/", 
-        headers=headers, 
-        json=task_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Task 3", False, f"Failed to create task 3: {response.text}", response)
-    else:
-        task3 = response.json()
-        task3_id = task3["id"]
-        log_test("Create Task 3", True, f"Successfully created task 3 with ID: {task3_id}", response)
-    
-    # Task 4: Báo cáo kết quả tuần
-    task_data = {
-        "name": "Báo cáo kết quả tuần",
-        "start_date": "2025-01-21T01:00:00Z",
-        "end_date": "2025-01-22T02:00:00Z",
-        "status": "not_started",
-        "description": "Tổng hợp và báo cáo kết quả chiến dịch trong tuần"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/services/{service_id}/tasks/", 
-        headers=headers, 
-        json=task_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Task 4", False, f"Failed to create task 4: {response.text}", response)
-    else:
-        task4 = response.json()
-        task4_id = task4["id"]
-        log_test("Create Task 4", True, f"Successfully created task 4 with ID: {task4_id}", response)
-    
-    # Step 5: Get list of tasks for the service
-    print("\n5. Getting list of tasks for the service...")
-    response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Tasks", False, f"Failed to get tasks: {response.text}", response)
-    else:
-        tasks = response.json()
-        log_test("Get Tasks", True, f"Successfully retrieved {len(tasks)} tasks", response)
-        
-        # Print the tasks
-        print("\nTasks for service:")
-        for idx, task in enumerate(tasks, 1):
-            print(f"{idx}. {task['name']} (status: {task['status']}) - {task['description']}")
-    
-    # Step 6: Update a task
-    if 'task_id' in locals():
-        print("\n6. Updating a task...")
+        # Test PUT /api/expense-folders/{id}
         update_data = {
-            "name": "Thiết kế banner Facebook (Updated)",
-            "status": "in_progress",
-            "description": "Thiết kế banner cho chiến dịch quảng cáo Facebook - Đã cập nhật"
+            "name": f"Updated Folder {uuid.uuid4().hex[:8]}",
+            "description": "Updated folder description",
+            "color": "#33FF57"
         }
         
         response = requests.put(
-            f"{BASE_URL}/tasks/{task_id}", 
-            headers=headers, 
+            f"{BACKEND_URL}/expense-folders/{folder_id}",
+            headers=get_headers(),
             json=update_data
         )
         
-        if response.status_code != 200:
-            log_test("Update Task", False, f"Failed to update task: {response.text}", response)
-        else:
-            updated_task = response.json()
-            log_test("Update Task", True, f"Successfully updated task: {updated_task['name']}", response)
+        print_test_result("Update Expense Folder", response)
         
-        # Get tasks again to verify the update
-        response = requests.get(f"{BASE_URL}/services/{service_id}/tasks/", headers=headers)
-        if response.status_code == 200:
-            tasks = response.json()
-            print("\nUpdated tasks for service:")
-            for idx, task in enumerate(tasks, 1):
-                print(f"{idx}. {task['name']} (status: {task['status']}) - {task['description']}")
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
-
-def test_bulk_delete_tasks():
-    """Test bulk delete tasks functionality"""
-    token = get_token()
-    if not token:
-        log_test("Authentication", False, "Failed to get authentication token")
-        return
-    
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    
-    # Step 1: Get list of campaigns to obtain a campaign_id
-    print("\n1. Getting list of campaigns...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/campaigns/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Campaigns", False, f"Failed to get campaigns: {response.text}", response)
-        return
-    
-    campaigns = response.json()
-    log_test("Get Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
-    
-    # If no campaigns exist, create one
-    if len(campaigns) == 0:
-        print("No campaigns found. Creating a new campaign...")
-        campaign_data = {
-            "name": "Test Campaign for Bulk Delete",
-            "description": "Campaign for testing bulk delete tasks"
+        # Test DELETE /api/expense-folders/{id}
+        # We'll create a new folder for deletion to avoid affecting other tests
+        temp_folder_data = {
+            "name": f"Temp Folder for Deletion {uuid.uuid4().hex[:8]}",
+            "description": "This folder will be deleted",
+            "color": "#3357FF"
         }
-        response = requests.post(f"{BASE_URL}{API_PREFIX}/campaigns/", headers=headers, json=campaign_data)
         
-        if response.status_code != 200:
-            log_test("Create Campaign", False, f"Failed to create campaign: {response.text}", response)
-            return
-        
-        campaign = response.json()
-        campaign_id = campaign["id"]
-        log_test("Create Campaign", True, f"Successfully created campaign with ID: {campaign_id}", response)
-    else:
-        # Use the first campaign
-        campaign_id = campaigns[0]["id"]
-        print(f"Using existing campaign with ID: {campaign_id}")
-    
-    # Step 2: Get list of services in the campaign
-    print("\n2. Getting list of services for the campaign...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Services", False, f"Failed to get services: {response.text}", response)
-        return
-    
-    services = response.json()
-    log_test("Get Services", True, f"Successfully retrieved {len(services)} services", response)
-    
-    # If no services exist, create one
-    if len(services) == 0:
-        print("No services found. Creating a new service...")
-        service_data = {
-            "name": "Service for Bulk Delete Test",
-            "sort_order": 1,
-            "description": "Service for testing bulk delete tasks"
-        }
         response = requests.post(
-            f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/", 
-            headers=headers, 
-            json=service_data
+            f"{BACKEND_URL}/expense-folders/",
+            headers=get_headers(),
+            json=temp_folder_data
         )
         
-        if response.status_code != 200:
-            log_test("Create Service", False, f"Failed to create service: {response.text}", response)
-            return
+        if response.status_code == 200:
+            temp_folder_id = response.json()["id"]
+            
+            # Now delete this folder
+            response = requests.delete(
+                f"{BACKEND_URL}/expense-folders/{temp_folder_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Delete Expense Folder", response)
+            
+            # Test deleting a folder that has expenses (should fail)
+            # We'll create this in the expense test and try to delete it there
+    
+    return created_folder_ids
+
+def test_expenses(category_ids, folder_ids):
+    """Test Expenses API endpoints"""
+    print("\n=== Testing Expenses API ===")
+    
+    if not category_ids or not folder_ids:
+        print("❌ Cannot test expenses without categories and folders")
+        return []
+    
+    category_id = category_ids[0]
+    folder_id = folder_ids[0]
+    
+    # Test POST /api/expenses/
+    expense_data = {
+        "title": f"Test Expense {uuid.uuid4().hex[:8]}",
+        "amount": 150.75,
+        "category_id": category_id,
+        "folder_id": folder_id,
+        "expense_date": datetime.now().isoformat(),
+        "description": "Test expense description",
+        "vendor": "Test Vendor",
+        "payment_method": "credit_card",
+        "status": "pending",
+        "tags": ["test", "api"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/expenses/",
+        headers=get_headers(),
+        json=expense_data
+    )
+    
+    success = print_test_result("Create Expense", response)
+    if success:
+        expense_id = response.json()["id"]
+        created_expense_ids.append(expense_id)
+        print(f"Created expense ID: {expense_id}")
+        print(f"Expense number: {response.json()['expense_number']}")
+    
+    # Create a few more expenses for testing filters and bulk operations
+    for i in range(3):
+        expense_data = {
+            "title": f"Test Expense {i+1} {uuid.uuid4().hex[:6]}",
+            "amount": 100 + (i * 50),
+            "category_id": category_id,
+            "folder_id": folder_id,
+            "expense_date": (datetime.now() - timedelta(days=i)).isoformat(),
+            "description": f"Test expense description {i+1}",
+            "vendor": f"Vendor {i+1}",
+            "payment_method": ["cash", "credit_card", "bank_transfer"][i % 3],
+            "status": ["pending", "approved", "paid"][i % 3],
+            "tags": ["test", f"tag{i+1}"]
+        }
         
-        service = response.json()
-        service_id = service["id"]
-        log_test("Create Service", True, f"Successfully created service with ID: {service_id}", response)
-    else:
-        # Use the first service
-        service_id = services[0]["id"]
-        print(f"Using existing service with ID: {service_id}")
-    
-    # Step 3: Get existing tasks for the service
-    print("\n3. Getting existing tasks for the service...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", headers=headers)
-    
-    if response.status_code != 200:
-        log_test("Get Tasks", False, f"Failed to get tasks: {response.text}", response)
-        return
-    
-    existing_tasks = response.json()
-    log_test("Get Tasks", True, f"Successfully retrieved {len(existing_tasks)} tasks", response)
-    
-    # Step 4: Create test tasks if needed
-    if len(existing_tasks) < 5:
-        print("\n4. Creating test tasks for bulk delete testing...")
-        task_names = [
-            "Task for Bulk Delete Test 1",
-            "Task for Bulk Delete Test 2",
-            "Task for Bulk Delete Test 3",
-            "Task for Bulk Delete Test 4",
-            "Task for Bulk Delete Test 5"
-        ]
+        response = requests.post(
+            f"{BACKEND_URL}/expenses/",
+            headers=get_headers(),
+            json=expense_data
+        )
         
-        created_tasks = []
-        for name in task_names:
-            task_data = {
-                "name": name,
-                "description": "This is a test task for bulk delete testing",
-                "status": "not_started"
+        if response.status_code == 200:
+            created_expense_ids.append(response.json()["id"])
+    
+    # Test GET /api/expenses/
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Expenses", response)
+    if success:
+        expenses = response.json()
+        print(f"Found {len(expenses)} expenses")
+    
+    # Test GET /api/expenses/ with filters
+    # Filter by category
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/?category_id={category_id}",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Expenses by Category", response)
+    
+    # Filter by folder
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/?folder_id={folder_id}",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Expenses by Folder", response)
+    
+    # Filter by status
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/?status=pending",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Expenses by Status", response)
+    
+    # Filter by payment method
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/?payment_method=credit_card",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Expenses by Payment Method", response)
+    
+    # Filter by date range
+    start_date = (datetime.now() - timedelta(days=7)).isoformat()
+    end_date = datetime.now().isoformat()
+    
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/?start_date={start_date}&end_date={end_date}",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Expenses by Date Range", response)
+    
+    # Search
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/?search=Test",
+        headers=get_headers()
+    )
+    
+    print_test_result("Search Expenses", response)
+    
+    if created_expense_ids:
+        expense_id = created_expense_ids[0]
+        
+        # Test GET /api/expenses/{id}
+        response = requests.get(
+            f"{BACKEND_URL}/expenses/{expense_id}",
+            headers=get_headers()
+        )
+        
+        print_test_result("Get Expense by ID", response)
+        
+        # Test PUT /api/expenses/{id}
+        update_data = {
+            "title": f"Updated Expense {uuid.uuid4().hex[:8]}",
+            "amount": 200.50,
+            "description": "Updated expense description",
+            "status": "approved"
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/expenses/{expense_id}",
+            headers=get_headers(),
+            json=update_data
+        )
+        
+        print_test_result("Update Expense", response)
+        
+        # Test DELETE /api/expenses/{id}
+        # We'll create a new expense for deletion to avoid affecting other tests
+        temp_expense_data = {
+            "title": f"Temp Expense for Deletion {uuid.uuid4().hex[:8]}",
+            "amount": 75.25,
+            "category_id": category_id,
+            "folder_id": folder_id,
+            "expense_date": datetime.now().isoformat(),
+            "description": "This expense will be deleted",
+            "vendor": "Temp Vendor",
+            "payment_method": "cash",
+            "status": "pending"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/expenses/",
+            headers=get_headers(),
+            json=temp_expense_data
+        )
+        
+        if response.status_code == 200:
+            temp_expense_id = response.json()["id"]
+            
+            # Now delete this expense
+            response = requests.delete(
+                f"{BACKEND_URL}/expenses/{temp_expense_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Delete Expense", response)
+    
+    # Test bulk operations
+    if len(created_expense_ids) >= 2:
+        # Test POST /api/expenses/bulk-update-status
+        bulk_ids = created_expense_ids[1:3]  # Use the 2nd and 3rd expenses
+        
+        bulk_update_data = {
+            "expense_ids": bulk_ids,
+            "status": "approved"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/expenses/bulk-update-status",
+            headers=get_headers(),
+            json=bulk_update_data
+        )
+        
+        print_test_result("Bulk Update Expense Status", response)
+        
+        # Create temporary expenses for bulk delete test
+        temp_expense_ids = []
+        for i in range(2):
+            temp_data = {
+                "title": f"Temp Expense for Bulk Delete {i} {uuid.uuid4().hex[:6]}",
+                "amount": 50.00,
+                "category_id": category_id,
+                "folder_id": folder_id,
+                "expense_date": datetime.now().isoformat(),
+                "description": "This expense will be bulk deleted",
+                "vendor": "Temp Vendor",
+                "payment_method": "cash",
+                "status": "pending"
             }
+            
             response = requests.post(
-                f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", 
-                headers=headers, 
-                json=task_data
+                f"{BACKEND_URL}/expenses/",
+                headers=get_headers(),
+                json=temp_data
             )
             
-            if response.status_code != 200:
-                log_test(f"Create Task '{name}'", False, f"Failed to create task: {response.text}", response)
-                continue
+            if response.status_code == 200:
+                temp_expense_ids.append(response.json()["id"])
+        
+        if temp_expense_ids:
+            # Test POST /api/expenses/bulk-delete
+            bulk_delete_data = {
+                "expense_ids": temp_expense_ids
+            }
             
-            task = response.json()
-            created_tasks.append(task)
-            log_test(f"Create Task '{name}'", True, f"Successfully created task with ID: {task['id']}", response)
-        
-        # Get updated task list
-        response = requests.get(f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", headers=headers)
-        if response.status_code != 200:
-            log_test("Get Updated Tasks", False, f"Failed to get updated tasks: {response.text}", response)
-            return
-        
-        existing_tasks = response.json()
-        log_test("Get Updated Tasks", True, f"Successfully retrieved {len(existing_tasks)} tasks after creation", response)
-    
-    # Step 5: Test bulk delete with valid task IDs using POST /api/tasks/bulk-delete
-    print("\n5. Testing bulk delete with valid task IDs using POST /api/tasks/bulk-delete...")
-    # Select 2-3 tasks to delete
-    tasks_to_delete = existing_tasks[:3] if len(existing_tasks) >= 3 else existing_tasks[:2]
-    task_ids_to_delete = [task["id"] for task in tasks_to_delete]
-    
-    print(f"Attempting to delete {len(task_ids_to_delete)} tasks: {task_ids_to_delete}")
-    
-    # Use POST method to /api/tasks/bulk-delete as specified in the frontend
-    response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=task_ids_to_delete)
-    
-    if response.status_code == 200:
-        result = response.json()
-        log_test("Bulk Delete Tasks", True, f"Successfully deleted {result['deleted_count']} tasks using POST /api/tasks/bulk-delete", response)
-    else:
-        log_test("Bulk Delete Tasks", False, f"Failed to delete tasks using POST /api/tasks/bulk-delete: {response.text}", response)
-        return
-    
-    # Verify tasks were deleted
-    print("\n6. Verifying tasks were deleted...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/", headers=headers)
-    if response.status_code == 200:
-        remaining_tasks = response.json()
-        remaining_ids = [task["id"] for task in remaining_tasks]
-        
-        all_deleted = True
-        for task_id in task_ids_to_delete:
-            if task_id in remaining_ids:
-                print(f"Task {task_id} was not deleted!")
-                all_deleted = False
-        
-        if all_deleted:
-            log_test("Verify Deletion", True, "All tasks were successfully deleted", response)
-        else:
-            log_test("Verify Deletion", False, "Some tasks were not deleted", response)
-    else:
-        log_test("Verify Deletion", False, f"Failed to verify task deletion: {response.text}", response)
-    
-    # Step 7: Test edge case - empty array
-    print("\n7. Testing edge case - empty array...")
-    response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=[])
-    
-    if response.status_code == 400:
-        log_test("Empty Array Edge Case", True, "Successfully handled empty array case (returned 400 error)", response)
-    else:
-        log_test("Empty Array Edge Case", False, f"Failed to handle empty array case properly: {response.text}", response)
-    
-    # Step 8: Test edge case - too many tasks
-    print("\n8. Testing edge case - too many tasks (>50)...")
-    # Generate 51 fake IDs
-    fake_ids = [f"fake_id_{i}" for i in range(51)]
-    
-    response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=fake_ids)
-    
-    if response.status_code == 400:
-        log_test("Too Many Tasks Edge Case", True, "Successfully handled too many tasks case (returned 400 error)", response)
-    else:
-        log_test("Too Many Tasks Edge Case", False, f"Failed to handle too many tasks case properly: {response.text}", response)
-    
-    # Step 9: Test edge case - non-existent task IDs
-    print("\n9. Testing edge case - non-existent task IDs...")
-    non_existent_ids = ["non_existent_id_1", "non_existent_id_2", "non_existent_id_3"]
-    
-    response = requests.post(f"{BASE_URL}{API_PREFIX}/tasks/bulk-delete", headers=headers, json=non_existent_ids)
-    
-    if response.status_code == 200:
-        result = response.json()
-        if result["deleted_count"] == 0:
-            log_test("Non-existent IDs Edge Case", True, "Successfully handled non-existent task IDs (returned 0 deleted_count)", response)
-        else:
-            log_test("Non-existent IDs Edge Case", False, f"Unexpected deleted_count for non-existent task IDs: {result['deleted_count']}", response)
-    else:
-        log_test("Non-existent IDs Edge Case", False, f"Failed to handle non-existent task IDs properly: {response.text}", response)
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
-
-def test_template_api():
-    """Test template API functionality"""
-    print("\n=== TESTING TEMPLATE API ===\n")
-    
-    # Step 1: Get admin token
-    print("1. Getting admin authentication token...")
-    admin_token = get_token()
-    if not admin_token:
-        log_test("Admin Authentication", False, "Failed to get admin authentication token")
-        return
-    
-    admin_headers = {
-        "Authorization": f"Bearer {admin_token}",
-        "Content-Type": "application/json"
-    }
-    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
-    
-    # Step 2: Create a new template (as admin)
-    print("\n2. Creating a new template as admin...")
-    template_data = {
-        "name": "Marketing Email Template",
-        "content": "This is a sample marketing email template content with {{variable}} placeholders.",
-        "template_type": "service"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/templates/", 
-        headers=admin_headers, 
-        json=template_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Template", False, f"Failed to create template: {response.text}", response)
-        return
-    
-    template = response.json()
-    template_id = template["id"]
-    log_test("Create Template", True, f"Successfully created template with ID: {template_id}", response)
-    
-    # Step 3: Create another template for testing bulk operations
-    print("\n3. Creating another template for bulk operations testing...")
-    template_data = {
-        "name": "Social Media Post Template",
-        "content": "This is a sample social media post template with {{hashtags}} and {{content}}.",
-        "template_type": "service"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/templates/", 
-        headers=admin_headers, 
-        json=template_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Second Template", False, f"Failed to create second template: {response.text}", response)
-    else:
-        second_template = response.json()
-        second_template_id = second_template["id"]
-        log_test("Create Second Template", True, f"Successfully created second template with ID: {second_template_id}", response)
-    
-    # Step 4: Get list of templates
-    print("\n4. Getting list of templates...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/", headers=admin_headers)
-    
-    if response.status_code != 200:
-        log_test("Get Templates", False, f"Failed to get templates: {response.text}", response)
-    else:
-        templates = response.json()
-        log_test("Get Templates", True, f"Successfully retrieved {len(templates)} templates", response)
-        
-        # Print the templates
-        print("\nTemplates:")
-        for idx, tmpl in enumerate(templates, 1):
-            print(f"{idx}. {tmpl['name']} (type: {tmpl['template_type']}) - Created by: {tmpl.get('creator_name', 'Unknown')}")
-    
-    # Step 5: Test search functionality
-    print("\n5. Testing search functionality...")
-    search_term = "Marketing"
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/?search={search_term}", headers=admin_headers)
-    
-    if response.status_code != 200:
-        log_test("Search Templates", False, f"Failed to search templates: {response.text}", response)
-    else:
-        search_results = response.json()
-        if any(search_term.lower() in template['name'].lower() for template in search_results):
-            log_test("Search Templates", True, f"Successfully found templates matching '{search_term}'", response)
-        else:
-            log_test("Search Templates", False, f"Search returned results but none match '{search_term}'", response)
-    
-    # Step 6: Get specific template
-    if 'template_id' in locals():
-        print(f"\n6. Getting specific template with ID: {template_id}...")
-        response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/{template_id}", headers=admin_headers)
-        
-        if response.status_code != 200:
-            log_test("Get Specific Template", False, f"Failed to get template: {response.text}", response)
-        else:
-            template_details = response.json()
-            log_test("Get Specific Template", True, f"Successfully retrieved template: {template_details['name']}", response)
-    
-    # Step 7: Update template
-    if 'template_id' in locals():
-        print(f"\n7. Updating template with ID: {template_id}...")
-        update_data = {
-            "name": "Updated Marketing Email Template",
-            "content": "This is an updated marketing email template with improved {{variable}} placeholders."
-        }
-        
-        response = requests.put(
-            f"{BASE_URL}{API_PREFIX}/templates/{template_id}", 
-            headers=admin_headers, 
-            json=update_data
-        )
-        
-        if response.status_code != 200:
-            log_test("Update Template", False, f"Failed to update template: {response.text}", response)
-        else:
-            updated_template = response.json()
-            log_test("Update Template", True, f"Successfully updated template: {updated_template['name']}", response)
-    
-    # Step 8: Test template duplication
-    if 'template_id' in locals():
-        print(f"\n8. Duplicating template with ID: {template_id}...")
-        response = requests.post(
-            f"{BASE_URL}{API_PREFIX}/templates/{template_id}/duplicate", 
-            headers=admin_headers
-        )
-        
-        if response.status_code != 200:
-            log_test("Duplicate Template", False, f"Failed to duplicate template: {response.text}", response)
-        else:
-            duplicated_template = response.json()
-            duplicated_template_id = duplicated_template["id"]
-            log_test("Duplicate Template", True, f"Successfully duplicated template with new ID: {duplicated_template_id}", response)
-            
-            # Verify the duplicated template has "(Copy)" in the name
-            if "(Copy)" in duplicated_template["name"]:
-                log_test("Verify Duplicate Name", True, f"Duplicated template has correct name format: {duplicated_template['name']}", response)
-            else:
-                log_test("Verify Duplicate Name", False, f"Duplicated template does not have '(Copy)' in name: {duplicated_template['name']}", response)
-    
-    # Step 9: Test bulk archive
-    print("\n9. Testing bulk archive functionality...")
-    template_ids_to_archive = []
-    
-    # Collect template IDs to archive
-    if 'template_id' in locals():
-        template_ids_to_archive.append(template_id)
-    if 'second_template_id' in locals():
-        template_ids_to_archive.append(second_template_id)
-    
-    if template_ids_to_archive:
-        response = requests.post(
-            f"{BASE_URL}{API_PREFIX}/templates/bulk-archive", 
-            headers=admin_headers, 
-            json=template_ids_to_archive
-        )
-        
-        if response.status_code != 200:
-            log_test("Bulk Archive", False, f"Failed to bulk archive templates: {response.text}", response)
-        else:
-            result = response.json()
-            log_test("Bulk Archive", True, f"Successfully archived {result.get('message', 'templates')}", response)
-    
-    # Step 10: Get archived templates
-    print("\n10. Getting archived templates...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/?archived=true", headers=admin_headers)
-    
-    if response.status_code != 200:
-        log_test("Get Archived Templates", False, f"Failed to get archived templates: {response.text}", response)
-    else:
-        archived_templates = response.json()
-        log_test("Get Archived Templates", True, f"Successfully retrieved {len(archived_templates)} archived templates", response)
-        
-        # Verify our templates are in the archived list
-        archived_ids = [t["id"] for t in archived_templates]
-        all_archived = all(tid in archived_ids for tid in template_ids_to_archive)
-        
-        if all_archived:
-            log_test("Verify Archived Status", True, "All templates were successfully archived", response)
-        else:
-            log_test("Verify Archived Status", False, "Some templates were not archived correctly", response)
-    
-    # Step 11: Test bulk restore
-    print("\n11. Testing bulk restore functionality...")
-    if template_ids_to_archive:
-        response = requests.post(
-            f"{BASE_URL}{API_PREFIX}/templates/bulk-restore", 
-            headers=admin_headers, 
-            json=template_ids_to_archive
-        )
-        
-        if response.status_code != 200:
-            log_test("Bulk Restore", False, f"Failed to bulk restore templates: {response.text}", response)
-        else:
-            result = response.json()
-            log_test("Bulk Restore", True, f"Successfully restored {result.get('message', 'templates')}", response)
-    
-    # Step 12: Verify templates are restored
-    print("\n12. Verifying templates are restored...")
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/?archived=false", headers=admin_headers)
-    
-    if response.status_code != 200:
-        log_test("Verify Restored Templates", False, f"Failed to get active templates: {response.text}", response)
-    else:
-        active_templates = response.json()
-        active_ids = [t["id"] for t in active_templates]
-        all_restored = all(tid in active_ids for tid in template_ids_to_archive)
-        
-        if all_restored:
-            log_test("Verify Restored Status", True, "All templates were successfully restored", response)
-        else:
-            log_test("Verify Restored Status", False, "Some templates were not restored correctly", response)
-    
-    # Step 13: Test error case - get non-existent template
-    print("\n13. Testing error case - get non-existent template...")
-    non_existent_id = "non_existent_template_id"
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/{non_existent_id}", headers=admin_headers)
-    
-    if response.status_code == 404:
-        log_test("Error Case - Non-existent Template", True, "Correctly returned 404 for non-existent template", response)
-    else:
-        log_test("Error Case - Non-existent Template", False, f"Did not correctly handle non-existent template: {response.status_code}", response)
-    
-    # Step 14: Test bulk delete as admin
-    print("\n14. Testing bulk delete as admin...")
-    # Only delete the duplicated template to keep the original ones for other tests
-    templates_to_delete = []
-    if 'duplicated_template_id' in locals():
-        templates_to_delete.append(duplicated_template_id)
-    
-    if templates_to_delete:
-        response = requests.post(
-            f"{BASE_URL}{API_PREFIX}/templates/bulk-delete", 
-            headers=admin_headers,
-            json=templates_to_delete
-        )
-        
-        if response.status_code != 200:
-            log_test("Bulk Delete", False, f"Failed to bulk delete templates: {response.text}", response)
-        else:
-            result = response.json()
-            log_test("Bulk Delete", True, f"Successfully deleted templates: {result.get('message', '')}", response)
-    
-    # Step 15: Clean up - delete all test templates
-    print("\n15. Cleaning up - deleting all test templates...")
-    templates_to_delete = []
-    
-    # Get all templates
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/templates/", headers=admin_headers)
-    if response.status_code == 200:
-        all_templates = response.json()
-        
-        # Find templates created during this test
-        test_template_names = [
-            "Marketing Email Template", 
-            "Updated Marketing Email Template",
-            "Social Media Post Template"
-        ]
-        
-        for template in all_templates:
-            if any(test_name in template["name"] for test_name in test_template_names) or "(Copy)" in template["name"]:
-                templates_to_delete.append(template["id"])
-        
-        if templates_to_delete:
             response = requests.post(
-                f"{BASE_URL}{API_PREFIX}/templates/bulk-delete", 
-                headers=admin_headers,
-                json=templates_to_delete
+                f"{BACKEND_URL}/expenses/bulk-delete",
+                headers=get_headers(),
+                json=bulk_delete_data
             )
             
-            if response.status_code != 200:
-                log_test("Clean Up", False, f"Failed to clean up test templates: {response.text}", response)
-            else:
-                result = response.json()
-                log_test("Clean Up", True, f"Successfully cleaned up test templates: {result.get('message', '')}", response)
+            print_test_result("Bulk Delete Expenses", response)
     
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
-
-def test_project_management_changes():
-    """Test the Project management changes"""
-    print("\n=== TESTING PROJECT MANAGEMENT CHANGES ===\n")
-    
-    # Step 1: Get admin token
-    print("1. Getting admin authentication token...")
-    admin_token = get_token()
-    if not admin_token:
-        log_test("Admin Authentication", False, "Failed to get admin authentication token")
-        return
-    
-    admin_headers = {
-        "Authorization": f"Bearer {admin_token}",
-        "Content-Type": "application/json"
-    }
-    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
-    
-    # Step 2: Test GET /api/users/by-role/{role} endpoint
-    print("\n2. Testing GET /api/users/by-role/{role} endpoint...")
-    roles = ["manager", "account", "content", "design", "editor", "sale"]
-    
-    for role in roles:
-        response = requests.get(f"{BASE_URL}{API_PREFIX}/users/by-role/{role}", headers=admin_headers)
-        
-        if response.status_code == 200:
-            users = response.json()
-            log_test(
-                f"Get users by role: {role}",
-                True,
-                f"Successfully retrieved users with role {role}",
-                response
-            )
-        else:
-            log_test(
-                f"Get users by role: {role}",
-                False,
-                f"Failed to retrieve users with role {role}",
-                response
-            )
-    
-    # Test invalid role
-    response = requests.get(f"{BASE_URL}{API_PREFIX}/users/by-role/invalid_role", headers=admin_headers)
-    if response.status_code == 400:
-        log_test(
-            "Get users by invalid role",
-            True,
-            "Correctly rejected invalid role with 400 status code",
-            response
-        )
-    else:
-        log_test(
-            "Get users by invalid role",
-            False,
-            f"Expected 400 status code, got {response.status_code}",
-            response
-        )
-    
-    # Step 3: Create a test client for project testing
-    print("\n3. Creating a test client for project testing...")
-    client_data = {
-        "name": f"Test Client {int(time.time())}",
-        "company": "Test Company",
-        "industry": "Technology",
-        "contact_name": "Test Contact",
-        "contact_email": "test@example.com"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/clients/",
-        headers=admin_headers,
-        json=client_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Test Client", False, "Failed to create test client", response)
-        return
-    
-    client = response.json()
-    client_id = client["id"]
-    log_test("Create Test Client", True, f"Successfully created test client with ID: {client_id}", response)
-    
-    # Step 4: Create a test campaign for project testing
-    print("\n4. Creating a test campaign for project testing...")
-    campaign_data = {
-        "name": f"Test Campaign {int(time.time())}",
-        "description": "Campaign created for testing project integration"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/campaigns/",
-        headers=admin_headers,
-        json=campaign_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Test Campaign", False, "Failed to create test campaign", response)
-        return
-    
-    campaign = response.json()
-    campaign_id = campaign["id"]
-    log_test("Create Test Campaign", True, f"Successfully created test campaign with ID: {campaign_id}", response)
-    
-    # Step 5: Test creating a project with campaign_id and staff role assignments
-    print("\n5. Testing creating a project with campaign_id and staff role assignments...")
-    project_data = {
-        "name": f"Test Project {int(time.time())}",
-        "client_id": client_id,
-        "campaign_id": campaign_id,
-        "description": "Project created for testing new fields",
-        "status": "planning",
-        "manager_ids": ["manager1", "manager2"],
-        "account_ids": ["account1"],
-        "content_ids": ["content1", "content2"],
-        "design_ids": ["design1"],
-        "editor_ids": [],
-        "sale_ids": ["sale1"]
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers,
-        json=project_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Create Project with New Fields", False, "Failed to create project with new fields", response)
-        return
-    
-    project = response.json()
-    project_id = project["id"]
-    log_test("Create Project with New Fields", True, f"Successfully created project with ID: {project_id}", response)
-    
-    # Verify all fields were saved correctly
-    for field in ["campaign_id", "manager_ids", "account_ids", "content_ids", "design_ids", "editor_ids", "sale_ids"]:
-        if project[field] == project_data[field]:
-            log_test(
-                f"Project field verification: {field}",
-                True,
-                f"Field {field} was saved correctly",
-                None
-            )
-        else:
-            log_test(
-                f"Project field verification: {field}",
-                False,
-                f"Field {field} was not saved correctly. Expected: {project_data[field]}, Got: {project[field]}",
-                None
-            )
-    
-    # Step 6: Test updating a project with new fields
-    print("\n6. Testing updating a project with new fields...")
-    update_data = {
-        "name": f"Updated Project {int(time.time())}",
-        "client_id": client_id,
-        "campaign_id": campaign_id,
-        "description": "Updated project description",
-        "status": "in_progress",
-        "manager_ids": ["manager3"],
-        "account_ids": ["account2", "account3"],
-        "content_ids": [],
-        "design_ids": ["design2", "design3"],
-        "editor_ids": ["editor1"],
-        "sale_ids": []
-    }
-    
-    response = requests.put(
-        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
-        headers=admin_headers,
-        json=update_data
-    )
-    
-    if response.status_code != 200:
-        log_test("Update Project with New Fields", False, "Failed to update project with new fields", response)
-    else:
-        updated_project = response.json()
-        log_test("Update Project with New Fields", True, "Successfully updated project with new fields", response)
-        
-        # Verify all fields were updated correctly
-        for field in ["campaign_id", "manager_ids", "account_ids", "content_ids", "design_ids", "editor_ids", "sale_ids"]:
-            if updated_project[field] == update_data[field]:
-                log_test(
-                    f"Project update verification: {field}",
-                    True,
-                    f"Field {field} was updated correctly",
-                    None
-                )
-            else:
-                log_test(
-                    f"Project update verification: {field}",
-                    False,
-                    f"Field {field} was not updated correctly. Expected: {update_data[field]}, Got: {updated_project[field]}",
-                    None
-                )
-    
-    # Step 7: Test that budget field is no longer accepted
-    print("\n7. Testing that budget field is no longer accepted...")
-    project_with_budget = {
-        "name": f"Budget Test Project {int(time.time())}",
-        "client_id": client_id,
-        "description": "Project with budget field",
-        "budget": 10000  # This field should be ignored
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers,
-        json=project_with_budget
-    )
-    
-    if response.status_code != 200:
-        log_test("Budget Field Removal Test", False, "Failed to create project for budget test", response)
-    else:
-        budget_project = response.json()
-        budget_project_id = budget_project["id"]
-        
-        # Check if budget field is present in the response
-        if "budget" not in budget_project:
-            log_test(
-                "Budget Field Removal",
-                True,
-                "Budget field is correctly not included in the project model",
-                response
-            )
-        else:
-            log_test(
-                "Budget Field Removal",
-                False,
-                f"Budget field is still present in the project model with value: {budget_project.get('budget')}",
-                response
-            )
-    
-    # Step 8: Test campaign_id validation
-    print("\n8. Testing campaign_id validation...")
-    invalid_campaign_project = {
-        "name": f"Invalid Campaign Project {int(time.time())}",
-        "client_id": client_id,
-        "campaign_id": "non_existent_campaign_id",
-        "description": "Project with invalid campaign_id"
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers,
-        json=invalid_campaign_project
-    )
-    
-    if response.status_code == 404:
-        log_test(
-            "Campaign ID Validation",
-            True,
-            "Correctly rejected project with invalid campaign_id",
-            response
-        )
-    else:
-        log_test(
-            "Campaign ID Validation",
-            False,
-            f"Expected 404 status code for invalid campaign_id, got {response.status_code}",
-            response
-        )
-    
-    # Step 9: Test that existing project API functionality still works
-    print("\n9. Testing that existing project API functionality still works...")
-    
-    # Get project by ID
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 200:
-        log_test("Get Project by ID", True, "Successfully retrieved project by ID", response)
-    else:
-        log_test("Get Project by ID", False, "Failed to retrieve project by ID", response)
-    
-    # Get projects list
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 200:
-        projects = response.json()
-        log_test("Get Projects List", True, f"Successfully retrieved projects list with {len(projects)} projects", response)
-    else:
-        log_test("Get Projects List", False, "Failed to retrieve projects list", response)
-    
-    # Test project filters
-    filters = [
-        {"name": "Status filter", "params": {"status": "in_progress"}},
-        {"name": "Archived filter", "params": {"archived": "false"}},
-        {"name": "Search filter", "params": {"search": "Test"}}
-    ]
-    
-    for filter_info in filters:
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/projects/",
-            headers=admin_headers,
-            params=filter_info["params"]
-        )
-        
-        if response.status_code == 200:
-            log_test(f"Project filter: {filter_info['name']}", True, f"Successfully filtered projects with {filter_info['name']}", response)
-        else:
-            log_test(f"Project filter: {filter_info['name']}", False, f"Failed to filter projects with {filter_info['name']}", response)
-    
-    # Step 10: Test that campaigns API endpoint works
-    print("\n10. Testing that campaigns API endpoint works...")
-    
-    # Get campaigns list
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 200:
-        campaigns = response.json()
-        log_test("Get Campaigns List", True, f"Successfully retrieved campaigns list with {len(campaigns)} campaigns", response)
-    else:
-        log_test("Get Campaigns List", False, "Failed to retrieve campaigns list", response)
-    
-    # Get campaign by ID
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 200:
-        campaign_detail = response.json()
-        log_test("Get Campaign by ID", True, f"Successfully retrieved campaign by ID: {campaign_detail['name']}", response)
-    else:
-        log_test("Get Campaign by ID", False, "Failed to retrieve campaign by ID", response)
-    
-    # Step 11: Clean up - delete test projects and campaign
-    print("\n11. Cleaning up - deleting test projects and campaign...")
-    
-    # Delete the test projects
-    if 'project_id' in locals():
+    # Test deleting a category that has expenses (should fail)
+    if category_id and created_expense_ids:
         response = requests.delete(
-            f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
-            headers=admin_headers
+            f"{BACKEND_URL}/expense-categories/{category_id}",
+            headers=get_headers()
         )
         
-        if response.status_code == 200:
-            log_test("Delete Test Project", True, "Successfully deleted test project", response)
-        else:
-            log_test("Delete Test Project", False, "Failed to delete test project", response)
+        print_test_result("Delete Category with Expenses (should fail)", response, expected_status=400)
     
-    if 'budget_project_id' in locals():
+    # Test deleting a folder that has expenses (should fail)
+    if folder_id and created_expense_ids:
         response = requests.delete(
-            f"{BASE_URL}{API_PREFIX}/projects/{budget_project_id}",
-            headers=admin_headers
+            f"{BACKEND_URL}/expense-folders/{folder_id}",
+            headers=get_headers()
         )
         
-        if response.status_code == 200:
-            log_test("Delete Budget Test Project", True, "Successfully deleted budget test project", response)
-        else:
-            log_test("Delete Budget Test Project", False, "Failed to delete budget test project", response)
+        print_test_result("Delete Folder with Expenses (should fail)", response, expected_status=400)
     
-    # Delete the test campaign
-    response = requests.delete(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 200:
-        log_test("Delete Test Campaign", True, "Successfully deleted test campaign", response)
-    else:
-        log_test("Delete Test Campaign", False, "Failed to delete test campaign", response)
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
+    return created_expense_ids
 
-def test_project_detail_workflow():
-    """Test the complete Project Detail workflow"""
-    print("\n=== TESTING PROJECT DETAIL WORKFLOW ===\n")
+def test_expense_statistics():
+    """Test Expense Statistics API endpoint"""
+    print("\n=== Testing Expense Statistics API ===")
     
-    # Step 1: Get admin token
-    print("1. Getting admin authentication token...")
-    admin_token = get_token()
-    if not admin_token:
-        log_test("Admin Authentication", False, "Failed to get admin authentication token")
-        return
-    
-    admin_headers = {
-        "Authorization": f"Bearer {admin_token}",
-        "Content-Type": "application/json"
-    }
-    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
-    
-    # Step 1.5: Get all projects to find available project IDs
-    print("\n1.5. Getting all projects to find available project IDs...")
+    # Test GET /api/expenses/statistics
     response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers
+        f"{BACKEND_URL}/expenses/statistics",
+        headers=get_headers()
     )
     
-    if response.status_code != 200:
-        log_test("Get All Projects", False, f"Failed to get all projects: {response.text}", response)
-        return
+    success = print_test_result("Get Expense Statistics", response)
+    if success:
+        stats = response.json()
+        print("Statistics summary:")
+        print(f"- Total expenses: {stats['total_expenses']}")
+        print(f"- Total amount: {stats['amounts']['total']}")
+        print(f"- By status: {stats['counts']}")
+        print(f"- Categories: {len(stats['by_category'])}")
+        print(f"- Monthly trends: {len(stats['monthly_trends'])}")
     
-    projects = response.json()
-    log_test("Get All Projects", True, f"Successfully retrieved {len(projects)} projects", response)
+    # Test with filters
+    current_year = datetime.now().year
     
-    if not projects:
-        log_test("Available Projects", False, "No projects found in the database", None)
-        return
-    
-    print("Available projects:")
-    for p in projects:
-        print(f"- ID: {p.get('id')}, Name: {p.get('name')}")
-    
-    # Step 2: Test GET /api/projects/{project_id} for a specific project
-    # Use the first project from the list or the specified one if it exists
-    project_id = next((p["id"] for p in projects if p["id"] == "3babc6e7-1c1f-459e-b64e-b2b9aa36c45b"), projects[0]["id"])
-    print(f"\n2. Testing GET /api/projects/{project_id}...")
-    
+    # Filter by year
     response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
-        headers=admin_headers
+        f"{BACKEND_URL}/expenses/statistics?year={current_year}",
+        headers=get_headers()
     )
     
-    if response.status_code != 200:
-        log_test("Get Project Details", False, f"Failed to get project details: {response.text}", response)
-        return
+    print_test_result("Get Expense Statistics by Year", response)
     
-    project = response.json()
-    log_test("Get Project Details", True, f"Successfully retrieved project: {project['name']}", response)
+    # Filter by quarter
+    current_quarter = (datetime.now().month - 1) // 3 + 1
     
-    # Verify project has campaign_id and staff assignments
-    if not project.get("campaign_id"):
-        log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
-    else:
-        log_test("Project Campaign ID", True, f"Project has campaign_id: {project['campaign_id']}", None)
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/statistics?year={current_year}&quarter={current_quarter}",
+        headers=get_headers()
+    )
     
-    # Check staff assignments
-    staff_fields = ["manager_ids", "account_ids", "content_ids", "design_ids", "editor_ids", "sale_ids"]
-    for field in staff_fields:
-        if field in project and isinstance(project[field], list):
-            log_test(f"Project {field}", True, f"Project has {field}: {project[field]}", None)
-        else:
-            log_test(f"Project {field}", False, f"Project does not have valid {field}", None)
+    print_test_result("Get Expense Statistics by Quarter", response)
     
-    # Step 3: Test GET /api/clients/{client_id} for associated client
-    client_id = project.get("client_id")
-    if not client_id:
-        log_test("Project Client ID", False, "Project does not have a client_id", None)
-    else:
-        print(f"\n3. Testing GET /api/clients/{client_id}...")
+    # Filter by month
+    current_month = datetime.now().month
+    
+    response = requests.get(
+        f"{BACKEND_URL}/expenses/statistics?year={current_year}&month={current_month}",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Expense Statistics by Month", response)
+    
+    # Filter by category
+    if created_category_ids:
+        category_id = created_category_ids[0]
         
         response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/clients/{client_id}",
-            headers=admin_headers
+            f"{BACKEND_URL}/expenses/statistics?category_id={category_id}",
+            headers=get_headers()
         )
         
-        if response.status_code != 200:
-            log_test("Get Client Details", False, f"Failed to get client details: {response.text}", response)
-        else:
-            client = response.json()
-            log_test("Get Client Details", True, f"Successfully retrieved client: {client['name']}", response)
-    
-    # Step 4: Test GET /api/campaigns/{campaign_id} for associated campaign
-    campaign_id = project.get("campaign_id")
-    if not campaign_id:
-        log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
-    else:
-        print(f"\n4. Testing GET /api/campaigns/{campaign_id}...")
-        
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
-            headers=admin_headers
-        )
-        
-        if response.status_code != 200:
-            log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
-            return
-        
-        campaign = response.json()
-        log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
-        
-        # Step 5: Test GET /api/campaigns/{campaign_id}/services/ to get services
-        print(f"\n5. Testing GET /api/campaigns/{campaign_id}/services/...")
-        
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
-            headers=admin_headers
-        )
-        
-        if response.status_code != 200:
-            log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
-            return
-        
-        services = response.json()
-        log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
-        
-        # Verify campaign has 3 services (Thiết kế UI/UX, Phát triển Frontend, Tạo nội dung)
-        expected_services = ["Thiết kế UI/UX", "Phát triển Frontend", "Tạo nội dung"]
-        found_services = [service["name"] for service in services]
-        
-        if all(service in found_services for service in expected_services):
-            log_test("Campaign Services Verification", True, f"Campaign has all expected services: {expected_services}", None)
-        else:
-            log_test("Campaign Services Verification", False, f"Campaign is missing some expected services. Found: {found_services}, Expected: {expected_services}", None)
-        
-        # Step 6: Test GET /api/services/{service_id}/tasks/ for each service to get tasks
-        print("\n6. Testing GET /api/services/{service_id}/tasks/ for each service...")
-        
-        for service in services:
-            service_id = service["id"]
-            service_name = service["name"]
-            
-            print(f"   Testing tasks for service: {service_name} (ID: {service_id})...")
-            
-            response = requests.get(
-                f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
-                headers=admin_headers
-            )
-            
-            if response.status_code != 200:
-                log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
-                continue
-            
-            tasks = response.json()
-            log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
-            
-            # Verify tasks have different statuses
-            if tasks:
-                statuses = set(task["status"] for task in tasks)
-                log_test(f"Task Statuses for Service '{service_name}'", True, f"Tasks have {len(statuses)} different statuses: {statuses}", None)
-            else:
-                log_test(f"Task Statuses for Service '{service_name}'", False, "No tasks found for this service", None)
-    
-    # Step 7: Test documents API filtering by project name
-    print("\n7. Testing GET /api/documents/ with filtering by project name...")
-    
-    # Get project name for filtering
-    project_name = project.get("name", "")
-    if not project_name:
-        log_test("Project Name for Document Filtering", False, "Project does not have a name", None)
-    else:
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/documents/?search={project_name}",
-            headers=admin_headers
-        )
-        
-        if response.status_code != 200:
-            log_test("Get Documents by Project Name", False, f"Failed to get documents: {response.text}", response)
-        else:
-            documents = response.json()
-            log_test("Get Documents by Project Name", True, f"Successfully retrieved {len(documents)} documents related to project '{project_name}'", response)
-    
-    # Step 8: Test error handling - Invalid project ID
-    print("\n8. Testing error handling - Invalid project ID...")
-    
-    invalid_project_id = "invalid-project-id"
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/{invalid_project_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 404:
-        log_test("Invalid Project ID Error Handling", True, "Correctly returned 404 for invalid project ID", response)
-    else:
-        log_test("Invalid Project ID Error Handling", False, f"Expected 404 status code for invalid project ID, got {response.status_code}", response)
-    
-    # Step 9: Test error handling - Missing campaign/client references
-    print("\n9. Testing error handling - Missing campaign/client references...")
-    
-    # Test with non-existent campaign ID
-    non_existent_campaign_id = "non-existent-campaign-id"
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{non_existent_campaign_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 404:
-        log_test("Non-existent Campaign ID Error Handling", True, "Correctly returned 404 for non-existent campaign ID", response)
-    else:
-        log_test("Non-existent Campaign ID Error Handling", False, f"Expected 404 status code for non-existent campaign ID, got {response.status_code}", response)
-    
-    # Test with non-existent client ID
-    non_existent_client_id = "non-existent-client-id"
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/clients/{non_existent_client_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 404:
-        log_test("Non-existent Client ID Error Handling", True, "Correctly returned 404 for non-existent client ID", response)
-    else:
-        log_test("Non-existent Client ID Error Handling", False, f"Expected 404 status code for non-existent client ID, got {response.status_code}", response)
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
+        print_test_result("Get Expense Statistics by Category", response)
 
-def test_campaign_services_workflow():
-    """Test the Campaign Services workflow"""
-    print("\n=== TESTING CAMPAIGN SERVICES WORKFLOW ===\n")
+def cleanup():
+    """Clean up created test data"""
+    print("\n=== Cleaning up test data ===")
     
-    # Step 1: Get admin token
-    print("1. Getting admin authentication token...")
-    admin_token = get_token()
-    if not admin_token:
-        log_test("Admin Authentication", False, "Failed to get admin authentication token")
-        return
-    
-    admin_headers = {
-        "Authorization": f"Bearer {admin_token}",
-        "Content-Type": "application/json"
-    }
-    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
-    
-    # Step 2: Get all campaigns
-    print("\n2. Getting all campaigns...")
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get All Campaigns", False, f"Failed to get all campaigns: {response.text}", response)
-        return
-    
-    campaigns = response.json()
-    log_test("Get All Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
-    
-    if not campaigns:
-        log_test("Available Campaigns", False, "No campaigns found in the database", None)
-        return
-    
-    print("Available campaigns:")
-    for c in campaigns:
-        print(f"- ID: {c.get('id')}, Name: {c.get('name')}")
-    
-    # Step 3: Test GET /api/campaigns/{campaign_id} for a specific campaign
-    # Use the first campaign from the list or the specified one if it exists
-    campaign_id = next((c["id"] for c in campaigns if c["id"] == "0a78e48d-a54a-44d3-a7d0-7cc83b2d3e1c"), campaigns[0]["id"])
-    print(f"\n3. Testing GET /api/campaigns/{campaign_id}...")
-    
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
-        return
-    
-    campaign = response.json()
-    log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
-    
-    # Step 4: Test GET /api/campaigns/{campaign_id}/services/ to get services
-    print(f"\n4. Testing GET /api/campaigns/{campaign_id}/services/...")
-    
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
-        return
-    
-    services = response.json()
-    log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
-    
-    if not services:
-        log_test("Campaign Services", False, "No services found for this campaign", None)
-        return
-    
-    print("Available services:")
-    for s in services:
-        print(f"- ID: {s.get('id')}, Name: {s.get('name')}")
-    
-    # Check if the campaign has the expected services
-    expected_services = ["Thiết kế UI/UX", "Phát triển Frontend", "Tạo nội dung"]
-    found_services = [service["name"] for service in services]
-    
-    if all(service in found_services for service in expected_services):
-        log_test("Campaign Services Verification", True, f"Campaign has all expected services: {expected_services}", None)
-    else:
-        log_test("Campaign Services Verification", False, f"Campaign is missing some expected services. Found: {found_services}, Expected: {expected_services}", None)
-    
-    # Step 5: Test GET /api/services/{service_id}/tasks/ for each service to get tasks
-    print("\n5. Testing GET /api/services/{service_id}/tasks/ for each service...")
-    
-    for service in services:
-        service_id = service["id"]
-        service_name = service["name"]
-        
-        print(f"   Testing tasks for service: {service_name} (ID: {service_id})...")
-        
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
-            headers=admin_headers
+    # Delete expenses
+    for expense_id in created_expense_ids:
+        requests.delete(
+            f"{BACKEND_URL}/expenses/{expense_id}",
+            headers=get_headers()
         )
-        
-        if response.status_code != 200:
-            log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
-            continue
-        
-        tasks = response.json()
-        log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
-        
-        # Verify tasks have different statuses
-        if tasks:
-            statuses = set(task["status"] for task in tasks)
-            log_test(f"Task Statuses for Service '{service_name}'", True, f"Tasks have {len(statuses)} different statuses: {statuses}", None)
-        else:
-            log_test(f"Task Statuses for Service '{service_name}'", False, "No tasks found for this service", None)
     
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
+    print(f"Deleted {len(created_expense_ids)} expenses")
     
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
+    # Delete categories and folders
+    # Note: We can only delete categories and folders that don't have expenses
+    # So we need to delete all expenses first
+    
+    for category_id in created_category_ids:
+        requests.delete(
+            f"{BACKEND_URL}/expense-categories/{category_id}",
+            headers=get_headers()
+        )
+    
+    print(f"Deleted {len(created_category_ids)} categories")
+    
+    for folder_id in created_folder_ids:
+        requests.delete(
+            f"{BACKEND_URL}/expense-folders/{folder_id}",
+            headers=get_headers()
+        )
+    
+    print(f"Deleted {len(created_folder_ids)} folders")
 
-def test_project_campaign_integration():
-    """Test the integration between projects and campaigns"""
-    print("\n=== TESTING PROJECT-CAMPAIGN INTEGRATION ===\n")
+def main():
+    """Main test function"""
+    print("=== Starting Expense Management System API Tests ===")
     
-    # Step 1: Get admin token
-    print("1. Getting admin authentication token...")
-    admin_token = get_token()
-    if not admin_token:
-        log_test("Admin Authentication", False, "Failed to get admin authentication token")
+    # Get authentication token
+    if not get_token():
+        print("Failed to authenticate. Exiting tests.")
         return
     
-    admin_headers = {
-        "Authorization": f"Bearer {admin_token}",
-        "Content-Type": "application/json"
-    }
-    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
+    # Run tests
+    category_ids = test_expense_categories()
+    folder_ids = test_expense_folders()
+    expense_ids = test_expenses(category_ids, folder_ids)
+    test_expense_statistics()
     
-    # Step 2: Get all projects
-    print("\n2. Getting all projects...")
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers
-    )
+    # Clean up
+    cleanup()
     
-    if response.status_code != 200:
-        log_test("Get All Projects", False, f"Failed to get all projects: {response.text}", response)
-        return
-    
-    projects = response.json()
-    log_test("Get All Projects", True, f"Successfully retrieved {len(projects)} projects", response)
-    
-    # Step 3: Get all campaigns
-    print("\n3. Getting all campaigns...")
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get All Campaigns", False, f"Failed to get all campaigns: {response.text}", response)
-        return
-    
-    campaigns = response.json()
-    log_test("Get All Campaigns", True, f"Successfully retrieved {len(campaigns)} campaigns", response)
-    
-    # Step 4: Update a project to associate it with a campaign
-    if projects and campaigns:
-        project_to_update = projects[0]
-        campaign_to_link = campaigns[0]
-        
-        print(f"\n4. Updating project '{project_to_update['name']}' to link with campaign '{campaign_to_link['name']}'...")
-        
-        # Create update data
-        update_data = {
-            "campaign_id": campaign_to_link["id"],
-            # Include all required fields for PUT
-            "name": project_to_update["name"],
-            "client_id": project_to_update["client_id"],
-            "description": project_to_update.get("description", ""),
-            "start_date": project_to_update.get("start_date", ""),
-            "end_date": project_to_update.get("end_date", ""),
-            "status": project_to_update.get("status", "active"),
-            "manager_ids": project_to_update.get("manager_ids", []),
-            "account_ids": project_to_update.get("account_ids", []),
-            "content_ids": project_to_update.get("content_ids", []),
-            "design_ids": project_to_update.get("design_ids", []),
-            "editor_ids": project_to_update.get("editor_ids", []),
-            "sale_ids": project_to_update.get("sale_ids", [])
-        }
-        
-        response = requests.put(
-            f"{BASE_URL}{API_PREFIX}/projects/{project_to_update['id']}",
-            headers=admin_headers,
-            json=update_data
-        )
-        
-        if response.status_code != 200:
-            log_test("Update Project with Campaign", False, f"Failed to update project: {response.text}", response)
-        else:
-            updated_project = response.json()
-            log_test("Update Project with Campaign", True, f"Successfully updated project with campaign_id: {updated_project.get('campaign_id')}", response)
-            
-            # Step 5: Verify the project has been updated with the campaign ID
-            print(f"\n5. Verifying project has been updated with campaign ID...")
-            
-            response = requests.get(
-                f"{BASE_URL}{API_PREFIX}/projects/{project_to_update['id']}",
-                headers=admin_headers
-            )
-            
-            if response.status_code != 200:
-                log_test("Verify Project Update", False, f"Failed to get updated project: {response.text}", response)
-            else:
-                verified_project = response.json()
-                if verified_project.get("campaign_id") == campaign_to_link["id"]:
-                    log_test("Verify Project Update", True, f"Project successfully updated with campaign_id: {verified_project.get('campaign_id')}", response)
-                else:
-                    log_test("Verify Project Update", False, f"Project not updated correctly. Expected campaign_id: {campaign_to_link['id']}, got: {verified_project.get('campaign_id')}", response)
-            
-            # Step 6: Test the complete project detail workflow with the updated project
-            print(f"\n6. Testing complete project detail workflow with updated project...")
-            
-            # Get project details
-            project_id = project_to_update["id"]
-            response = requests.get(
-                f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
-                headers=admin_headers
-            )
-            
-            if response.status_code != 200:
-                log_test("Get Project Details", False, f"Failed to get project details: {response.text}", response)
-                return
-            
-            project = response.json()
-            log_test("Get Project Details", True, f"Successfully retrieved project: {project['name']}", response)
-            
-            # Get associated campaign
-            campaign_id = project.get("campaign_id")
-            if not campaign_id:
-                log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
-            else:
-                response = requests.get(
-                    f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
-                    headers=admin_headers
-                )
-                
-                if response.status_code != 200:
-                    log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
-                else:
-                    campaign = response.json()
-                    log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
-                    
-                    # Get campaign services
-                    response = requests.get(
-                        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
-                        headers=admin_headers
-                    )
-                    
-                    if response.status_code != 200:
-                        log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
-                    else:
-                        services = response.json()
-                        log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
-                        
-                        # Get tasks for each service
-                        for service in services:
-                            service_id = service["id"]
-                            service_name = service["name"]
-                            
-                            response = requests.get(
-                                f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
-                                headers=admin_headers
-                            )
-                            
-                            if response.status_code != 200:
-                                log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
-                            else:
-                                tasks = response.json()
-                                log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
-    else:
-        log_test("Project-Campaign Integration", False, "Not enough projects or campaigns to test integration", None)
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
-
-def test_comprehensive_project_detail():
-    """Test all aspects of the Project Detail functionality"""
-    print("\n=== COMPREHENSIVE PROJECT DETAIL TESTING ===\n")
-    
-    # Step 1: Get admin token
-    print("1. Getting admin authentication token...")
-    admin_token = get_token()
-    if not admin_token:
-        log_test("Admin Authentication", False, "Failed to get admin authentication token")
-        return
-    
-    admin_headers = {
-        "Authorization": f"Bearer {admin_token}",
-        "Content-Type": "application/json"
-    }
-    log_test("Admin Authentication", True, "Successfully obtained admin authentication token")
-    
-    # Step 2: Get all projects
-    print("\n2. Getting all projects...")
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get All Projects", False, f"Failed to get all projects: {response.text}", response)
-        return
-    
-    projects = response.json()
-    log_test("Get All Projects", True, f"Successfully retrieved {len(projects)} projects", response)
-    
-    if not projects:
-        log_test("Available Projects", False, "No projects found in the database", None)
-        return
-    
-    # Get the project that has a campaign_id (we updated one in the previous test)
-    project_with_campaign = next((p for p in projects if p.get("campaign_id")), None)
-    
-    if not project_with_campaign:
-        log_test("Project with Campaign", False, "No project with campaign_id found", None)
-        return
-    
-    project_id = project_with_campaign["id"]
-    print(f"\n3. Testing project detail workflow for project '{project_with_campaign['name']}' (ID: {project_id})...")
-    
-    # Step 3: Get project details
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/{project_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get Project Details", False, f"Failed to get project details: {response.text}", response)
-        return
-    
-    project = response.json()
-    log_test("Get Project Details", True, f"Successfully retrieved project: {project['name']}", response)
-    
-    # Step 4: Get client details
-    client_id = project.get("client_id")
-    if not client_id:
-        log_test("Project Client ID", False, "Project does not have a client_id", None)
-    else:
-        print(f"\n4. Getting client details for client ID: {client_id}...")
-        
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/clients/{client_id}",
-            headers=admin_headers
-        )
-        
-        if response.status_code != 200:
-            log_test("Get Client Details", False, f"Failed to get client details: {response.text}", response)
-        else:
-            client = response.json()
-            log_test("Get Client Details", True, f"Successfully retrieved client: {client['name']}", response)
-    
-    # Step 5: Get campaign details
-    campaign_id = project.get("campaign_id")
-    if not campaign_id:
-        log_test("Project Campaign ID", False, "Project does not have a campaign_id", None)
-        return
-    
-    print(f"\n5. Getting campaign details for campaign ID: {campaign_id}...")
-    
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get Campaign Details", False, f"Failed to get campaign details: {response.text}", response)
-        return
-    
-    campaign = response.json()
-    log_test("Get Campaign Details", True, f"Successfully retrieved campaign: {campaign['name']}", response)
-    
-    # Step 6: Get campaign services
-    print(f"\n6. Getting services for campaign ID: {campaign_id}...")
-    
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{campaign_id}/services/",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get Campaign Services", False, f"Failed to get campaign services: {response.text}", response)
-        return
-    
-    services = response.json()
-    log_test("Get Campaign Services", True, f"Successfully retrieved {len(services)} services", response)
-    
-    # Verify campaign has the expected services
-    expected_services = ["Thiết kế UI/UX", "Phát triển Frontend", "Tạo nội dung"]
-    found_services = [service["name"] for service in services]
-    
-    if all(service in found_services for service in expected_services):
-        log_test("Campaign Services Verification", True, f"Campaign has all expected services: {expected_services}", None)
-    else:
-        log_test("Campaign Services Verification", False, f"Campaign is missing some expected services. Found: {found_services}, Expected: {expected_services}", None)
-    
-    # Step 7: Get tasks for each service
-    print("\n7. Getting tasks for each service...")
-    
-    all_tasks = []
-    for service in services:
-        service_id = service["id"]
-        service_name = service["name"]
-        
-        print(f"   Getting tasks for service: {service_name} (ID: {service_id})...")
-        
-        response = requests.get(
-            f"{BASE_URL}{API_PREFIX}/services/{service_id}/tasks/",
-            headers=admin_headers
-        )
-        
-        if response.status_code != 200:
-            log_test(f"Get Tasks for Service '{service_name}'", False, f"Failed to get tasks: {response.text}", response)
-            continue
-        
-        tasks = response.json()
-        log_test(f"Get Tasks for Service '{service_name}'", True, f"Successfully retrieved {len(tasks)} tasks", response)
-        
-        # Verify tasks have different statuses
-        if tasks:
-            statuses = set(task["status"] for task in tasks)
-            log_test(f"Task Statuses for Service '{service_name}'", True, f"Tasks have {len(statuses)} different statuses: {statuses}", None)
-            all_tasks.extend(tasks)
-        else:
-            log_test(f"Task Statuses for Service '{service_name}'", False, "No tasks found for this service", None)
-    
-    # Step 8: Get documents filtered by project name
-    print("\n8. Getting documents filtered by project name...")
-    
-    project_name = project["name"]
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/documents/?search={project_name}",
-        headers=admin_headers
-    )
-    
-    if response.status_code != 200:
-        log_test("Get Documents by Project Name", False, f"Failed to get documents: {response.text}", response)
-    else:
-        documents = response.json()
-        log_test("Get Documents by Project Name", True, f"Successfully retrieved {len(documents)} documents related to project '{project_name}'", response)
-    
-    # Step 9: Test error handling - Invalid project ID
-    print("\n9. Testing error handling - Invalid project ID...")
-    
-    invalid_project_id = "invalid-project-id"
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/projects/{invalid_project_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 404:
-        log_test("Invalid Project ID Error Handling", True, "Correctly returned 404 for invalid project ID", response)
-    else:
-        log_test("Invalid Project ID Error Handling", False, f"Expected 404 status code for invalid project ID, got {response.status_code}", response)
-    
-    # Step 10: Test error handling - Invalid campaign ID
-    print("\n10. Testing error handling - Invalid campaign ID...")
-    
-    invalid_campaign_id = "invalid-campaign-id"
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/campaigns/{invalid_campaign_id}",
-        headers=admin_headers
-    )
-    
-    if response.status_code == 404:
-        log_test("Invalid Campaign ID Error Handling", True, "Correctly returned 404 for invalid campaign ID", response)
-    else:
-        log_test("Invalid Campaign ID Error Handling", False, f"Expected 404 status code for invalid campaign ID, got {response.status_code}", response)
-    
-    # Step 11: Test error handling - Invalid service ID
-    print("\n11. Testing error handling - Invalid service ID...")
-    
-    invalid_service_id = "invalid-service-id"
-    response = requests.get(
-        f"{BASE_URL}{API_PREFIX}/services/{invalid_service_id}/tasks/",
-        headers=admin_headers
-    )
-    
-    print(f"Response status code: {response.status_code}")
-    print(f"Response body: {response.text}")
-    
-    if response.status_code == 404 or (response.status_code == 200 and response.json() == []):
-        log_test("Invalid Service ID Error Handling", True, "Correctly handled invalid service ID", response)
-    else:
-        log_test("Invalid Service ID Error Handling", False, f"Expected 404 status code or empty array for invalid service ID, got {response.status_code}", response)
-    
-    # Print summary
-    print("\n=== Test Summary ===")
-    print(f"Total tests: {test_results['success'] + test_results['failure']}")
-    print(f"Passed: {test_results['success']}")
-    print(f"Failed: {test_results['failure']}")
-    
-    if test_results['failure'] == 0:
-        print("\n✅ All tests passed successfully!")
-    else:
-        print("\n❌ Some tests failed. Check the logs above for details.")
+    print("\n=== All tests completed ===")
 
 if __name__ == "__main__":
-    # Reset test results
-    test_results = {
-        "success": 0,
-        "failure": 0,
-        "tests": []
-    }
-    
-    # Run the tests
-    # test_task_creation()
-    # test_bulk_delete_tasks()
-    # test_template_api()
-    # test_project_management_changes()
-    # test_project_detail_workflow()
-    # test_campaign_services_workflow()
-    # test_project_campaign_integration()
-    test_comprehensive_project_detail()
+    main()
