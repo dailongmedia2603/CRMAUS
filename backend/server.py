@@ -1862,6 +1862,494 @@ async def copy_task(
     
     return {"detail": f"{quantity} tasks copied successfully", "copied_tasks": [Task(**task) for task in copied_tasks]}
 
+# ================== EXPENSE MANAGEMENT ENDPOINTS ==================
+
+# Expense Categories endpoints
+@api_router.post("/expense-categories/", response_model=ExpenseCategory)
+async def create_expense_category(
+    category: ExpenseCategoryCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo hạng mục chi phí mới"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    category_data = category.dict()
+    category_obj = ExpenseCategory(**category_data, created_by=current_user.id)
+    await db.expense_categories.insert_one(category_obj.dict())
+    return category_obj
+
+@api_router.get("/expense-categories/", response_model=List[ExpenseCategory])
+async def get_expense_categories(
+    is_active: Optional[bool] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách hạng mục chi phí"""
+    query_filter = {}
+    if is_active is not None:
+        query_filter["is_active"] = is_active
+    
+    categories = await db.expense_categories.find(query_filter).sort("name", 1).to_list(length=None)
+    return [ExpenseCategory(**cat) for cat in categories]
+
+@api_router.put("/expense-categories/{category_id}", response_model=ExpenseCategory)
+async def update_expense_category(
+    category_id: str,
+    category_update: ExpenseCategoryUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật hạng mục chi phí"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    existing_category = await db.expense_categories.find_one({"id": category_id})
+    if not existing_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    update_data = {k: v for k, v in category_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.expense_categories.update_one({"id": category_id}, {"$set": update_data})
+    
+    updated_category = await db.expense_categories.find_one({"id": category_id})
+    return ExpenseCategory(**updated_category)
+
+@api_router.delete("/expense-categories/{category_id}")
+async def delete_expense_category(
+    category_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa hạng mục chi phí"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Check if category is being used by any expenses
+    expense_count = await db.expenses.count_documents({"category_id": category_id})
+    if expense_count > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete category that has expenses")
+    
+    result = await db.expense_categories.delete_one({"id": category_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    return {"detail": "Category deleted successfully"}
+
+# Expense Folders endpoints
+@api_router.post("/expense-folders/", response_model=ExpenseFolder)
+async def create_expense_folder(
+    folder: ExpenseFolderCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo thư mục chi phí mới"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    folder_data = folder.dict()
+    folder_obj = ExpenseFolder(**folder_data, created_by=current_user.id)
+    await db.expense_folders.insert_one(folder_obj.dict())
+    return folder_obj
+
+@api_router.get("/expense-folders/", response_model=List[ExpenseFolder])
+async def get_expense_folders(
+    is_active: Optional[bool] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách thư mục chi phí"""
+    query_filter = {}
+    if is_active is not None:
+        query_filter["is_active"] = is_active
+    
+    folders = await db.expense_folders.find(query_filter).sort("name", 1).to_list(length=None)
+    return [ExpenseFolder(**folder) for folder in folders]
+
+@api_router.put("/expense-folders/{folder_id}", response_model=ExpenseFolder)
+async def update_expense_folder(
+    folder_id: str,
+    folder_update: ExpenseFolderUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật thư mục chi phí"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    existing_folder = await db.expense_folders.find_one({"id": folder_id})
+    if not existing_folder:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    update_data = {k: v for k, v in folder_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.expense_folders.update_one({"id": folder_id}, {"$set": update_data})
+    
+    updated_folder = await db.expense_folders.find_one({"id": folder_id})
+    return ExpenseFolder(**updated_folder)
+
+@api_router.delete("/expense-folders/{folder_id}")
+async def delete_expense_folder(
+    folder_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa thư mục chi phí"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Check if folder is being used by any expenses
+    expense_count = await db.expenses.count_documents({"folder_id": folder_id})
+    if expense_count > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete folder that has expenses")
+    
+    result = await db.expense_folders.delete_one({"id": folder_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    
+    return {"detail": "Folder deleted successfully"}
+
+# Expenses endpoints
+@api_router.post("/expenses/", response_model=Expense)
+async def create_expense(
+    expense: ExpenseCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo chi phí mới"""
+    # Verify category exists
+    category = await db.expense_categories.find_one({"id": expense.category_id})
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Verify folder exists (if provided)
+    if expense.folder_id:
+        folder = await db.expense_folders.find_one({"id": expense.folder_id})
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+    
+    # Verify project exists (if provided)
+    if expense.project_id:
+        project = await db.projects.find_one({"id": expense.project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify client exists (if provided)
+    if expense.client_id:
+        client = await db.clients.find_one({"id": expense.client_id})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Generate expense number
+    expense_count = await db.expenses.count_documents({})
+    expense_number = f"EXP-{datetime.utcnow().strftime('%Y%m')}-{expense_count + 1:04d}"
+    
+    expense_data = expense.dict()
+    expense_obj = Expense(**expense_data, expense_number=expense_number, created_by=current_user.id)
+    await db.expenses.insert_one(expense_obj.dict())
+    
+    # Enrich with related data
+    expense_dict = expense_obj.dict()
+    expense_dict["category_name"] = category.get("name")
+    if expense.folder_id and folder:
+        expense_dict["folder_name"] = folder.get("name")
+    if expense.project_id and project:
+        expense_dict["project_name"] = project.get("name")
+    if expense.client_id and client:
+        expense_dict["client_name"] = client.get("name")
+    expense_dict["created_by_name"] = current_user.full_name
+    
+    return Expense(**expense_dict)
+
+@api_router.get("/expenses/", response_model=List[Expense])
+async def get_expenses(
+    skip: int = 0,
+    limit: int = 100,
+    category_id: Optional[str] = None,
+    folder_id: Optional[str] = None,
+    project_id: Optional[str] = None,
+    client_id: Optional[str] = None,
+    status: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    search: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách chi phí với filters"""
+    query_filter = {}
+    
+    # Apply filters
+    if category_id:
+        query_filter["category_id"] = category_id
+    if folder_id:
+        query_filter["folder_id"] = folder_id
+    if project_id:
+        query_filter["project_id"] = project_id
+    if client_id:
+        query_filter["client_id"] = client_id
+    if status:
+        query_filter["status"] = status
+    if payment_method:
+        query_filter["payment_method"] = payment_method
+    
+    # Date range filter
+    if start_date or end_date:
+        date_filter = {}
+        if start_date:
+            date_filter["$gte"] = start_date
+        if end_date:
+            date_filter["$lte"] = end_date
+        query_filter["expense_date"] = date_filter
+    
+    # Search filter
+    if search:
+        search_conditions = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"vendor": {"$regex": search, "$options": "i"}},
+            {"expense_number": {"$regex": search, "$options": "i"}}
+        ]
+        query_filter["$or"] = search_conditions
+    
+    expenses = await db.expenses.find(query_filter).sort("expense_date", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich with related data
+    for expense in expenses:
+        if expense.get("category_id"):
+            category = await db.expense_categories.find_one({"id": expense["category_id"]})
+            expense["category_name"] = category.get("name") if category else "Unknown"
+        
+        if expense.get("folder_id"):
+            folder = await db.expense_folders.find_one({"id": expense["folder_id"]})
+            expense["folder_name"] = folder.get("name") if folder else "Unknown"
+        
+        if expense.get("project_id"):
+            project = await db.projects.find_one({"id": expense["project_id"]})
+            expense["project_name"] = project.get("name") if project else "Unknown"
+        
+        if expense.get("client_id"):
+            client = await db.clients.find_one({"id": expense["client_id"]})
+            expense["client_name"] = client.get("name") if client else "Unknown"
+        
+        if expense.get("created_by"):
+            user = await db.users.find_one({"id": expense["created_by"]})
+            expense["created_by_name"] = user.get("full_name") if user else "Unknown"
+    
+    return [Expense(**expense) for expense in expenses]
+
+@api_router.get("/expenses/{expense_id}", response_model=Expense)
+async def get_expense(
+    expense_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy thông tin chi tiết một chi phí"""
+    expense = await db.expenses.find_one({"id": expense_id})
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    # Enrich with related data
+    if expense.get("category_id"):
+        category = await db.expense_categories.find_one({"id": expense["category_id"]})
+        expense["category_name"] = category.get("name") if category else "Unknown"
+    
+    if expense.get("folder_id"):
+        folder = await db.expense_folders.find_one({"id": expense["folder_id"]})
+        expense["folder_name"] = folder.get("name") if folder else "Unknown"
+    
+    if expense.get("project_id"):
+        project = await db.projects.find_one({"id": expense["project_id"]})
+        expense["project_name"] = project.get("name") if project else "Unknown"
+    
+    if expense.get("client_id"):
+        client = await db.clients.find_one({"id": expense["client_id"]})
+        expense["client_name"] = client.get("name") if client else "Unknown"
+    
+    if expense.get("created_by"):
+        user = await db.users.find_one({"id": expense["created_by"]})
+        expense["created_by_name"] = user.get("full_name") if user else "Unknown"
+    
+    return Expense(**expense)
+
+@api_router.put("/expenses/{expense_id}", response_model=Expense)
+async def update_expense(
+    expense_id: str,
+    expense_update: ExpenseUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật chi phí"""
+    existing_expense = await db.expenses.find_one({"id": expense_id})
+    if not existing_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    # Verify category exists (if being updated)
+    if expense_update.category_id:
+        category = await db.expense_categories.find_one({"id": expense_update.category_id})
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Verify folder exists (if being updated)
+    if expense_update.folder_id:
+        folder = await db.expense_folders.find_one({"id": expense_update.folder_id})
+        if not folder:
+            raise HTTPException(status_code=404, detail="Folder not found")
+    
+    # Verify project exists (if being updated)
+    if expense_update.project_id:
+        project = await db.projects.find_one({"id": expense_update.project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify client exists (if being updated)
+    if expense_update.client_id:
+        client = await db.clients.find_one({"id": expense_update.client_id})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+    
+    update_data = {k: v for k, v in expense_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.expenses.update_one({"id": expense_id}, {"$set": update_data})
+    
+    # Get updated expense with enriched data
+    updated_expense = await get_expense(expense_id, current_user)
+    return updated_expense
+
+@api_router.delete("/expenses/{expense_id}")
+async def delete_expense(
+    expense_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa chi phí"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.expenses.delete_one({"id": expense_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    return {"detail": "Expense deleted successfully"}
+
+# Expense bulk operations
+@api_router.post("/expenses/bulk-delete")
+async def bulk_delete_expenses(
+    expense_ids: List[str],
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa nhiều chi phí cùng lúc"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.expenses.delete_many({"id": {"$in": expense_ids}})
+    return {"detail": f"{result.deleted_count} expenses deleted"}
+
+@api_router.post("/expenses/bulk-update-status")
+async def bulk_update_expense_status(
+    expense_ids: List[str],
+    status: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật trạng thái nhiều chi phí cùng lúc"""
+    if status not in ["pending", "approved", "rejected", "paid"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    result = await db.expenses.update_many(
+        {"id": {"$in": expense_ids}},
+        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": f"{result.modified_count} expenses updated"}
+
+# Expense Statistics and Dashboard
+@api_router.get("/expenses/statistics")
+async def get_expense_statistics(
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    category_id: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy thống kê chi phí"""
+    # Build time filter
+    time_filter = {}
+    if year:
+        start_date = datetime(year, 1, 1)
+        if quarter:
+            quarter_months = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
+            start_month, end_month = quarter_months[quarter]
+            start_date = datetime(year, start_month, 1)
+            end_date = datetime(year, end_month + 1, 1) if end_month < 12 else datetime(year + 1, 1, 1)
+        elif month:
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year + 1, 1, 1)
+        
+        time_filter["expense_date"] = {"$gte": start_date, "$lt": end_date}
+    
+    # Build base filter
+    base_filter = time_filter.copy()
+    if category_id:
+        base_filter["category_id"] = category_id
+    
+    # Get statistics
+    total_expenses = await db.expenses.count_documents(base_filter)
+    
+    # Amount by status
+    pending_amount = sum([exp["amount"] for exp in await db.expenses.find({**base_filter, "status": "pending"}).to_list(length=1000)])
+    approved_amount = sum([exp["amount"] for exp in await db.expenses.find({**base_filter, "status": "approved"}).to_list(length=1000)])
+    paid_amount = sum([exp["amount"] for exp in await db.expenses.find({**base_filter, "status": "paid"}).to_list(length=1000)])
+    
+    # Count by status
+    pending_count = await db.expenses.count_documents({**base_filter, "status": "pending"})
+    approved_count = await db.expenses.count_documents({**base_filter, "status": "approved"})
+    paid_count = await db.expenses.count_documents({**base_filter, "status": "paid"})
+    
+    # Expenses by category
+    pipeline = [
+        {"$match": base_filter},
+        {"$group": {
+            "_id": "$category_id",
+            "total_amount": {"$sum": "$amount"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    
+    category_stats = await db.expenses.aggregate(pipeline).to_list(length=None)
+    
+    # Enrich category stats with names
+    for stat in category_stats:
+        category = await db.expense_categories.find_one({"id": stat["_id"]})
+        stat["category_name"] = category.get("name") if category else "Unknown"
+    
+    # Monthly trends (if no specific month filter)
+    monthly_trends = []
+    if not month and year:
+        for m in range(1, 13):
+            month_start = datetime(year, m, 1)
+            month_end = datetime(year, m + 1, 1) if m < 12 else datetime(year + 1, 1, 1)
+            month_filter = {**base_filter, "expense_date": {"$gte": month_start, "$lt": month_end}}
+            
+            month_total = sum([exp["amount"] for exp in await db.expenses.find(month_filter).to_list(length=1000)])
+            month_count = await db.expenses.count_documents(month_filter)
+            
+            monthly_trends.append({
+                "month": m,
+                "total_amount": month_total,
+                "count": month_count
+            })
+    
+    return {
+        "total_expenses": total_expenses,
+        "amounts": {
+            "pending": pending_amount,
+            "approved": approved_amount,
+            "paid": paid_amount,
+            "total": pending_amount + approved_amount + paid_amount
+        },
+        "counts": {
+            "pending": pending_count,
+            "approved": approved_count,
+            "paid": paid_count
+        },
+        "by_category": category_stats,
+        "monthly_trends": monthly_trends
+    }
+
 # ================== TEMPLATE ENDPOINTS ==================
 
 @api_router.post("/templates/", response_model=Template)
