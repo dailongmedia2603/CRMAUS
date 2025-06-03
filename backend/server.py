@@ -350,6 +350,105 @@ class Template(TemplateBase):
     created_by: Optional[str] = None
     creator_name: Optional[str] = None
 
+# ================= EXPENSE MANAGEMENT MODELS =================
+
+# Expense Category Models
+class ExpenseCategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: str = "#3B82F6"  # Default blue color
+    is_active: bool = True
+
+class ExpenseCategoryCreate(ExpenseCategoryBase):
+    pass
+
+class ExpenseCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class ExpenseCategory(ExpenseCategoryBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
+# Expense Folder Models (for organizing expenses)
+class ExpenseFolderBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: str = "#10B981"  # Default green color
+    is_active: bool = True
+
+class ExpenseFolderCreate(ExpenseFolderBase):
+    pass
+
+class ExpenseFolderUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class ExpenseFolder(ExpenseFolderBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+
+# Expense Models
+class ExpenseBase(BaseModel):
+    title: str
+    amount: float
+    category_id: str
+    folder_id: Optional[str] = None
+    project_id: Optional[str] = None  # Link to project if applicable
+    client_id: Optional[str] = None   # Link to client if applicable
+    expense_date: datetime
+    description: Optional[str] = None
+    receipt_url: Optional[str] = None  # Receipt/invoice image
+    vendor: Optional[str] = None       # Vendor/supplier name
+    payment_method: str = "cash"       # cash, credit_card, bank_transfer, check
+    status: str = "pending"           # pending, approved, rejected, paid
+    tags: List[str] = []
+    is_recurring: bool = False
+    recurring_frequency: Optional[str] = None  # weekly, monthly, quarterly, yearly
+    recurring_end_date: Optional[datetime] = None
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+class ExpenseUpdate(BaseModel):
+    title: Optional[str] = None
+    amount: Optional[float] = None
+    category_id: Optional[str] = None
+    folder_id: Optional[str] = None
+    project_id: Optional[str] = None
+    client_id: Optional[str] = None
+    expense_date: Optional[datetime] = None
+    description: Optional[str] = None
+    receipt_url: Optional[str] = None
+    vendor: Optional[str] = None
+    payment_method: Optional[str] = None
+    status: Optional[str] = None
+    tags: Optional[List[str]] = None
+    is_recurring: Optional[bool] = None
+    recurring_frequency: Optional[str] = None
+    recurring_end_date: Optional[datetime] = None
+
+class Expense(ExpenseBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    expense_number: str  # Auto-generated unique number
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    # Enriched fields
+    category_name: Optional[str] = None
+    folder_name: Optional[str] = None
+    project_name: Optional[str] = None
+    client_name: Optional[str] = None
+    created_by_name: Optional[str] = None
+
 # Hàm tiện ích
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
