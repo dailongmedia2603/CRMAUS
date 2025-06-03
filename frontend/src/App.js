@@ -6771,4 +6771,643 @@ const Settings = () => {
   return <div>Cài đặt hệ thống (đang phát triển)</div>;
 };
 
+// Tab 3: Cấu hình hạng mục và thư mục
+const ExpenseConfig = () => {
+  const [activeConfigTab, setActiveConfigTab] = useState('categories'); // categories, folders
+  
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Cấu hình hạng mục và thư mục</h3>
+      
+      {/* Sub-tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveConfigTab('categories')}
+            className={`${
+              activeConfigTab === 'categories'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Hạng mục chi phí
+          </button>
+          <button
+            onClick={() => setActiveConfigTab('folders')}
+            className={`${
+              activeConfigTab === 'folders'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Thư mục
+          </button>
+        </nav>
+      </div>
+
+      {/* Sub-tab Content */}
+      {activeConfigTab === 'categories' && <ExpenseCategoryManager />}
+      {activeConfigTab === 'folders' && <ExpenseFolderManager />}
+    </div>
+  );
+};
+
+// Component quản lý hạng mục chi phí
+const ExpenseCategoryManager = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    color: '#3B82F6',
+    is_active: true
+  });
+
+  const colorOptions = [
+    { value: '#3B82F6', label: 'Xanh dương', class: 'bg-blue-500' },
+    { value: '#10B981', label: 'Xanh lá', class: 'bg-green-500' },
+    { value: '#F59E0B', label: 'Vàng', class: 'bg-yellow-500' },
+    { value: '#EF4444', label: 'Đỏ', class: 'bg-red-500' },
+    { value: '#8B5CF6', label: 'Tím', class: 'bg-purple-500' },
+    { value: '#F97316', label: 'Cam', class: 'bg-orange-500' },
+    { value: '#06B6D4', label: 'Cyan', class: 'bg-cyan-500' },
+    { value: '#84CC16', label: 'Lime', class: 'bg-lime-500' }
+  ];
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/expense-categories/`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Không thể tải danh sách hạng mục');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (isEditing) {
+        await axios.put(`${API}/expense-categories/${currentCategory.id}`, formData);
+        toast.success('Cập nhật hạng mục thành công!');
+      } else {
+        await axios.post(`${API}/expense-categories/`, formData);
+        toast.success('Thêm hạng mục thành công!');
+      }
+      setIsModalOpen(false);
+      resetForm();
+      fetchCategories();
+    } catch (error) {
+      console.error('Error saving category:', error);
+      toast.error(isEditing ? 'Không thể cập nhật hạng mục' : 'Không thể tạo hạng mục mới');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      color: '#3B82F6',
+      is_active: true
+    });
+    setIsEditing(false);
+    setCurrentCategory(null);
+  };
+
+  const handleEdit = (category) => {
+    setCurrentCategory(category);
+    setFormData({
+      name: category.name,
+      description: category.description || '',
+      color: category.color,
+      is_active: category.is_active
+    });
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (categoryId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa hạng mục này? Hành động này không thể hoàn tác.')) {
+      try {
+        await axios.delete(`${API}/expense-categories/${categoryId}`);
+        toast.success('Xóa hạng mục thành công!');
+        fetchCategories();
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        if (error.response?.status === 400) {
+          toast.error('Không thể xóa hạng mục đã có chi phí');
+        } else {
+          toast.error('Không thể xóa hạng mục');
+        }
+      }
+    }
+  };
+
+  const toggleStatus = async (category) => {
+    try {
+      await axios.put(`${API}/expense-categories/${category.id}`, {
+        ...category,
+        is_active: !category.is_active
+      });
+      toast.success('Cập nhật trạng thái thành công!');
+      fetchCategories();
+    } catch (error) {
+      console.error('Error updating category status:', error);
+      toast.error('Không thể cập nhật trạng thái');
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải danh sách hạng mục...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h4 className="text-md font-medium">Quản lý hạng mục chi phí</h4>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+        >
+          Thêm hạng mục
+        </button>
+      </div>
+
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {categories.map((category) => (
+          <div key={category.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: category.color }}
+                ></div>
+                <div>
+                  <h5 className="font-medium text-gray-900">{category.name}</h5>
+                  {category.description && (
+                    <p className="text-sm text-gray-500 mt-1">{category.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  category.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {category.is_active ? 'Hoạt động' : 'Tạm dừng'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end space-x-2">
+              <button
+                onClick={() => toggleStatus(category)}
+                className={`text-xs px-3 py-1 rounded ${
+                  category.is_active 
+                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+              >
+                {category.is_active ? 'Tạm dừng' : 'Kích hoạt'}
+              </button>
+              <button
+                onClick={() => handleEdit(category)}
+                className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+              >
+                Sửa
+              </button>
+              <button
+                onClick={() => handleDelete(category.id)}
+                className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {categories.length === 0 && (
+        <div className="text-center py-10 text-gray-500">
+          Chưa có hạng mục nào. Hãy thêm hạng mục đầu tiên.
+        </div>
+      )}
+
+      {/* Modal for Add/Edit Category */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {isEditing ? 'Chỉnh sửa hạng mục' : 'Thêm hạng mục mới'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tên hạng mục *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Màu sắc
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, color: color.value })}
+                      className={`p-2 rounded-md border-2 ${
+                        formData.color === color.value ? 'border-gray-400' : 'border-gray-200'
+                      } hover:border-gray-400 transition-colors`}
+                    >
+                      <div className={`w-6 h-6 rounded-full mx-auto ${color.class}`}></div>
+                      <div className="text-xs mt-1 text-center">{color.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
+                  Kích hoạt ngay
+                </label>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isEditing ? 'Cập nhật' : 'Thêm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Component quản lý thư mục chi phí
+const ExpenseFolderManager = () => {
+  const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentFolder, setCurrentFolder] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    color: '#10B981',
+    is_active: true
+  });
+
+  const colorOptions = [
+    { value: '#10B981', label: 'Xanh lá', class: 'bg-green-500' },
+    { value: '#3B82F6', label: 'Xanh dương', class: 'bg-blue-500' },
+    { value: '#F59E0B', label: 'Vàng', class: 'bg-yellow-500' },
+    { value: '#EF4444', label: 'Đỏ', class: 'bg-red-500' },
+    { value: '#8B5CF6', label: 'Tím', class: 'bg-purple-500' },
+    { value: '#F97316', label: 'Cam', class: 'bg-orange-500' },
+    { value: '#06B6D4', label: 'Cyan', class: 'bg-cyan-500' },
+    { value: '#84CC16', label: 'Lime', class: 'bg-lime-500' }
+  ];
+
+  useEffect(() => {
+    fetchFolders();
+  }, []);
+
+  const fetchFolders = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/expense-folders/`);
+      setFolders(response.data);
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+      toast.error('Không thể tải danh sách thư mục');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (isEditing) {
+        await axios.put(`${API}/expense-folders/${currentFolder.id}`, formData);
+        toast.success('Cập nhật thư mục thành công!');
+      } else {
+        await axios.post(`${API}/expense-folders/`, formData);
+        toast.success('Thêm thư mục thành công!');
+      }
+      setIsModalOpen(false);
+      resetForm();
+      fetchFolders();
+    } catch (error) {
+      console.error('Error saving folder:', error);
+      toast.error(isEditing ? 'Không thể cập nhật thư mục' : 'Không thể tạo thư mục mới');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      color: '#10B981',
+      is_active: true
+    });
+    setIsEditing(false);
+    setCurrentFolder(null);
+  };
+
+  const handleEdit = (folder) => {
+    setCurrentFolder(folder);
+    setFormData({
+      name: folder.name,
+      description: folder.description || '',
+      color: folder.color,
+      is_active: folder.is_active
+    });
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (folderId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa thư mục này? Hành động này không thể hoàn tác.')) {
+      try {
+        await axios.delete(`${API}/expense-folders/${folderId}`);
+        toast.success('Xóa thư mục thành công!');
+        fetchFolders();
+      } catch (error) {
+        console.error('Error deleting folder:', error);
+        if (error.response?.status === 400) {
+          toast.error('Không thể xóa thư mục đã có chi phí');
+        } else {
+          toast.error('Không thể xóa thư mục');
+        }
+      }
+    }
+  };
+
+  const toggleStatus = async (folder) => {
+    try {
+      await axios.put(`${API}/expense-folders/${folder.id}`, {
+        ...folder,
+        is_active: !folder.is_active
+      });
+      toast.success('Cập nhật trạng thái thành công!');
+      fetchFolders();
+    } catch (error) {
+      console.error('Error updating folder status:', error);
+      toast.error('Không thể cập nhật trạng thái');
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải danh sách thư mục...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h4 className="text-md font-medium">Quản lý thư mục chi phí</h4>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+        >
+          Thêm thư mục
+        </button>
+      </div>
+
+      {/* Folders Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {folders.map((folder) => (
+          <div key={folder.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: folder.color }}
+                ></div>
+                <div>
+                  <h5 className="font-medium text-gray-900">{folder.name}</h5>
+                  {folder.description && (
+                    <p className="text-sm text-gray-500 mt-1">{folder.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  folder.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {folder.is_active ? 'Hoạt động' : 'Tạm dừng'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end space-x-2">
+              <button
+                onClick={() => toggleStatus(folder)}
+                className={`text-xs px-3 py-1 rounded ${
+                  folder.is_active 
+                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+              >
+                {folder.is_active ? 'Tạm dừng' : 'Kích hoạt'}
+              </button>
+              <button
+                onClick={() => handleEdit(folder)}
+                className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+              >
+                Sửa
+              </button>
+              <button
+                onClick={() => handleDelete(folder.id)}
+                className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {folders.length === 0 && (
+        <div className="text-center py-10 text-gray-500">
+          Chưa có thư mục nào. Hãy thêm thư mục đầu tiên.
+        </div>
+      )}
+
+      {/* Modal for Add/Edit Folder */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {isEditing ? 'Chỉnh sửa thư mục' : 'Thêm thư mục mới'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tên thư mục *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Màu sắc
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, color: color.value })}
+                      className={`p-2 rounded-md border-2 ${
+                        formData.color === color.value ? 'border-gray-400' : 'border-gray-200'
+                      } hover:border-gray-400 transition-colors`}
+                    >
+                      <div className={`w-6 h-6 rounded-full mx-auto ${color.class}`}></div>
+                      <div className="text-xs mt-1 text-center">{color.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="folder_is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor="folder_is_active" className="ml-2 text-sm text-gray-700">
+                  Kích hoạt ngay
+                </label>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isEditing ? 'Cập nhật' : 'Thêm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default App;
