@@ -404,7 +404,7 @@ test_plan:
     - "Expenses API - Bulk Operations"
     - "Expense Statistics API"
   stuck_tasks:
-    - "Expense Statistics API"
+    []
   test_all: false
   test_priority: "high_first"
 
