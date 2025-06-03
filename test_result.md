@@ -121,11 +121,11 @@ backend:
 
   - task: "Expense Statistics API"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
@@ -133,6 +133,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "The expense statistics API endpoint is not working correctly. The endpoint returns a 404 error with the message 'Expense not found'. This suggests that there might be an issue with the route definition or the endpoint implementation."
+      - working: true
+        agent: "testing"
+        comment: "The expense statistics API endpoint is now working correctly. The endpoint returns the expected data structure with total_expenses, amounts, counts, by_category, and monthly_trends. All test cases passed, including filtering by year, quarter, month, and category."
 
 frontend:
     stuck_count: 0
