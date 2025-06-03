@@ -6770,14 +6770,6 @@ const Invoices = () => {
 const Settings = () => {
   return <div>Cài đặt hệ thống (đang phát triển)</div>;
 };
-
-// Tab 3: Cấu hình hạng mục và thư mục
-const ExpenseConfig = () => {
-  const [activeConfigTab, setActiveConfigTab] = useState('categories'); // categories, folders
-  
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Cấu hình hạng mục và thư mục</h3>
       
       {/* Sub-tab Navigation */}
       <div className="border-b border-gray-200">
