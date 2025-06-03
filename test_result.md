@@ -408,6 +408,9 @@ agent_communication:
   - agent: "testing"
     message: "Completed testing of the Work Items API endpoints. Successfully tested all CRUD operations: creating work items (POST /api/projects/{project_id}/work-items/), listing work items (GET /api/projects/{project_id}/work-items/), getting specific work items (GET /api/work-items/{work_item_id}), updating work items (PUT /api/work-items/{work_item_id}), deleting work items (DELETE /api/work-items/{work_item_id}), and updating work item status (PATCH /api/work-items/{work_item_id}/status). The API correctly handles different priority levels (normal, high, urgent) and status transitions (not_started → in_progress → completed). Validation works correctly for required fields, project existence, and service/task linking. The only minor issue found is that the enriched response data (assigned_by_name, assigned_to_name, service_name, task_name) is not being populated in the response, but this doesn't affect core functionality. All tests passed with no critical issues."
 
+  - agent: "testing"
+    message: "Completed testing of the Expense Management System APIs. Successfully tested the Expense Categories API, Expense Folders API, Expenses API CRUD operations, and Expenses API bulk operations. All endpoints work correctly except for the Expense Statistics API. The Expense Statistics API endpoint (GET /api/expenses/statistics) returns a 404 error with the message 'Expense not found'. This suggests that there might be an issue with the route definition or the endpoint implementation. All other endpoints work as expected, including creating, retrieving, updating, and deleting expense categories, folders, and expenses. The bulk operations for updating status and deleting expenses also work correctly. The API correctly prevents deletion of categories and folders that have associated expenses."
+
 ## Update Report - Project Detail Enhancement (2025-06-01)
 
 ### ✅ COMPLETED PROJECT DETAIL FEATURES
