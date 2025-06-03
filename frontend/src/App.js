@@ -459,6 +459,8 @@ const MainLayout = () => {
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/revenue" element={<Revenue />} />
                 <Route path="/expense" element={<Expense />} />
+                <Route path="/revenue" element={<Revenue />} />
+                <Route path="/expense" element={<Expense />} />
                 <Route path="/campaigns" element={<CampaignsComponent />} />
                 <Route path="/campaigns/:id" element={<CampaignDetailComponent />} />
                 <Route path="/documents" element={<Documents />} />
