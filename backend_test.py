@@ -420,15 +420,10 @@ def test_expenses(category_ids, folder_ids):
         # Test POST /api/expenses/bulk-update-status
         bulk_ids = created_expense_ids[1:3]  # Use the 2nd and 3rd expenses
         
-        bulk_update_data = {
-            "expense_ids": bulk_ids,
-            "status": "approved"
-        }
-        
         response = requests.post(
-            f"{BACKEND_URL}/expenses/bulk-update-status",
+            f"{BACKEND_URL}/expenses/bulk-update-status?status=approved",
             headers=get_headers(),
-            json=bulk_update_data
+            json=bulk_ids
         )
         
         print_test_result("Bulk Update Expense Status", response)
