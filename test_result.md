@@ -49,6 +49,93 @@ backend:
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the bulk operations for projects, including bulk archive, restore, and delete"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the bulk operations for projects. The bulk archive, restore, and delete endpoints work correctly. Authorization is properly implemented - staff users can't perform bulk delete operations. The endpoints handle invalid project IDs gracefully."
+
+  - task: "Expense Categories API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expense categories API endpoints: POST /api/expense-categories/, GET /api/expense-categories/, PUT /api/expense-categories/{id}, DELETE /api/expense-categories/{id}"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all expense categories API endpoints. The API correctly creates, retrieves, updates, and deletes expense categories. The GET endpoint properly filters by is_active parameter. The DELETE endpoint correctly prevents deletion of categories that have associated expenses."
+
+  - task: "Expense Folders API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expense folders API endpoints: POST /api/expense-folders/, GET /api/expense-folders/, PUT /api/expense-folders/{id}, DELETE /api/expense-folders/{id}"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all expense folders API endpoints. The API correctly creates, retrieves, updates, and deletes expense folders. The GET endpoint properly filters by is_active parameter. The DELETE endpoint correctly prevents deletion of folders that have associated expenses."
+
+  - task: "Expenses API - CRUD Operations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expenses API CRUD endpoints: POST /api/expenses/, GET /api/expenses/, GET /api/expenses/{id}, PUT /api/expenses/{id}, DELETE /api/expenses/{id}"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all expenses API CRUD endpoints. The API correctly creates, retrieves, updates, and deletes expenses. The GET endpoint properly handles all filters including category_id, folder_id, status, payment_method, date range, and search. The expense_number is auto-generated correctly. The API returns enriched fields like category_name and folder_name."
+
+  - task: "Expenses API - Bulk Operations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expenses API bulk operation endpoints: POST /api/expenses/bulk-delete, POST /api/expenses/bulk-update-status"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the expenses API bulk operation endpoints. The bulk-delete endpoint correctly deletes multiple expenses at once. The bulk-update-status endpoint correctly updates the status of multiple expenses at once."
+
+  - task: "Expense Statistics API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expense statistics API endpoint: GET /api/expenses/statistics"
+      - working: false
+        agent: "testing"
+        comment: "The expense statistics API endpoint is not working correctly. The endpoint returns a 404 error with the message 'Expense not found'. This suggests that there might be an issue with the route definition or the endpoint implementation."
+
+frontend:
+    stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
