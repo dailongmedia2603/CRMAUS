@@ -6812,6 +6812,47 @@ const ExpenseConfig = () => {
   );
 };
 
+// Tab 3: Cấu hình hạng mục và thư mục
+const ExpenseConfig = () => {
+  const [activeConfigTab, setActiveConfigTab] = useState('categories'); // categories, folders
+  
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Cấu hình hạng mục và thư mục</h3>
+      
+      {/* Sub-tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveConfigTab('categories')}
+            className={`${
+              activeConfigTab === 'categories'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Hạng mục chi phí
+          </button>
+          <button
+            onClick={() => setActiveConfigTab('folders')}
+            className={`${
+              activeConfigTab === 'folders'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Thư mục
+          </button>
+        </nav>
+      </div>
+
+      {/* Sub-tab Content */}
+      {activeConfigTab === 'categories' && <ExpenseCategoryManager />}
+      {activeConfigTab === 'folders' && <ExpenseFolderManager />}
+    </div>
+  );
+};
+
 // Component quản lý hạng mục chi phí
 const ExpenseCategoryManager = () => {
   const [categories, setCategories] = useState([]);
