@@ -856,6 +856,658 @@ const SidebarContent = ({ user, logout }) => {
   );
 };
 
+// Tab 2: Danh sách chi phí với CRUD operations
+const ExpenseList = () => {
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentExpense, setCurrentExpense] = useState(null);
+  const [selectedExpenses, setSelectedExpenses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [actionMenuOpen, setActionMenuOpen] = useState(null);
+  const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    amount: '',
+    category_id: '',
+    folder_id: '',
+    project_id: '',
+    client_id: '',
+    expense_date: format(new Date(), 'yyyy-MM-dd'),
+    description: '',
+    vendor: '',
+    payment_method: 'cash',
+    status: 'pending',
+    tags: []
+  });
+
+  // Reference data
+  const [categories, setCategories] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [clients, setClients] = useState([]);
+
+  const paymentMethods = [
+    { value: 'cash', label: 'Tiền mặt' },
+    { value: 'credit_card', label: 'Thẻ tín dụng' },
+    { value: 'bank_transfer', label: 'Chuyển khoản' },
+    { value: 'check', label: 'Séc' }
+  ];
+
+  const statusOptions = [
+    { value: 'pending', label: 'Chờ duyệt', color: 'orange' },
+    { value: 'approved', label: 'Đã duyệt', color: 'blue' },
+    { value: 'rejected', label: 'Từ chối', color: 'red' },
+    { value: 'paid', label: 'Đã thanh toán', color: 'green' }
+  ];
+
+  useEffect(() => {
+    fetchExpenses();
+    fetchReferenceData();
+  }, [statusFilter, categoryFilter, searchTerm]);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      if (categoryFilter) params.append('category_id', categoryFilter);
+      if (searchTerm) params.append('search', searchTerm);
+
+      const response = await axios.get(`${API}/expenses/?${params}`);
+      setExpenses(response.data);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      toast.error('Không thể tải danh sách chi phí');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReferenceData = async () => {
+    try {
+      const [categoriesRes, foldersRes, projectsRes, clientsRes] = await Promise.all([
+        axios.get(`${API}/expense-categories/`),
+        axios.get(`${API}/expense-folders/`),
+        axios.get(`${API}/projects/`),
+        axios.get(`${API}/clients/`)
+      ]);
+
+      setCategories(categoriesRes.data);
+      setFolders(foldersRes.data);
+      setProjects(projectsRes.data);
+      setClients(clientsRes.data);
+    } catch (error) {
+      console.error('Error fetching reference data:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (isEditing) {
+        await axios.put(`${API}/expenses/${currentExpense.id}`, formData);
+        toast.success('Cập nhật chi phí thành công!');
+      } else {
+        await axios.post(`${API}/expenses/`, formData);
+        toast.success('Thêm chi phí thành công!');
+      }
+      setIsModalOpen(false);
+      resetForm();
+      fetchExpenses();
+    } catch (error) {
+      console.error('Error saving expense:', error);
+      toast.error(isEditing ? 'Không thể cập nhật chi phí' : 'Không thể tạo chi phí mới');
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      amount: '',
+      category_id: '',
+      folder_id: '',
+      project_id: '',
+      client_id: '',
+      expense_date: format(new Date(), 'yyyy-MM-dd'),
+      description: '',
+      vendor: '',
+      payment_method: 'cash',
+      status: 'pending',
+      tags: []
+    });
+    setIsEditing(false);
+    setCurrentExpense(null);
+  };
+
+  const handleEdit = (expense) => {
+    setCurrentExpense(expense);
+    setFormData({
+      title: expense.title,
+      amount: expense.amount,
+      category_id: expense.category_id,
+      folder_id: expense.folder_id || '',
+      project_id: expense.project_id || '',
+      client_id: expense.client_id || '',
+      expense_date: format(new Date(expense.expense_date), 'yyyy-MM-dd'),
+      description: expense.description || '',
+      vendor: expense.vendor || '',
+      payment_method: expense.payment_method,
+      status: expense.status,
+      tags: expense.tags || []
+    });
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (expenseId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa chi phí này?')) {
+      try {
+        await axios.delete(`${API}/expenses/${expenseId}`);
+        toast.success('Xóa chi phí thành công!');
+        fetchExpenses();
+      } catch (error) {
+        console.error('Error deleting expense:', error);
+        toast.error('Không thể xóa chi phí');
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedExpenses.length} chi phí đã chọn?`)) {
+      try {
+        await axios.post(`${API}/expenses/bulk-delete`, selectedExpenses);
+        toast.success('Xóa các chi phí thành công!');
+        setSelectedExpenses([]);
+        fetchExpenses();
+      } catch (error) {
+        console.error('Error bulk deleting expenses:', error);
+        toast.error('Không thể xóa chi phí');
+      }
+    }
+  };
+
+  const handleBulkStatusUpdate = async (status) => {
+    try {
+      await axios.post(`${API}/expenses/bulk-update-status`, selectedExpenses, {
+        params: { status }
+      });
+      toast.success('Cập nhật trạng thái thành công!');
+      setSelectedExpenses([]);
+      setBulkActionMenuOpen(false);
+      fetchExpenses();
+    } catch (error) {
+      console.error('Error bulk updating status:', error);
+      toast.error('Không thể cập nhật trạng thái');
+    }
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedExpenses(expenses.map(expense => expense.id));
+    } else {
+      setSelectedExpenses([]);
+    }
+  };
+
+  const handleSelectExpense = (expenseId) => {
+    if (selectedExpenses.includes(expenseId)) {
+      setSelectedExpenses(selectedExpenses.filter(id => id !== expenseId));
+    } else {
+      setSelectedExpenses([...selectedExpenses, expenseId]);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const statusConfig = statusOptions.find(opt => opt.value === status);
+    return statusConfig ? statusConfig.color : 'gray';
+  };
+
+  const getStatusLabel = (status) => {
+    const statusConfig = statusOptions.find(opt => opt.value === status);
+    return statusConfig ? statusConfig.label : status;
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải danh sách chi phí...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header và Filter */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Danh sách chi phí</h3>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+        >
+          Thêm chi phí
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tiêu đề, mô tả..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              <option value="">Tất cả trạng thái</option>
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              <option value="">Tất cả hạng mục</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setBulkActionMenuOpen(!bulkActionMenuOpen)}
+              disabled={selectedExpenses.length === 0}
+              className={`w-full px-3 py-2 text-sm border rounded-md ${
+                selectedExpenses.length === 0 
+                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Thao tác hàng loạt ({selectedExpenses.length})
+            </button>
+            {bulkActionMenuOpen && selectedExpenses.length > 0 && (
+              <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleBulkStatusUpdate('approved')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Duyệt tất cả
+                  </button>
+                  <button
+                    onClick={() => handleBulkStatusUpdate('rejected')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Từ chối tất cả
+                  </button>
+                  <button
+                    onClick={() => handleBulkStatusUpdate('paid')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Đánh dấu đã thanh toán
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
+                    Xóa tất cả
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Expense Table */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    checked={selectedExpenses.length === expenses.length && expenses.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300"
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Mã số / Tiêu đề
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Số tiền
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Hạng mục
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ngày chi
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Hành động
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {expenses.map((expense) => (
+                <tr key={expense.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedExpenses.includes(expense.id)}
+                      onChange={() => handleSelectExpense(expense.id)}
+                      className="rounded border-gray-300"
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">{expense.expense_number}</div>
+                    <div className="text-sm text-gray-500">{expense.title}</div>
+                    {expense.vendor && (
+                      <div className="text-xs text-gray-400">Nhà cung cấp: {expense.vendor}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {expense.amount.toLocaleString('vi-VN')} VNĐ
+                    </div>
+                    <div className="text-xs text-gray-500">{expense.payment_method}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{expense.category_name}</div>
+                    {expense.folder_name && (
+                      <div className="text-xs text-gray-500">{expense.folder_name}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {format(new Date(expense.expense_date), 'dd/MM/yyyy')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      getStatusColor(expense.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
+                      getStatusColor(expense.status) === 'blue' ? 'bg-blue-100 text-blue-800' :
+                      getStatusColor(expense.status) === 'red' ? 'bg-red-100 text-red-800' :
+                      getStatusColor(expense.status) === 'green' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getStatusLabel(expense.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="relative">
+                      <button
+                        onClick={() => setActionMenuOpen(actionMenuOpen === expense.id ? null : expense.id)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+                      {actionMenuOpen === expense.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                handleEdit(expense);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Chỉnh sửa
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDelete(expense.id);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {expenses.length === 0 && (
+          <div className="text-center py-10 text-gray-500">
+            Chưa có chi phí nào
+          </div>
+        )}
+      </div>
+
+      {/* Modal for Add/Edit Expense */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {isEditing ? 'Chỉnh sửa chi phí' : 'Thêm chi phí mới'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tiêu đề *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Số tiền *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hạng mục *
+                  </label>
+                  <select
+                    required
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn hạng mục</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Thư mục
+                  </label>
+                  <select
+                    value={formData.folder_id}
+                    onChange={(e) => setFormData({ ...formData, folder_id: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn thư mục</option>
+                    {folders.map(folder => (
+                      <option key={folder.id} value={folder.id}>{folder.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dự án
+                  </label>
+                  <select
+                    value={formData.project_id}
+                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn dự án</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>{project.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Khách hàng
+                  </label>
+                  <select
+                    value={formData.client_id}
+                    onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn khách hàng</option>
+                    {clients.map(client => (
+                      <option key={client.id} value={client.id}>{client.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ngày chi *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.expense_date}
+                    onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phương thức thanh toán
+                  </label>
+                  <select
+                    value={formData.payment_method}
+                    onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    {paymentMethods.map(method => (
+                      <option key={method.value} value={method.value}>{method.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Trạng thái
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    {statusOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nhà cung cấp
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.vendor}
+                    onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isEditing ? 'Cập nhật' : 'Thêm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Các component cho từng trang
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
