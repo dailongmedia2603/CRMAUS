@@ -629,7 +629,7 @@ const SidebarContent = ({ user, logout }) => {
             <button
               onClick={() => toggleSubmenu("finance")}
               className={`${
-                location.startsWith("/invoices") || location.startsWith("/contracts") || location.startsWith("/finance-reports")
+                location.startsWith("/invoices") || location.startsWith("/finance-reports") || location.startsWith("/revenue") || location.startsWith("/expense")
                   ? "bg-indigo-800 text-white"
                   : "text-indigo-100 hover:bg-indigo-600"
               } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
