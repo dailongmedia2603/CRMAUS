@@ -454,14 +454,10 @@ def test_expenses(category_ids, folder_ids):
         
         if temp_expense_ids:
             # Test POST /api/expenses/bulk-delete
-            bulk_delete_data = {
-                "expense_ids": temp_expense_ids
-            }
-            
             response = requests.post(
                 f"{BACKEND_URL}/expenses/bulk-delete",
                 headers=get_headers(),
-                json=bulk_delete_data
+                json=temp_expense_ids
             )
             
             print_test_result("Bulk Delete Expenses", response)
