@@ -395,7 +395,13 @@ test_plan:
     - "Templates UI - Data Persistence"
     - "Project Detail Workflow"
     - "Work Items API - CRUD Operations"
-  stuck_tasks: []
+    - "Expense Categories API"
+    - "Expense Folders API"
+    - "Expenses API - CRUD Operations"
+    - "Expenses API - Bulk Operations"
+    - "Expense Statistics API"
+  stuck_tasks:
+    - "Expense Statistics API"
   test_all: false
   test_priority: "high_first"
 
