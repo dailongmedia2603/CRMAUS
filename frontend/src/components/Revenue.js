@@ -1,3 +1,9 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
 // Component Expense Management (Quản lý Chi phí)
 const Expense = () => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, expenses, config
