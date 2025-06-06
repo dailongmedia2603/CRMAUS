@@ -987,7 +987,894 @@ const Dashboard = () => {
   );
 };
 
-const Clients = () => <div>Clients component placeholder</div>;
+const Clients = () => {
+  const navigate = useNavigate();
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewArchived, setViewArchived] = useState(false);
+  const [selectedClients, setSelectedClients] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("active"); // active, archived, all
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [isEditing, setIsEditing] = useState(false); 
+  const [currentClientId, setCurrentClientId] = useState(null); 
+  const [statsData, setStatsData] = useState({
+    totalClients: 0,
+    activeClients: 0,
+    newClientsThisMonth: 0
+  });
+  const [formData, setFormData] = useState({
+    name: "",
+    company: "",
+    industry: "",
+    size: "",
+    website: "",
+    phone: "",
+    contact_name: "",
+    contact_email: "",
+    contact_phone: "",
+    notes: "",
+    address: "",
+    tags: []
+  });
+  const [filterData, setFilterData] = useState({
+    tags: [],
+    hasProjects: null,
+    hasInvoices: null,
+    dateFrom: "",
+    dateTo: ""
+  });
+
+  const [actionMenuOpen, setActionMenuOpen] = useState(null);
+  const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
+
+  // Mẫu tag để lựa chọn
+  const availableTags = ["Doanh nghiệp", "Cá nhân", "Mới", "VIP", "Tiềm năng"];
+
+  useEffect(() => {
+    fetchClients();
+    fetchStats();
+  }, [statusFilter, viewArchived]);
+
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/clients/`);
+      
+      let filteredClients = response.data;
+      
+      if (statusFilter === "active") {
+        filteredClients = filteredClients.filter(client => !client.archived);
+      } else if (statusFilter === "archived") {
+        filteredClients = filteredClients.filter(client => client.archived);
+      }
+
+      if (searchTerm) {
+        filteredClients = filteredClients.filter(client => 
+          client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          (client.contact_email && client.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (client.contact_name && client.contact_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (client.website && client.website.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      }
+
+      setClients(filteredClients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      toast.error("Không thể tải danh sách khách hàng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${API}/clients/`);
+      const allClients = response.data;
+      
+      const totalClients = allClients.length;
+      const activeClients = allClients.filter(client => !client.archived).length;
+      
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const newClientsThisMonth = allClients.filter(client => {
+        const createdDate = new Date(client.created_at);
+        return createdDate >= firstDayOfMonth;
+      }).length;
+
+      setStatsData({
+        totalClients,
+        activeClients,
+        newClientsThisMonth
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedClients(clients.map(client => client.id));
+    } else {
+      setSelectedClients([]);
+    }
+  };
+
+  const handleSelectClient = (clientId) => {
+    if (selectedClients.includes(clientId)) {
+      setSelectedClients(selectedClients.filter(id => id !== clientId));
+    } else {
+      setSelectedClients([...selectedClients, clientId]);
+    }
+  };
+
+  const toggleActionMenu = (clientId) => {
+    if (actionMenuOpen === clientId) {
+      setActionMenuOpen(null);
+    } else {
+      setActionMenuOpen(clientId);
+    }
+  };
+
+  const toggleBulkActionMenu = () => {
+    setBulkActionMenuOpen(!bulkActionMenuOpen);
+  };
+  
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+  
+  const handleTagSelect = (e) => {
+    const tag = e.target.value;
+    if (tag && !formData.tags.includes(tag)) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, tag]
+      });
+    }
+  };
+  
+  const removeTag = (tagToRemove) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(tag => tag !== tagToRemove)
+    });
+  };
+  
+  const handleEditClient = (client) => {
+    setIsEditing(true);
+    setCurrentClientId(client.id);
+    
+    setFormData({
+      name: client.name || "",
+      company: client.company || "",
+      industry: client.industry || "",
+      size: client.size || "",
+      website: client.website || "",
+      phone: client.phone || "",
+      contact_name: client.contact_name || "",
+      contact_email: client.contact_email || "",
+      contact_phone: client.contact_phone || "",
+      notes: client.notes || "",
+      address: client.address || "",
+      tags: client.tags || []
+    });
+    
+    setAvatarPreview(client.avatar_url || null);
+    setIsModalOpen(true);
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const clientData = {
+        ...formData,
+        company: formData.company || formData.name
+      };
+
+      if (avatarFile) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', avatarFile);
+        
+        const uploadResponse = await axios.post(`${API}/upload-avatar/`, formDataUpload, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        clientData.avatar_url = uploadResponse.data.avatar_url;
+      }
+
+      let response;
+      if (isEditing) {
+        response = await axios.put(`${API}/clients/${currentClientId}`, clientData);
+        toast.success("Cập nhật khách hàng thành công!");
+      } else {
+        response = await axios.post(`${API}/clients/`, clientData);
+        toast.success("Thêm khách hàng thành công!");
+      }
+
+      resetForm();
+      setIsModalOpen(false);
+      fetchClients();
+      fetchStats();
+    } catch (error) {
+      console.error("Error saving client:", error);
+      toast.error(isEditing ? "Không thể cập nhật khách hàng" : "Không thể thêm khách hàng mới");
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      company: "",
+      industry: "",
+      size: "",
+      website: "",
+      phone: "",
+      contact_name: "",
+      contact_email: "",
+      contact_phone: "",
+      notes: "",
+      address: "",
+      tags: []
+    });
+    setAvatarPreview(null);
+    setAvatarFile(null);
+    setIsEditing(false);
+    setCurrentClientId(null);
+  };
+
+  const handleDeleteClient = async (clientId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
+      try {
+        await axios.delete(`${API}/clients/${clientId}`);
+        toast.success("Xóa khách hàng thành công!");
+        fetchClients();
+        fetchStats();
+      } catch (error) {
+        console.error("Error deleting client:", error);
+        toast.error("Không thể xóa khách hàng");
+      }
+    }
+  };
+
+  const handleArchiveClient = async (clientId, isArchived) => {
+    try {
+      const client = clients.find(c => c.id === clientId);
+      const updatedClient = { ...client, archived: !isArchived };
+      
+      await axios.put(`${API}/clients/${clientId}`, updatedClient);
+      toast.success(isArchived ? "Khôi phục khách hàng thành công!" : "Lưu trữ khách hàng thành công!");
+      fetchClients();
+      fetchStats();
+    } catch (error) {
+      console.error("Error archiving client:", error);
+      toast.error("Không thể cập nhật trạng thái khách hàng");
+    }
+  };
+
+  const handleBulkAction = async (action) => {
+    if (selectedClients.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất một khách hàng");
+      return;
+    }
+
+    const confirmMessage = action === 'delete' 
+      ? `Bạn có chắc chắn muốn xóa ${selectedClients.length} khách hàng đã chọn?`
+      : `Bạn có chắc chắn muốn ${action === 'archive' ? 'lưu trữ' : 'khôi phục'} ${selectedClients.length} khách hàng đã chọn?`;
+
+    if (window.confirm(confirmMessage)) {
+      try {
+        if (action === 'delete') {
+          await Promise.all(selectedClients.map(id => axios.delete(`${API}/clients/${id}`)));
+          toast.success("Xóa các khách hàng thành công!");
+        } else {
+          const isArchive = action === 'archive';
+          await Promise.all(selectedClients.map(async (id) => {
+            const client = clients.find(c => c.id === id);
+            const updatedClient = { ...client, archived: isArchive };
+            return axios.put(`${API}/clients/${id}`, updatedClient);
+          }));
+          toast.success(isArchive ? "Lưu trữ các khách hàng thành công!" : "Khôi phục các khách hàng thành công!");
+        }
+        
+        setSelectedClients([]);
+        setBulkActionMenuOpen(false);
+        fetchClients();
+        fetchStats();
+      } catch (error) {
+        console.error(`Error ${action} clients:`, error);
+        toast.error("Có lỗi xảy ra khi thực hiện thao tác");
+      }
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold text-gray-900">Khách hàng</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+        >
+          Thêm khách hàng
+        </button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
+              <p className="text-2xl font-bold text-gray-900">{statsData.totalClients}</p>
+            </div>
+            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Đang hoạt động</p>
+              <p className="text-2xl font-bold text-green-600">{statsData.activeClients}</p>
+            </div>
+            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Mới tháng này</p>
+              <p className="text-2xl font-bold text-purple-600">{statsData.newClientsThisMonth}</p>
+            </div>
+            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Tìm kiếm khách hàng..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <select
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="active">Đang hoạt động</option>
+              <option value="archived">Đã lưu trữ</option>
+              <option value="all">Tất cả</option>
+            </select>
+
+            {selectedClients.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={toggleBulkActionMenu}
+                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Thao tác ({selectedClients.length})
+                </button>
+                {bulkActionMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleBulkAction('archive')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Lưu trữ
+                      </button>
+                      <button
+                        onClick={() => handleBulkAction('restore')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Khôi phục
+                      </button>
+                      <button
+                        onClick={() => handleBulkAction('delete')}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Client Table */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    checked={selectedClients.length === clients.length && clients.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300"
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Khách hàng
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Liên hệ
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thông tin
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tags
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Hành động
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {clients.map((client) => (
+                <tr key={client.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedClients.includes(client.id)}
+                      onChange={() => handleSelectClient(client.id)}
+                      className="rounded border-gray-300"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 flex-shrink-0">
+                        {client.avatar_url ? (
+                          <img className="h-10 w-10 rounded-full object-cover" src={client.avatar_url} alt="" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {client.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                        <div className="text-sm text-gray-500">{client.company}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{client.contact_name}</div>
+                    <div className="text-sm text-gray-500">{client.contact_email}</div>
+                    <div className="text-sm text-gray-500">{client.contact_phone}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{client.industry}</div>
+                    <div className="text-sm text-gray-500">{client.size}</div>
+                    {client.website && (
+                      <div className="text-sm text-blue-500">
+                        <a href={client.website} target="_blank" rel="noopener noreferrer">
+                          {client.website}
+                        </a>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-wrap gap-1">
+                      {client.tags && client.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      client.archived 
+                        ? 'bg-gray-100 text-gray-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {client.archived ? 'Đã lưu trữ' : 'Hoạt động'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="relative">
+                      <button
+                        onClick={() => toggleActionMenu(client.id)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+                      {actionMenuOpen === client.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                navigate(`/clients/${client.id}`);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Xem chi tiết
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleEditClient(client);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              Chỉnh sửa
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleArchiveClient(client.id, client.archived);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              {client.archived ? 'Khôi phục' : 'Lưu trữ'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDeleteClient(client.id);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {clients.length === 0 && (
+          <div className="text-center py-10 text-gray-500">
+            {statusFilter === 'all' ? 'Chưa có khách hàng nào' : 
+             statusFilter === 'archived' ? 'Chưa có khách hàng nào bị lưu trữ' :
+             'Chưa có khách hàng hoạt động nào'}
+          </div>
+        )}
+      </div>
+
+      {/* Add/Edit Client Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {isEditing ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Avatar Upload */}
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar preview"
+                      className="h-20 w-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                      <svg className="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  id="avatar-upload"
+                />
+                <label
+                  htmlFor="avatar-upload"
+                  className="cursor-pointer bg-white border border-gray-300 rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Chọn ảnh đại diện
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên khách hàng *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên công ty *
+                  </label>
+                  <input
+                    type="text"
+                    name="company"
+                    required
+                    value={formData.company}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ngành nghề
+                  </label>
+                  <input
+                    type="text"
+                    name="industry"
+                    value={formData.industry}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quy mô
+                  </label>
+                  <select
+                    name="size"
+                    value={formData.size}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn quy mô</option>
+                    <option value="1-10">1-10 nhân viên</option>
+                    <option value="11-50">11-50 nhân viên</option>
+                    <option value="51-200">51-200 nhân viên</option>
+                    <option value="201-500">201-500 nhân viên</option>
+                    <option value="500+">Trên 500 nhân viên</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Website
+                  </label>
+                  <input
+                    type="url"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên người liên hệ
+                  </label>
+                  <input
+                    type="text"
+                    name="contact_name"
+                    value={formData.contact_name}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email liên hệ
+                  </label>
+                  <input
+                    type="email"
+                    name="contact_email"
+                    value={formData.contact_email}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Điện thoại liên hệ
+                  </label>
+                  <input
+                    type="tel"
+                    name="contact_phone"
+                    value={formData.contact_phone}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <select
+                  onChange={handleTagSelect}
+                  value=""
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">Chọn tag</option>
+                  {availableTags.map((tag) => (
+                    <option key={tag} value={tag}>
+                      {tag}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ghi chú
+                </label>
+                <textarea
+                  name="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isEditing ? 'Cập nhật' : 'Thêm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 const ClientDetail = () => <div>Client Detail component placeholder</div>;
 const Projects = () => <ProjectsComponent />;
 const ProjectDetail = () => <div>Project Detail component placeholder</div>;
