@@ -163,6 +163,69 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the GET /api/clients/ endpoint. The API returns the list of clients correctly. The endpoint is accessible by all authenticated users regardless of role, which is appropriate for populating client dropdowns in the project form."
+      - working: true
+        agent: "testing"
+        comment: "Retested the GET /api/clients/ endpoint. The API returns the list of clients correctly, including the demo clients (Công ty ABC). The endpoint is working as expected."
+
+  - task: "Clients API - GET /api/clients/{client_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/clients/{client_id} endpoint to ensure it returns the client details correctly"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/clients/{client_id} endpoint. The API returns the client details correctly with all fields. The endpoint returns a 404 error when an invalid client_id is provided."
+
+  - task: "Clients API - POST /api/clients/"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the POST /api/clients/ endpoint to ensure it creates new clients correctly"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the POST /api/clients/ endpoint. The API creates new clients correctly with all provided fields. The created client can be retrieved using the GET endpoint and all fields match the submitted data."
+
+  - task: "Clients API - PUT /api/clients/{client_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the PUT /api/clients/{client_id} endpoint to ensure it updates client information correctly"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the PUT /api/clients/{client_id} endpoint. The API updates client information correctly. All fields can be updated and the changes are reflected when retrieving the client details."
+
+  - task: "Clients API - DELETE /api/clients/{client_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the DELETE /api/clients/{client_id} endpoint to ensure it deletes clients correctly"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the DELETE /api/clients/{client_id} endpoint. The API deletes clients correctly. After deletion, attempting to retrieve the client returns a 404 error as expected."
 
   - task: "Users API - GET /api/users/"
     implemented: true
