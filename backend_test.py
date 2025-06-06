@@ -546,6 +546,140 @@ def test_expense_statistics():
         
         print_test_result("Get Expense Statistics by Category", response)
 
+def test_clients():
+    """Test Clients API endpoints"""
+    print("\n=== Testing Clients API ===")
+    
+    # Test GET /api/clients/ - Get list of clients
+    response = requests.get(
+        f"{BACKEND_URL}/clients/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Clients List", response)
+    if success:
+        clients = response.json()
+        print(f"Found {len(clients)} clients")
+        
+        # Check if demo clients exist
+        demo_clients = [client for client in clients if client["name"] == "Test Client" or client["name"] == "Công ty ABC"]
+        if demo_clients:
+            print(f"✅ Demo clients found: {len(demo_clients)}")
+            for client in demo_clients:
+                print(f"  - {client['name']} ({client['company']})")
+        else:
+            print("❌ Demo clients not found")
+    
+    # Test POST /api/clients/ - Create a new client
+    client_data = {
+        "name": f"Test Client {uuid.uuid4().hex[:8]}",
+        "company": "Test Company Ltd.",
+        "industry": "Technology",
+        "size": "Medium",
+        "website": "https://testcompany.com",
+        "phone": "+84 123 456 789",
+        "contact_name": "John Doe",
+        "contact_email": "john.doe@testcompany.com",
+        "contact_phone": "+84 987 654 321",
+        "notes": "This is a test client created by the API test",
+        "address": "123 Test Street, Test City",
+        "tags": ["test", "api", "client"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/clients/",
+        headers=get_headers(),
+        json=client_data
+    )
+    
+    success = print_test_result("Create Client", response)
+    if success:
+        client_id = response.json()["id"]
+        created_client_ids.append(client_id)
+        print(f"Created client ID: {client_id}")
+    
+    # Test GET /api/clients/{client_id} - Get client details
+    if created_client_ids:
+        client_id = created_client_ids[0]
+        
+        response = requests.get(
+            f"{BACKEND_URL}/clients/{client_id}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result("Get Client Details", response)
+        if success:
+            client = response.json()
+            print(f"Client details: {client['name']} - {client['company']}")
+            
+            # Verify client data matches what we created
+            for key, value in client_data.items():
+                if client[key] != value:
+                    print(f"❌ Mismatch in {key}: expected {value}, got {client[key]}")
+    
+    # Test PUT /api/clients/{client_id} - Update client
+    if created_client_ids:
+        client_id = created_client_ids[0]
+        
+        update_data = {
+            "name": f"Updated Client {uuid.uuid4().hex[:8]}",
+            "company": "Updated Company Ltd.",
+            "industry": "Software",
+            "notes": "This client was updated by the API test"
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/clients/{client_id}",
+            headers=get_headers(),
+            json={**client_data, **update_data}  # Merge original data with updates
+        )
+        
+        success = print_test_result("Update Client", response)
+        if success:
+            updated_client = response.json()
+            print(f"Updated client: {updated_client['name']} - {updated_client['company']}")
+            
+            # Verify client data was updated
+            for key, value in update_data.items():
+                if updated_client[key] != value:
+                    print(f"❌ Update failed for {key}: expected {value}, got {updated_client[key]}")
+    
+    # Test DELETE /api/clients/{client_id} - Delete client
+    if len(created_client_ids) > 0:
+        # Create a temporary client for deletion
+        temp_client_data = {
+            "name": f"Temp Client for Deletion {uuid.uuid4().hex[:6]}",
+            "company": "Temp Company",
+            "industry": "Testing"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/clients/",
+            headers=get_headers(),
+            json=temp_client_data
+        )
+        
+        if response.status_code == 200:
+            temp_client_id = response.json()["id"]
+            
+            # Now delete this client
+            response = requests.delete(
+                f"{BACKEND_URL}/clients/{temp_client_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Delete Client", response)
+            
+            # Verify client was deleted
+            response = requests.get(
+                f"{BACKEND_URL}/clients/{temp_client_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Verify Client Deletion", response, expected_status=404)
+    
+    return created_client_ids
+
 def cleanup():
     """Clean up created test data"""
     print("\n=== Cleaning up test data ===")
