@@ -722,9 +722,239 @@ def cleanup():
     
     print(f"Deleted {len(created_client_ids)} clients")
 
+def test_projects(client_ids=None):
+    """Test Projects API endpoints"""
+    print("\n=== Testing Projects API ===")
+    
+    # Create a client if none provided
+    if not client_ids or len(client_ids) == 0:
+        client_data = {
+            "name": f"Test Client for Projects {uuid.uuid4().hex[:8]}",
+            "company": "Test Company Ltd.",
+            "industry": "Technology",
+            "size": "Medium",
+            "website": "https://testcompany.com",
+            "phone": "+84 123 456 789",
+            "contact_name": "John Doe",
+            "contact_email": "john.doe@testcompany.com"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/clients/",
+            headers=get_headers(),
+            json=client_data
+        )
+        
+        if response.status_code == 200:
+            client_id = response.json()["id"]
+            created_client_ids.append(client_id)
+            print(f"Created client ID for projects: {client_id}")
+        else:
+            print(f"❌ Failed to create client for projects: {response.status_code} - {response.text}")
+            return []
+    else:
+        client_id = client_ids[0]
+    
+    created_project_ids = []
+    
+    # Test POST /api/projects/ - Create a new project
+    project_data = {
+        "name": f"Test Project {uuid.uuid4().hex[:8]}",
+        "client_id": client_id,
+        "description": "This is a test project created by the API test",
+        "start_date": (datetime.utcnow() - timedelta(days=7)).isoformat(),
+        "end_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+        "status": "in_progress",
+        "team": [],
+        "contract_value": 10000.0,
+        "debt": 0.0,
+        "manager_ids": [],
+        "account_ids": [],
+        "content_ids": [],
+        "design_ids": [],
+        "editor_ids": [],
+        "sale_ids": []
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/projects/",
+        headers=get_headers(),
+        json=project_data
+    )
+    
+    success = print_test_result("Create Project", response)
+    if success:
+        project_id = response.json()["id"]
+        created_project_ids.append(project_id)
+        print(f"Created project ID: {project_id}")
+    
+    # Test GET /api/projects/ - Get list of projects
+    response = requests.get(
+        f"{BACKEND_URL}/projects/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Projects List", response)
+    if success:
+        projects = response.json()
+        print(f"Found {len(projects)} projects")
+    
+    # Test GET /api/projects/ with filters
+    response = requests.get(
+        f"{BACKEND_URL}/projects/?status=in_progress&client_id={client_id}",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Projects with Filters", response)
+    if success:
+        filtered_projects = response.json()
+        print(f"Found {len(filtered_projects)} projects with filters")
+    
+    # Test GET /api/projects/client/{client_id} - Get projects by client
+    response = requests.get(
+        f"{BACKEND_URL}/projects/client/{client_id}",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Projects by Client", response)
+    if success:
+        client_projects = response.json()
+        print(f"Found {len(client_projects)} projects for client")
+    
+    # Test GET /api/projects/statistics - Get project statistics
+    response = requests.get(
+        f"{BACKEND_URL}/projects/statistics",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Project Statistics", response)
+    if success:
+        stats = response.json()
+        print(f"Project statistics: {stats}")
+    
+    # Test GET /api/projects/{project_id} - Get project details
+    if created_project_ids:
+        project_id = created_project_ids[0]
+        
+        response = requests.get(
+            f"{BACKEND_URL}/projects/{project_id}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result("Get Project Details", response)
+        if success:
+            project = response.json()
+            print(f"Project details: {project['name']} - Status: {project['status']}")
+    
+    # Test PUT /api/projects/{project_id} - Update project
+    if created_project_ids:
+        project_id = created_project_ids[0]
+        
+        update_data = {
+            "name": f"Updated Project {uuid.uuid4().hex[:8]}",
+            "client_id": client_id,
+            "description": "This project was updated by the API test",
+            "status": "on_hold",
+            "contract_value": 15000.0,
+            "debt": 5000.0,
+            "start_date": project_data["start_date"],
+            "end_date": project_data["end_date"]
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/projects/{project_id}",
+            headers=get_headers(),
+            json=update_data
+        )
+        
+        success = print_test_result("Update Project", response)
+        if success:
+            updated_project = response.json()
+            print(f"Updated project: {updated_project['name']} - Status: {updated_project['status']}")
+    
+    # Create additional projects for bulk operations
+    additional_project_ids = []
+    for i in range(2):
+        project_data = {
+            "name": f"Bulk Test Project {i+1} {uuid.uuid4().hex[:6]}",
+            "client_id": client_id,
+            "description": f"This is a test project {i+1} for bulk operations",
+            "status": "planning"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/projects/",
+            headers=get_headers(),
+            json=project_data
+        )
+        
+        if response.status_code == 200:
+            project_id = response.json()["id"]
+            additional_project_ids.append(project_id)
+            created_project_ids.append(project_id)
+            print(f"Created additional project {i+1} ID: {project_id}")
+    
+    # Test bulk operations
+    if additional_project_ids:
+        # Test POST /api/projects/bulk-archive
+        response = requests.post(
+            f"{BACKEND_URL}/projects/bulk-archive",
+            headers=get_headers(),
+            json=additional_project_ids
+        )
+        
+        print_test_result("Bulk Archive Projects", response)
+        
+        # Test POST /api/projects/bulk-restore
+        response = requests.post(
+            f"{BACKEND_URL}/projects/bulk-restore",
+            headers=get_headers(),
+            json=additional_project_ids
+        )
+        
+        print_test_result("Bulk Restore Projects", response)
+        
+        # Test POST /api/projects/bulk-delete
+        response = requests.post(
+            f"{BACKEND_URL}/projects/bulk-delete",
+            headers=get_headers(),
+            json=additional_project_ids
+        )
+        
+        print_test_result("Bulk Delete Projects", response)
+        
+        # Remove deleted project IDs from our tracking list
+        for project_id in additional_project_ids:
+            if project_id in created_project_ids:
+                created_project_ids.remove(project_id)
+    
+    # Test DELETE /api/projects/{project_id} - Delete project
+    if created_project_ids:
+        project_id = created_project_ids[0]
+        
+        response = requests.delete(
+            f"{BACKEND_URL}/projects/{project_id}",
+            headers=get_headers()
+        )
+        
+        print_test_result("Delete Project", response)
+        
+        # Verify project was deleted
+        response = requests.get(
+            f"{BACKEND_URL}/projects/{project_id}",
+            headers=get_headers()
+        )
+        
+        print_test_result("Verify Project Deletion", response, expected_status=404)
+        
+        # Remove deleted project ID from our tracking list
+        created_project_ids.remove(project_id)
+    
+    return created_project_ids
+
 def main():
     """Main test function"""
-    print("=== Starting Expense Management System API Tests ===")
+    print("=== Starting API Tests ===")
     
     # Get authentication token
     if not get_token():
@@ -737,6 +967,7 @@ def main():
     expense_ids = test_expenses(category_ids, folder_ids)
     test_expense_statistics()
     client_ids = test_clients()
+    project_ids = test_projects(client_ids)
     
     # Clean up
     cleanup()
