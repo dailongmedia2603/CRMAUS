@@ -736,6 +736,7 @@ def main():
     folder_ids = test_expense_folders()
     expense_ids = test_expenses(category_ids, folder_ids)
     test_expense_statistics()
+    client_ids = test_clients()
     
     # Clean up
     cleanup()
