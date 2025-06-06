@@ -1497,7 +1497,12 @@ const Clients = () => {
                         )}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                        <button
+                          onClick={() => navigate(`/clients/${client.id}`)}
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                        >
+                          {client.name}
+                        </button>
                         <div className="text-sm text-gray-500">{client.company}</div>
                       </div>
                     </div>
