@@ -2479,7 +2479,598 @@ const ClientDetail = () => {
   );
 };
 const Projects = () => <ProjectsComponent />;
-const ProjectDetail = () => <div>Project Detail component placeholder</div>;
+// Component chi tiết dự án
+const ProjectDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [project, setProject] = useState(null);
+  const [client, setClient] = useState(null);
+  const [contracts, setContracts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    fetchProjectDetail();
+    fetchProjectTasks();
+    fetchProjectContracts();
+    fetchProjectInvoices();
+  }, [id]);
+
+  const fetchProjectDetail = async () => {
+    try {
+      const response = await axios.get(`${API}/projects/${id}`);
+      setProject(response.data);
+      
+      // Fetch client info
+      if (response.data.client_id) {
+        const clientResponse = await axios.get(`${API}/clients/${response.data.client_id}`);
+        setClient(clientResponse.data);
+      }
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      toast.error("Không thể tải thông tin dự án");
+      navigate('/projects');
+    }
+  };
+
+  const fetchProjectTasks = async () => {
+    try {
+      // Note: This would need to be implemented based on your task structure
+      // For now, we'll set empty array
+      setTasks([]);
+    } catch (error) {
+      console.error("Error fetching project tasks:", error);
+    }
+  };
+
+  const fetchProjectContracts = async () => {
+    try {
+      const response = await axios.get(`${API}/contracts/`);
+      // Filter contracts by project_id
+      const projectContracts = response.data.filter(contract => contract.project_id === id);
+      setContracts(projectContracts);
+    } catch (error) {
+      console.error("Error fetching project contracts:", error);
+    }
+  };
+
+  const fetchProjectInvoices = async () => {
+    try {
+      const response = await axios.get(`${API}/invoices/`);
+      // Filter invoices by project_id
+      const projectInvoices = response.data.filter(invoice => invoice.project_id === id);
+      setInvoices(projectInvoices);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching project invoices:", error);
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">Đang tải thông tin dự án...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-600">Không tìm thấy thông tin dự án</p>
+        <button
+          onClick={() => navigate('/projects')}
+          className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+        >
+          Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'on_hold': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    const statusMap = {
+      'planning': 'Đang lập kế hoạch',
+      'in_progress': 'Đang thực hiện',
+      'on_hold': 'Tạm dừng',
+      'completed': 'Hoàn thành',
+      'cancelled': 'Đã hủy',
+      'overdue': 'Quá hạn',
+      'pending': 'Chờ xử lý'
+    };
+    return statusMap[status] || status;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header với thông tin cơ bản */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/projects')}
+              className="flex items-center text-gray-600 hover:text-gray-900"
+            >
+              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Quay lại danh sách dự án
+            </button>
+            <div className="flex space-x-3">
+              <button className="bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Chỉnh sửa
+              </button>
+              <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                Tạo hóa đơn
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-6">
+          <div className="flex items-start space-x-6">
+            {/* Icon dự án */}
+            <div className="flex-shrink-0">
+              <div className="h-24 w-24 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <svg className="h-12 w-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Thông tin chính */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-3">
+                <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(project.status)}`}>
+                  {getStatusText(project.status)}
+                </span>
+              </div>
+              
+              {client && (
+                <button
+                  onClick={() => navigate(`/clients/${client.id}`)}
+                  className="text-lg text-indigo-600 hover:text-indigo-800 mt-1"
+                >
+                  {client.name} - {client.company}
+                </button>
+              )}
+              
+              {project.description && (
+                <p className="text-sm text-gray-600 mt-2">{project.description}</p>
+              )}
+
+              {/* Team members */}
+              {project.team && project.team.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-500 mb-2">Thành viên nhóm:</p>
+                  <div className="flex space-x-2">
+                    {project.team.map((member, index) => (
+                      <div
+                        key={index}
+                        className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center"
+                      >
+                        <span className="text-xs font-medium text-gray-700">
+                          {member.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stats cards mini */}
+              <div className="grid grid-cols-4 gap-4 mt-6">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">
+                    {project.budget ? project.budget.toLocaleString() : '0'} VNĐ
+                  </div>
+                  <div className="text-sm text-gray-600">Ngân sách</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">
+                    {project.contract_value ? project.contract_value.toLocaleString() : '0'} VNĐ
+                  </div>
+                  <div className="text-sm text-gray-600">Giá trị hợp đồng</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">{contracts.length}</div>
+                  <div className="text-sm text-gray-600">Hợp đồng</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">{invoices.length}</div>
+                  <div className="text-sm text-gray-600">Hóa đơn</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Thông tin thời gian và tài chính */}
+            <div className="flex-shrink-0 w-80">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Thông tin dự án</h3>
+                <div className="space-y-3">
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Ngày bắt đầu</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.start_date ? format(new Date(project.start_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+                    </dd>
+                  </div>
+                  
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Ngày kết thúc</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.end_date ? format(new Date(project.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+                    </dd>
+                  </div>
+
+                  {project.debt && project.debt > 0 && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Công nợ</dt>
+                      <dd className="mt-1 text-sm text-red-600 font-semibold">
+                        {project.debt.toLocaleString()} VNĐ
+                      </dd>
+                    </div>
+                  )}
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Ngày tạo</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.created_at ? format(new Date(project.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Cập nhật cuối</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.updated_at ? format(new Date(project.updated_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                    </dd>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`${
+                activeTab === 'overview'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Tổng quan
+            </button>
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={`${
+                activeTab === 'tasks'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Nhiệm vụ ({tasks.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('contracts')}
+              className={`${
+                activeTab === 'contracts'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Hợp đồng ({contracts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`${
+                activeTab === 'invoices'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Hóa đơn ({invoices.length})
+            </button>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {/* Tab Content */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Progress Summary */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Tiến độ dự án</h3>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-indigo-600">
+                        {project.status === 'completed' ? '100%' : 
+                         project.status === 'in_progress' ? '60%' : 
+                         project.status === 'on_hold' ? '30%' : '0%'}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Hoàn thành</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">
+                        {invoices.filter(inv => inv.status === 'paid').length}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Hóa đơn đã thanh toán</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">
+                        {project.team ? project.team.length : 0}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Thành viên tham gia</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Project Description */}
+              {project.description && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Mô tả dự án</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Financial Summary */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Tổng quan tài chính</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-lg font-semibold text-blue-900">
+                      {project.budget ? project.budget.toLocaleString() : '0'} VNĐ
+                    </div>
+                    <div className="text-sm text-blue-600">Ngân sách dự án</div>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-lg font-semibold text-green-900">
+                      {project.contract_value ? project.contract_value.toLocaleString() : '0'} VNĐ
+                    </div>
+                    <div className="text-sm text-green-600">Giá trị hợp đồng</div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <div className="text-lg font-semibold text-yellow-900">
+                      {invoices.reduce((total, inv) => total + (inv.amount || 0), 0).toLocaleString()} VNĐ
+                    </div>
+                    <div className="text-sm text-yellow-600">Tổng hóa đơn</div>
+                  </div>
+                  
+                  {project.debt && project.debt > 0 && (
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <div className="text-lg font-semibold text-red-900">
+                        {project.debt.toLocaleString()} VNĐ
+                      </div>
+                      <div className="text-sm text-red-600">Công nợ</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Lịch sử hoạt động</h3>
+                <div className="flow-root">
+                  <ul className="-mb-8">
+                    <li>
+                      <div className="relative pb-8">
+                        <div className="relative flex space-x-3">
+                          <div>
+                            <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                              <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                              </svg>
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                            <div>
+                              <p className="text-sm text-gray-500">
+                                Dự án được tạo
+                              </p>
+                            </div>
+                            <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                              {project.created_at ? format(new Date(project.created_at), 'dd/MM/yyyy') : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'tasks' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Nhiệm vụ</h3>
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                  Tạo nhiệm vụ mới
+                </button>
+              </div>
+              <div className="text-center py-12">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có nhiệm vụ nào</h3>
+                <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo nhiệm vụ mới cho dự án này.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'contracts' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Hợp đồng</h3>
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                  Tạo hợp đồng mới
+                </button>
+              </div>
+              {contracts.length > 0 ? (
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tiêu đề
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Giá trị
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Trạng thái
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ngày kết thúc
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {contracts.map((contract) => (
+                        <tr key={contract.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {contract.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contract.value?.toLocaleString()} VNĐ
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              contract.status === 'signed' ? 'bg-green-100 text-green-800' :
+                              contract.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {contract.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {contract.end_date ? format(new Date(contract.end_date), 'dd/MM/yyyy') : 'N/A'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có hợp đồng nào</h3>
+                  <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo hợp đồng mới cho dự án này.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'invoices' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Hóa đơn</h3>
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                  Tạo hóa đơn mới
+                </button>
+              </div>
+              {invoices.length > 0 ? (
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Số hóa đơn
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tiêu đề
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Số tiền
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Trạng thái
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Hạn thanh toán
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {invoices.map((invoice) => (
+                        <tr key={invoice.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {invoice.invoice_number}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {invoice.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {invoice.amount?.toLocaleString()} VNĐ
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                              invoice.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                              invoice.status === 'sent' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {invoice.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yyyy') : 'N/A'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có hóa đơn nào</h3>
+                  <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo hóa đơn mới cho dự án này.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 const Task = () => <div>Task component placeholder</div>;
 const Contracts = () => <div>Contracts component placeholder</div>;
 const Invoices = () => <div>Invoices component placeholder</div>;
