@@ -712,6 +712,15 @@ def cleanup():
         )
     
     print(f"Deleted {len(created_folder_ids)} folders")
+    
+    # Delete clients
+    for client_id in created_client_ids:
+        requests.delete(
+            f"{BACKEND_URL}/clients/{client_id}",
+            headers=get_headers()
+        )
+    
+    print(f"Deleted {len(created_client_ids)} clients")
 
 def main():
     """Main test function"""
