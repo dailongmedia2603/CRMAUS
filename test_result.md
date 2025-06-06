@@ -13,6 +13,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the GET /api/projects/ endpoint. The API returns the list of projects correctly. All filters are working properly, including archived, status, year, and search filters. The endpoint is accessible by all authenticated users regardless of role."
+      - working: true
+        agent: "testing"
+        comment: "Retested the GET /api/projects/ endpoint with comprehensive tests. The API returns the list of projects correctly with all filters working, including status, client_id, team_member, year, quarter, month, and search. The endpoint is accessible by all authenticated users and returns the expected data structure."
 
   - task: "Projects API - PUT /api/projects/{project_id}"
     implemented: true
