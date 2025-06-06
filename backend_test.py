@@ -737,6 +737,8 @@ def test_projects(client_ids=None):
     """Test Projects API endpoints"""
     print("\n=== Testing Projects API ===")
     
+    global created_project_ids
+    
     # Create a client if none provided
     if not client_ids or len(client_ids) == 0:
         client_data = {
