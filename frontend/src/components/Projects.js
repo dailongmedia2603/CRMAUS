@@ -890,8 +890,7 @@ const Projects = ({ user }) => {
                             <div className="py-1">
                               <button
                                 onClick={() => {
-                                  // Chi tiết dự án - có thể navigate tới trang chi tiết
-                                  console.log('View project details:', project.id);
+                                  navigate(`/projects/${project.id}`);
                                   setActionDropdownOpen(null);
                                 }}
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
