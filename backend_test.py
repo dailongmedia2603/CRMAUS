@@ -16,6 +16,7 @@ token = None
 created_category_ids = []
 created_folder_ids = []
 created_expense_ids = []
+created_client_ids = []
 
 def get_token():
     """Get authentication token"""
