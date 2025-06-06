@@ -486,6 +486,9 @@ agent_communication:
   - agent: "testing"
     message: "Completed retesting of the Expense Statistics API. The endpoint is now working correctly after the routing fix. Successfully tested GET /api/expenses/statistics with various filters including year, quarter, month, and category. The API returns the expected data structure with total_expenses, amounts by status, counts by status, expenses by category, and monthly trends. All expense-related APIs are now working correctly, including expense categories, folders, CRUD operations, bulk operations, and statistics."
 
+  - agent: "testing"
+    message: "Completed testing of all Client API endpoints. Successfully tested GET /api/clients/ (list clients), GET /api/clients/{client_id} (get client details), POST /api/clients/ (create client), PUT /api/clients/{client_id} (update client), and DELETE /api/clients/{client_id} (delete client). All endpoints are working correctly. The GET /api/clients/ endpoint returns the list of clients including the demo client 'Công ty ABC'. The API correctly handles CRUD operations for clients with proper validation and error handling. All tests passed successfully with no issues."
+
 ## Update Report - Project Detail Enhancement (2025-06-01)
 
 ### ✅ COMPLETED PROJECT DETAIL FEATURES
