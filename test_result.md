@@ -426,7 +426,6 @@ test_plan:
     - "Projects API - PUT /api/projects/{project_id}"
     - "Projects API - DELETE /api/projects/{project_id}"
     - "Projects API - Bulk Operations"
-    - "Clients API - GET /api/clients/"
     - "Users API - GET /api/users/"
     - "Users API - GET /api/users/by-role/{role}"
     - "Projects API - Campaign Integration"
