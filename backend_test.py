@@ -680,6 +680,8 @@ def test_clients():
     
     return created_client_ids
 
+created_project_ids = []
+
 def cleanup():
     """Clean up created test data"""
     print("\n=== Cleaning up test data ===")
@@ -692,6 +694,15 @@ def cleanup():
         )
     
     print(f"Deleted {len(created_expense_ids)} expenses")
+    
+    # Delete projects
+    for project_id in created_project_ids:
+        requests.delete(
+            f"{BACKEND_URL}/projects/{project_id}",
+            headers=get_headers()
+        )
+    
+    print(f"Deleted {len(created_project_ids)} projects")
     
     # Delete categories and folders
     # Note: We can only delete categories and folders that don't have expenses
