@@ -1664,40 +1664,54 @@ const Clients = () => {
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Tìm kiếm khách hàng..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <select
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="active">Đang hoạt động</option>
-              <option value="archived">Đã lưu trữ</option>
-              <option value="all">Tất cả</option>
-            </select>
-
-            {selectedClients.length > 0 && (
+      {/* Modern Search and Filter Bar */}
+      <div className="modern-card">
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            {/* Search */}
+            <div className="flex-1 max-w-md">
               <div className="relative">
-                <button
-                  onClick={toggleBulkActionMenu}
-                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm hover:bg-gray-200 transition-colors"
-                >
-                  Thao tác ({selectedClients.length})
-                </button>
-                {bulkActionMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khách hàng..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="modern-input pl-10"
+                />
+              </div>
+            </div>
+            
+            {/* Filter Controls */}
+            <div className="flex gap-3">
+              <select
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                className="modern-input"
+              >
+                <option value="active">Đang hoạt động</option>
+                <option value="archived">Đã lưu trữ</option>
+                <option value="all">Tất cả</option>
+              </select>
+
+              {selectedClients.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={toggleBulkActionMenu}
+                    className="btn-secondary"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                    </svg>
+                    Thao tác ({selectedClients.length})
+                  </button>
+                  {bulkActionMenuOpen && (
+                    <div className="dropdown-menu">
+                      {bulkActionMenuOpen && <div className="dropdown-backdrop" onClick={() => setBulkActionMenuOpen(false)}></div>}
                     <div className="py-1">
                       <button
                         onClick={() => handleBulkAction('archive')}
