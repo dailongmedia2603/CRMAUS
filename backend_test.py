@@ -1195,3 +1195,6 @@ def main_auth_test():
         print("\n❌ Authentication failed. Skipping other tests.")
         
     print("\n=== All tests completed ===")
+-e 
+if __name__ == "__main__":
+    main_auth_test()
