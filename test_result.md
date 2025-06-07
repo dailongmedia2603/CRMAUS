@@ -123,7 +123,7 @@ backend:
 frontend:
   - task: "ExpenseOverview Component"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/ExpenseComponents.js"
     stuck_count: 0
     priority: "high"
@@ -132,10 +132,13 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the ExpenseOverview component which calls the /api/expenses/statistics endpoint."
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the ExpenseOverview component is properly implemented. It fetches data from /api/expenses/statistics endpoint (which has been verified to work), displays statistics cards for total expenses, pending, approved, and paid amounts. It also shows charts for expenses by category and monthly trends. The component includes proper loading states, error handling, and filter functionality for year, quarter, month, and category."
 
   - task: "ExpenseList Component"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/ExpenseComponents.js"
     stuck_count: 0
     priority: "high"
@@ -144,10 +147,13 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the ExpenseList component which calls the /api/expenses/ endpoint."
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the ExpenseList component is properly implemented. It fetches data from /api/expenses/ endpoint (which has been verified to work), displays a table of expenses with all required fields. It includes search functionality, status and category filters, and bulk actions. The component also provides a modal for adding and editing expenses with proper form validation and error handling."
 
   - task: "ExpenseConfig Component"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/ExpenseComponents.js"
     stuck_count: 0
     priority: "high"
@@ -156,10 +162,13 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the ExpenseConfig component which calls the /api/expense-categories/ and /api/expense-folders/ endpoints."
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the ExpenseConfig component is properly implemented. It provides tab navigation between 'Hạng mục chi phí' and 'Thư mục' sub-tabs, and correctly renders the ExpenseCategoryManager and ExpenseFolderManager components based on the active tab."
       
   - task: "ExpenseCategoryManager Component"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/ExpenseComponents.js"
     stuck_count: 0
     priority: "high"
@@ -168,10 +177,13 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the ExpenseCategoryManager component which is part of the ExpenseConfig tab."
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the ExpenseCategoryManager component is properly implemented. It fetches data from /api/expense-categories/ endpoint (which has been verified to work), displays a grid of expense categories with their details. It provides functionality to add, edit, and delete categories, as well as toggle their active status. The component includes a modal for adding and editing categories with proper form validation and error handling."
       
   - task: "ExpenseFolderManager Component"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/ExpenseComponents.js"
     stuck_count: 0
     priority: "high"
@@ -180,6 +192,9 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the ExpenseFolderManager component which is part of the ExpenseConfig tab."
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the ExpenseFolderManager component is properly implemented. It fetches data from /api/expense-folders/ endpoint (which has been verified to work), displays a grid of expense folders with their details. It provides functionality to add, edit, and delete folders, as well as toggle their active status. The component includes a modal for adding and editing folders with proper form validation and error handling."
 
 metadata:
   created_by: "testing_agent"
