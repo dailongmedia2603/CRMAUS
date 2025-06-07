@@ -684,6 +684,134 @@ const Clients = () => {
 // Project Detail Placeholder
 const ProjectDetail = () => <div className="modern-card p-6"><h2>Project Detail</h2></div>;
 
+// Login Component
+const LoginComponent = ({ login }) => {
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      console.log('🔐 Login attempt with:', { email: credentials.email });
+      console.log('🌐 API URL:', API);
+      
+      const formData = new URLSearchParams();
+      formData.append('username', credentials.email);
+      formData.append('password', credentials.password);
+
+      console.log('📤 Sending login request...');
+      const response = await axios.post(`${API}/api/token`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      console.log('✅ Login response:', response.data);
+      
+      console.log('👤 Fetching user info...');
+      const userResponse = await axios.get(`${API}/api/users/me/`, {
+        headers: { Authorization: `Bearer ${response.data.access_token}` }
+      });
+
+      console.log('👤 User data:', userResponse.data);
+      
+      login(userResponse.data, response.data.access_token);
+      toast.success('Đăng nhập thành công!');
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      toast.error(`Đăng nhập thất bại! ${error.response?.data?.detail || 'Vui lòng kiểm tra thông tin.'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <div className="mx-auto h-20 w-20 bg-indigo-600 rounded-full flex items-center justify-center">
+            <svg className="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0a2 2 0 002-2v-1a2 2 0 00-2-2H5a2 2 0 00-2 2v1a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Đăng nhập CRM AUS
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Hệ thống quản lý khách hàng toàn diện
+          </p>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={credentials.email}
+                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Mật khẩu
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Mật khẩu"
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="spinner mr-2"></div>
+                  Đang đăng nhập...
+                </div>
+              ) : (
+                'Đăng nhập'
+              )}
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <div className="text-sm text-gray-600">
+              <strong>Thông tin đăng nhập demo:</strong>
+            </div>
+            <div className="text-sm text-gray-500 mt-2">
+              Email: admin@example.com<br />
+              Password: admin123
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Remaining component placeholders
 const Task = () => <div className="modern-card p-6"><h2>Task Management</h2></div>;
 const Contracts = () => <div className="modern-card p-6"><h2>Contracts</h2></div>;
