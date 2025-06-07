@@ -393,53 +393,80 @@ const MainLayout = () => {
 
       {/* Main content */}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
-          <button
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <span className="sr-only">Open sidebar</span>
-            <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <div className="flex-1 px-4 flex justify-between">
-            <div className="flex-1 flex">
-              <form className="w-full flex md:ml-0" action="#" method="GET">
-                <label htmlFor="search-field" className="sr-only">
-                  Tìm kiếm
-                </label>
-                <div className="relative w-full text-gray-400 focus-within:text-gray-600">
-                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <input
-                    id="search-field"
-                    className="block w-full h-full pl-8 pr-3 py-2 border-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-0 focus:border-transparent sm:text-sm"
-                    placeholder="Tìm kiếm"
-                    type="search"
-                    name="search"
-                  />
-                </div>
-              </form>
+        {/* Modern Header */}
+        <div className="modern-header flex items-center justify-between px-6 py-4">
+          {/* Breadcrumb */}
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center text-sm text-gray-500">
+              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+              </svg>
+              <span className="breadcrumb-item">Trang chủ</span>
+              {currentPage !== 'dashboard' && (
+                <>
+                  <svg className="w-4 h-4 mx-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="breadcrumb-item active">
+                    {currentPage === 'clients' ? 'Khách hàng' :
+                     currentPage === 'client-detail' ? 'Chi tiết khách hàng' :
+                     currentPage === 'projects' ? 'Dự án' :
+                     currentPage === 'project-detail' ? 'Chi tiết dự án' :
+                     currentPage === 'task' ? 'Nhiệm vụ' :
+                     currentPage === 'task-templates' ? 'Template dịch vụ' :
+                     currentPage === 'campaigns' ? 'Chiến dịch' :
+                     currentPage === 'campaign-detail' ? 'Chi tiết chiến dịch' :
+                     currentPage === 'invoices' ? 'Hóa đơn' :
+                     currentPage === 'contracts' ? 'Hợp đồng' :
+                     currentPage === 'expenses' ? 'Quản lý chi phí' :
+                     currentPage === 'documents' ? 'Tài liệu' :
+                     currentPage === 'settings' ? 'Cài đặt' :
+                     'Trang'}
+                  </span>
+                </>
+              )}
             </div>
-            <div className="ml-4 flex items-center md:ml-6">
-              {/* Profile dropdown */}
-              <div className="ml-3 relative">
-                <div>
-                  <button
-                    className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    id="user-menu"
-                    aria-haspopup="true"
-                  >
-                    <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-                      {user.full_name.charAt(0)}
-                    </div>
-                  </button>
-                </div>
+          </div>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {/* Search Button */}
+            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
+            {/* Notifications */}
+            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM5.07 7A7.002 7.002 0 0112 2c1.857 0 3.547.72 4.816 1.898M15 17h5l-5 5v-5z" />
+              </svg>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            {/* Settings */}
+            <button 
+              onClick={() => user?.role === 'admin' && setCurrentPage('settings')}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              disabled={user?.role !== 'admin'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            {/* User Menu */}
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
+                <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
+              </div>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">
+                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
             </div>
           </div>
