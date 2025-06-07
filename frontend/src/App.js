@@ -285,24 +285,35 @@ const LoginComponent = ({ login }) => {
     setLoading(true);
 
     try {
+      console.log('🔐 Login attempt with:', { email: credentials.email });
+      console.log('🌐 API URL:', API);
+      
       const formData = new URLSearchParams();
       formData.append('username', credentials.email);
       formData.append('password', credentials.password);
 
-      const response = await axios.post(`${API}/token`, formData, {
+      console.log('📤 Sending login request...');
+      const response = await axios.post(`${API}/api/token`, formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
 
-      const userResponse = await axios.get(`${API}/users/me/`, {
+      console.log('✅ Login response:', response.data);
+      
+      console.log('👤 Fetching user info...');
+      const userResponse = await axios.get(`${API}/api/users/me/`, {
         headers: { Authorization: `Bearer ${response.data.access_token}` }
       });
 
+      console.log('👤 User data:', userResponse.data);
+      
       login(userResponse.data, response.data.access_token);
       toast.success('Đăng nhập thành công!');
     } catch (error) {
-      toast.error('Đăng nhập thất bại! Vui lòng kiểm tra thông tin.');
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      toast.error(`Đăng nhập thất bại! ${error.response?.data?.detail || 'Vui lòng kiểm tra thông tin.'}`);
     } finally {
       setLoading(false);
     }
