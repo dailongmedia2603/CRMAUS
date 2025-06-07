@@ -987,5 +987,211 @@ def main():
     
     print("\n=== All tests completed ===")
 
-if __name__ == "__main__":
-    main()
+def test_projects_api():
+    """Test projects API"""
+    print("\n=== Testing Projects API ===")
+    
+    # Get projects list
+    response = requests.get(
+        f"{BACKEND_URL}/projects/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Projects List", response)
+    if success:
+        projects = response.json()
+        print(f"Found {len(projects)} projects")
+    
+    return success
+
+def test_campaigns_api():
+    """Test campaigns API"""
+    print("\n=== Testing Campaigns API ===")
+    
+    # Get campaigns list
+    response = requests.get(
+        f"{BACKEND_URL}/campaigns/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Campaigns List", response)
+    if success:
+        campaigns = response.json()
+        print(f"Found {len(campaigns)} campaigns")
+    
+    return success
+
+def test_templates_api():
+    """Test templates API"""
+    print("\n=== Testing Templates API ===")
+    
+    # Get templates list
+    response = requests.get(
+        f"{BACKEND_URL}/templates/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Templates List", response)
+    if success:
+        templates = response.json()
+        print(f"Found {len(templates)} templates")
+    
+    return success
+
+def test_health_check():
+    """Test health check endpoint"""
+    print("\n=== Testing Health Check Endpoint ===")
+    
+    response = requests.get(f"{BACKEND_URL}/health")
+    
+    success = print_test_result("Health Check", response)
+    if success:
+        data = response.json()
+        print(f"Health status: {data['status']}")
+        print(f"Timestamp: {data['timestamp']}")
+    
+    return success
+
+def test_setup_system():
+    """Test setup system endpoint"""
+    print("\n=== Testing Setup System Endpoint ===")
+    
+    response = requests.post(f"{BACKEND_URL}/setup")
+    
+    success = print_test_result("Setup System", response)
+    if success:
+        data = response.json()
+        print(f"Setup response: {data}")
+    
+    return success
+
+def test_authentication():
+    """Test authentication system with token endpoint"""
+    print("\n=== Testing Authentication System ===")
+    
+    # Test with valid credentials
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": EMAIL, "password": PASSWORD}
+    )
+    
+    success = print_test_result("Authentication with Valid Credentials", response)
+    if success:
+        data = response.json()
+        print(f"Token type: {data['token_type']}")
+        print(f"Access token received: {data['access_token'][:10]}...")
+    
+    # Test with invalid credentials
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": "invalid@example.com", "password": "wrongpassword"}
+    )
+    
+    print_test_result("Authentication with Invalid Credentials", response, expected_status=401)
+    
+    return success
+
+def test_user_info():
+    """Test user info retrieval"""
+    print("\n=== Testing User Info Retrieval ===")
+    
+    response = requests.get(
+        f"{BACKEND_URL}/users/me/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get User Info", response)
+    if success:
+        user = response.json()
+        print(f"User info: {user['email']} - {user['full_name']}")
+    
+    return success
+
+def create_test_user():
+    """Create a test user account"""
+    print("\n=== Creating Test User Account ===")
+    
+    # Generate a unique email
+    test_email = f"test_user_{uuid.uuid4().hex[:8]}@example.com"
+    
+    user_data = {
+        "email": test_email,
+        "password": "TestPassword123!",
+        "full_name": "Test User",
+        "is_active": True
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers(),
+        json=user_data
+    )
+    
+    success = print_test_result("Create Test User", response)
+    if success:
+        user = response.json()
+        print(f"Created test user: {user['email']}")
+        
+        # Test login with new user
+        login_response = requests.post(
+            f"{BACKEND_URL}/token",
+            data={"username": test_email, "password": "TestPassword123!"}
+        )
+        
+        login_success = print_test_result("Login with Test User", login_response)
+        if login_success:
+            print("✅ Test user login successful")
+        
+        # Clean up - delete test user
+        delete_response = requests.delete(
+            f"{BACKEND_URL}/users/{user['id']}",
+            headers=get_headers()
+        )
+        
+        print_test_result("Delete Test User", delete_response)
+    
+    return success
+
+def main_auth_test():
+    """Main test function for authentication and basic APIs"""
+    print("=== Starting CRM Backend Tests ===")
+    print(f"Backend URL: {BACKEND_URL}")
+    
+    # Test health check endpoint
+    health_check_success = test_health_check()
+    
+    # Test setup system endpoint
+    setup_success = test_setup_system()
+    
+    # Test authentication system
+    auth_success = test_authentication()
+    
+    # If authentication successful, test other endpoints
+    if auth_success:
+        # Test user info retrieval
+        user_info_success = test_user_info()
+        
+        # Test main APIs
+        projects_success = test_projects_api()
+        campaigns_success = test_campaigns_api()
+        clients_success = test_clients()
+        templates_success = test_templates_api()
+        
+        # Create and test a new user account
+        create_user_success = create_test_user()
+        
+        # Print summary
+        print("\n=== Test Summary ===")
+        print(f"Health Check: {'✅' if health_check_success else '❌'}")
+        print(f"Setup System: {'✅' if setup_success else '❌'}")
+        print(f"Authentication: {'✅' if auth_success else '❌'}")
+        print(f"User Info: {'✅' if user_info_success else '❌'}")
+        print(f"Projects API: {'✅' if projects_success else '❌'}")
+        print(f"Campaigns API: {'✅' if campaigns_success else '❌'}")
+        print(f"Clients API: {'✅' if clients_success else '❌'}")
+        print(f"Templates API: {'✅' if templates_success else '❌'}")
+        print(f"Create Test User: {'✅' if create_user_success else '❌'}")
+    else:
+        print("\n❌ Authentication failed. Skipping other tests.")
+        
+    print("\n=== All tests completed ===")
