@@ -35,7 +35,7 @@ backend:
         agent: "testing"
         comment: "Retested the GET /api/projects/{project_id} endpoint. The API returns the project details correctly with all fields including client_id, name, description, start_date, end_date, status, team, contract_value, debt, and role-based user assignments. The endpoint properly handles invalid project IDs with a 404 error."
 
-  - task: "Projects API - GET /api/projects/client/{client_id}"
+  - task: "Authentication System - POST /api/token"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -45,9 +45,55 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the GET /api/projects/client/{client_id} endpoint to ensure it returns the projects for a specific client correctly"
+        comment: "Need to test the POST /api/token endpoint to ensure it correctly authenticates users and returns a valid JWT token"
       - working: true
         agent: "testing"
+        comment: "Successfully tested the POST /api/token endpoint. The API correctly authenticates users with valid credentials and returns a JWT token. The endpoint returns a 401 error for invalid credentials. The token can be used to access protected endpoints."
+
+  - task: "Health Check - GET /api/health"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/health endpoint to ensure it returns the system health status"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/health endpoint. The API returns a 200 status code with the system health status 'ok' and a timestamp."
+
+  - task: "Setup System - POST /api/setup"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the POST /api/setup endpoint to ensure it correctly sets up the initial admin user"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the POST /api/setup endpoint. The API returns a message indicating that setup is already completed, which is expected since the system is already initialized."
+
+  - task: "User Info - GET /api/users/me/"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/users/me/ endpoint to ensure it returns the current user's information"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/users/me/ endpoint. The API returns the current user's information including email and full name. The endpoint requires authentication and returns the correct user data."
         comment: "Successfully tested the GET /api/projects/client/{client_id} endpoint. The API returns the list of projects for a specific client correctly. The endpoint returns an empty list when no projects are found for the client. The endpoint returns a 404 error when an invalid client_id is provided."
       - working: true
         agent: "testing"
