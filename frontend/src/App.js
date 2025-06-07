@@ -679,7 +679,7 @@ const Clients = () => {
 };
 
 // Client Detail Component
-const ClientDetail = () => {
+// ClientDetail imported from components/ClientDetail.js
   const { id } = useParams();
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
@@ -1254,7 +1254,7 @@ const ClientDetail = () => {
   );
 };
 
-const ClientDetail = () => {
+// ClientDetail imported from components/ClientDetail.js
   const { id } = useParams();
   
   return (
@@ -1762,7 +1762,7 @@ const Opportunities = () => <div className="modern-card p-6"><h2>Opportunities</
 const SalesReports = () => <div className="modern-card p-6"><h2>Sales Reports</h2></div>;
 
 // Client Detail Component
-const ClientDetail = () => {
+// ClientDetail imported from components/ClientDetail.js
   const { id } = useParams();
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
@@ -2149,7 +2149,7 @@ const ClientDetail = () => {
 };
 
 // Client Detail Component
-const ClientDetail = () => {
+// ClientDetail imported from components/ClientDetail.js
   const { id } = useParams();
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
