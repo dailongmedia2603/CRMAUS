@@ -385,7 +385,7 @@ const MainLayout = () => {
       {/* Static sidebar for desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex flex-col h-0 flex-1 bg-indigo-700">
+          <div className="flex flex-col h-0 flex-1">
             <SidebarContent user={user} logout={logout} />
           </div>
         </div>
