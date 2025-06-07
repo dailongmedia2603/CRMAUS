@@ -285,9 +285,14 @@ const LoginComponent = ({ login }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/token`, {
-        username: credentials.email,
-        password: credentials.password
+      const formData = new URLSearchParams();
+      formData.append('username', credentials.email);
+      formData.append('password', credentials.password);
+
+      const response = await axios.post(`${API}/token`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
       const userResponse = await axios.get(`${API}/users/me/`, {
