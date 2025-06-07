@@ -482,18 +482,22 @@ const MainLayout = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/clients/:id" element={<ClientDetail />} />
-                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects" element={<ProjectsComponent />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/task" element={<Task />} />
-                <Route path="/task-templates" element={<Templates />} />
+                <Route path="/task-templates" element={<TemplatesComponent />} />
                 <Route path="/contracts" element={<Contracts />} />
                 <Route path="/invoices" element={<Invoices />} />
-                <Route path="/revenue" element={<Revenue />} />
-                <Route path="/expense" element={<Expense />} />
+                <Route path="/expenses" element={<ExpenseOverview />} />
                 <Route path="/campaigns" element={<CampaignsComponent />} />
                 <Route path="/campaigns/:id" element={<CampaignDetailComponent />} />
-                <Route path="/documents" element={<Documents />} />
+                <Route path="/documents" element={<DocumentsComponent />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/financial-reports" element={<FinancialReports />} />
+                <Route path="/opportunities" element={<Opportunities />} />
+                <Route path="/sales-reports" element={<SalesReports />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </div>
