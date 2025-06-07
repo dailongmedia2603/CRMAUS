@@ -120,6 +120,59 @@ backend:
         agent: "testing"
         comment: "The GET /api/dashboard/statistics endpoint returns a 404 error with the message 'Not Found'. This suggests that the dashboard statistics endpoint might not be implemented or has an incorrect route definition."
 
+frontend:
+  - task: "ExpenseOverview Component"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/ExpenseComponents.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the ExpenseOverview component which calls the /api/expenses/statistics endpoint."
+
+  - task: "ExpenseList Component"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/ExpenseComponents.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the ExpenseList component which calls the /api/expenses/ endpoint."
+
+  - task: "ExpenseConfig Component"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/ExpenseComponents.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the ExpenseConfig component which calls the /api/expense-categories/ and /api/expense-folders/ endpoints."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Expense Categories API"
+    - "Expense Folders API"
+    - "Expenses API"
+    - "Expense Statistics API"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
 agent_communication:
     - agent: "testing"
       message: "I've tested all the expense management API endpoints required by the ExpenseComponents.js frontend code. All four endpoints (GET /api/expense-categories/, GET /api/expense-folders/, GET /api/expenses/, and GET /api/expenses/statistics) are working correctly. The endpoints return the expected data with all required fields and the filtering functionality works as expected. The frontend should be able to integrate with these endpoints without any issues."
