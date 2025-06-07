@@ -156,6 +156,30 @@ frontend:
       - working: "NA"
         agent: "testing"
         comment: "Need to test the ExpenseConfig component which calls the /api/expense-categories/ and /api/expense-folders/ endpoints."
+      
+  - task: "ExpenseCategoryManager Component"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/ExpenseComponents.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the ExpenseCategoryManager component which is part of the ExpenseConfig tab."
+      
+  - task: "ExpenseFolderManager Component"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/ExpenseComponents.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the ExpenseFolderManager component which is part of the ExpenseConfig tab."
 
 metadata:
   created_by: "testing_agent"
