@@ -1756,21 +1756,7 @@ const Contracts = () => <div className="modern-card p-6"><h2>Contracts</h2></div
 const Invoices = () => <div className="modern-card p-6"><h2>Invoices</h2></div>;
 const Settings = () => <div className="modern-card p-6"><h2>Settings</h2></div>;
 const Account = () => <div className="modern-card p-6"><h2>Account</h2></div>;
-const Reports = () => <div className="modern-card p-6"><h2>Reports</h2></div>;
-const FinancialReports = () => <div className="modern-card p-6"><h2>Financial Reports</h2></div>;
-const Opportunities = () => <div className="modern-card p-6"><h2>Opportunities</h2></div>;
-const SalesReports = () => <div className="modern-card p-6"><h2>Sales Reports</h2></div>;
-
-// Client Detail Component
-const ClientDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [client, setClient] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [contracts, setContracts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingClient, setEditingClient] = useState(null);
+// ClientDetail component is imported from ./components/ClientDetail.js
 
   useEffect(() => {
     fetchClientDetails();
