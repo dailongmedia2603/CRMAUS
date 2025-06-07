@@ -22,9 +22,6 @@ const AuthContext = createContext();
 // Export AuthContext for use in other components
 export { AuthContext };
 
-// Import Expense Components
-import { ExpenseOverview, ExpenseList, ExpenseConfig } from './components/ExpenseComponents';
-
 // Expense Management Main Component
 const ExpenseManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
