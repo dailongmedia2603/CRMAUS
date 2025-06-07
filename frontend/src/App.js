@@ -1649,21 +1649,6 @@ const Clients = () => {
         </div>
       </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Mới tháng này</p>
-              <p className="text-2xl font-bold text-purple-600">{statsData.newClientsThisMonth}</p>
-            </div>
-            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Modern Search and Filter Bar */}
       <div className="modern-card">
         <div className="p-6">
