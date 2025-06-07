@@ -446,7 +446,11 @@ const MainLayout = () => {
 
             {/* Settings */}
             <button 
-              onClick={() => user?.role === 'admin' && window.location.href = '/settings'}
+              onClick={() => {
+                if (user?.role === 'admin') {
+                  window.location.href = '/settings';
+                }
+              }}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               disabled={user?.role !== 'admin'}
             >
