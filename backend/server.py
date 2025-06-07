@@ -917,6 +917,71 @@ async def read_invoices(skip: int = 0, limit: int = 100, current_user: User = De
     invoices = await db.invoices.find().skip(skip).limit(limit).to_list(length=limit)
     return invoices
 
+# Invoice statistics endpoint - must be before {invoice_id} endpoint
+@api_router.get("/invoices/statistics")
+async def get_invoice_statistics(
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Build time filter
+    time_filter = {}
+    if year:
+        start_date = datetime(year, 1, 1)
+        if quarter:
+            quarter_months = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
+            start_month, end_month = quarter_months[quarter]
+            start_date = datetime(year, start_month, 1)
+            end_date = datetime(year, end_month + 1, 1) if end_month < 12 else datetime(year + 1, 1, 1)
+        elif month:
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+        else:
+            end_date = datetime(year + 1, 1, 1)
+        
+        time_filter["created_at"] = {"$gte": start_date, "$lt": end_date}
+    
+    # Get invoice statistics
+    base_filter = time_filter
+    
+    total_invoices = await db.invoices.count_documents(base_filter)
+    total_amount = 0
+    paid_amount = 0
+    pending_amount = 0
+    overdue_amount = 0
+    
+    invoices = await db.invoices.find(base_filter).to_list(length=None)
+    
+    for invoice in invoices:
+        total_amount += invoice["amount"]
+        if invoice["status"] == "paid":
+            paid_amount += invoice["amount"]
+        elif invoice["status"] == "sent":
+            pending_amount += invoice["amount"]
+        elif invoice["status"] == "overdue":
+            overdue_amount += invoice["amount"]
+    
+    # Count by status
+    draft_count = await db.invoices.count_documents({**base_filter, "status": "draft"})
+    sent_count = await db.invoices.count_documents({**base_filter, "status": "sent"})
+    paid_count = await db.invoices.count_documents({**base_filter, "status": "paid"})
+    overdue_count = await db.invoices.count_documents({**base_filter, "status": "overdue"})
+    
+    return {
+        "total_invoices": total_invoices,
+        "total_amount": total_amount,
+        "paid_amount": paid_amount,
+        "pending_amount": pending_amount,
+        "overdue_amount": overdue_amount,
+        "by_status": {
+            "draft": draft_count,
+            "sent": sent_count,
+            "paid": paid_count,
+            "overdue": overdue_count
+        }
+    }
+
 @api_router.get("/invoices/client/{client_id}", response_model=List[Invoice])
 async def read_client_invoices(client_id: str, current_user: User = Depends(get_current_active_user)):
     invoices = await db.invoices.find({"client_id": client_id}).to_list(length=100)
