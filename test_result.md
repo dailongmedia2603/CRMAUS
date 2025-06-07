@@ -94,10 +94,20 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the GET /api/users/me/ endpoint. The API returns the current user's information including email and full name. The endpoint requires authentication and returns the correct user data."
-        comment: "Successfully tested the GET /api/projects/client/{client_id} endpoint. The API returns the list of projects for a specific client correctly. The endpoint returns an empty list when no projects are found for the client. The endpoint returns a 404 error when an invalid client_id is provided."
+
+  - task: "Projects API - GET /api/projects/client/{client_id}"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the GET /api/projects/client/{client_id} endpoint to ensure it returns the projects for a specific client correctly"
       - working: true
         agent: "testing"
-        comment: "Retested the GET /api/projects/client/{client_id} endpoint. The API returns the list of projects for a specific client correctly. The endpoint properly handles invalid client IDs with a 404 error. The returned projects contain all expected fields."
 
   - task: "Projects API - GET /api/projects/statistics"
     implemented: true
