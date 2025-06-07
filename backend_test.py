@@ -1152,6 +1152,286 @@ def create_test_user():
     
     return success
 
+def test_invoices():
+    """Test Invoices API endpoints"""
+    print("\n=== Testing Invoices API ===")
+    
+    # Test GET /api/invoices/ - Get list of invoices
+    response = requests.get(
+        f"{BACKEND_URL}/invoices/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Invoices List", response)
+    if success:
+        invoices = response.json()
+        print(f"Found {len(invoices)} invoices")
+    
+    # Test GET /api/invoices/statistics - Get invoice statistics
+    response = requests.get(
+        f"{BACKEND_URL}/invoices/statistics",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Invoice Statistics", response)
+    if success:
+        stats = response.json()
+        print(f"Invoice statistics: {stats}")
+    
+    # Get a single invoice for detailed testing
+    if success and len(invoices) > 0:
+        invoice_id = invoices[0]["id"]
+        
+        # Test GET /api/invoices/{invoice_id} - Get invoice details
+        response = requests.get(
+            f"{BACKEND_URL}/invoices/{invoice_id}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result("Get Invoice Details", response)
+        if success:
+            invoice = response.json()
+            print(f"Invoice details: {invoice['invoice_number']} - Amount: {invoice['amount']}")
+    
+    return success
+
+def test_contracts():
+    """Test Contracts API endpoints"""
+    print("\n=== Testing Contracts API ===")
+    
+    # Test GET /api/contracts/ - Get list of contracts
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Contracts List", response)
+    if success:
+        contracts = response.json()
+        print(f"Found {len(contracts)} contracts")
+    
+    # Get a single contract for detailed testing
+    if success and len(contracts) > 0:
+        contract_id = contracts[0]["id"]
+        
+        # Test GET /api/contracts/{contract_id} - Get contract details
+        response = requests.get(
+            f"{BACKEND_URL}/contracts/{contract_id}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result("Get Contract Details", response)
+        if success:
+            contract = response.json()
+            print(f"Contract details: {contract['title']} - Value: {contract.get('value', 'N/A')}")
+    
+    return success
+
+def test_documents():
+    """Test Documents API endpoints"""
+    print("\n=== Testing Documents API ===")
+    
+    # Test GET /api/document-folders/ - Get list of document folders
+    response = requests.get(
+        f"{BACKEND_URL}/document-folders/",
+        headers=get_headers()
+    )
+    
+    folders_success = print_test_result("Get Document Folders", response)
+    if folders_success:
+        folders = response.json()
+        print(f"Found {len(folders)} document folders")
+    
+    # Test GET /api/documents/ - Get list of documents
+    response = requests.get(
+        f"{BACKEND_URL}/documents/",
+        headers=get_headers()
+    )
+    
+    docs_success = print_test_result("Get Documents List", response)
+    if docs_success:
+        documents = response.json()
+        print(f"Found {len(documents)} documents")
+    
+    # Get a single document for detailed testing
+    if docs_success and len(documents) > 0:
+        document_id = documents[0]["id"]
+        
+        # Test GET /api/documents/{document_id} - Get document details
+        response = requests.get(
+            f"{BACKEND_URL}/documents/{document_id}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result("Get Document Details", response)
+        if success:
+            document = response.json()
+            print(f"Document details: {document['title']} - Type: {document.get('document_type', 'N/A')}")
+    
+    return folders_success and docs_success
+
+def test_dashboard():
+    """Test Dashboard API endpoints"""
+    print("\n=== Testing Dashboard API ===")
+    
+    # Test GET /api/dashboard/statistics - Get dashboard statistics
+    response = requests.get(
+        f"{BACKEND_URL}/dashboard/statistics",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Dashboard Statistics", response)
+    if success:
+        stats = response.json()
+        print("Dashboard statistics:")
+        for key, value in stats.items():
+            if isinstance(value, dict):
+                print(f"- {key}: {len(value)} items")
+            else:
+                print(f"- {key}: {value}")
+    
+    return success
+
+def test_services():
+    """Test Services API endpoints"""
+    print("\n=== Testing Services API ===")
+    
+    # First get campaigns to find a campaign ID
+    response = requests.get(
+        f"{BACKEND_URL}/campaigns/",
+        headers=get_headers()
+    )
+    
+    if response.status_code == 200:
+        campaigns = response.json()
+        if len(campaigns) > 0:
+            campaign_id = campaigns[0]["id"]
+            
+            # Test GET /api/campaigns/{campaign_id}/services/ - Get services for a campaign
+            response = requests.get(
+                f"{BACKEND_URL}/campaigns/{campaign_id}/services/",
+                headers=get_headers()
+            )
+            
+            success = print_test_result("Get Campaign Services", response)
+            if success:
+                services = response.json()
+                print(f"Found {len(services)} services for campaign {campaign_id}")
+                
+                # If services exist, test getting tasks for a service
+                if len(services) > 0:
+                    service_id = services[0]["id"]
+                    
+                    # Test GET /api/services/{service_id}/tasks/ - Get tasks for a service
+                    response = requests.get(
+                        f"{BACKEND_URL}/services/{service_id}/tasks/",
+                        headers=get_headers()
+                    )
+                    
+                    success = print_test_result("Get Service Tasks", response)
+                    if success:
+                        tasks = response.json()
+                        print(f"Found {len(tasks)} tasks for service {service_id}")
+        else:
+            print("❌ No campaigns found to test services")
+            return False
+    else:
+        print(f"❌ Failed to get campaigns: {response.status_code} - {response.text}")
+        return False
+    
+    return success
+
+def test_work_items():
+    """Test Work Items API endpoints"""
+    print("\n=== Testing Work Items API ===")
+    
+    # First get projects to find a project ID
+    response = requests.get(
+        f"{BACKEND_URL}/projects/",
+        headers=get_headers()
+    )
+    
+    if response.status_code == 200:
+        projects = response.json()
+        if len(projects) > 0:
+            project_id = projects[0]["id"]
+            
+            # Test GET /api/projects/{project_id}/work-items/ - Get work items for a project
+            response = requests.get(
+                f"{BACKEND_URL}/projects/{project_id}/work-items/",
+                headers=get_headers()
+            )
+            
+            success = print_test_result("Get Project Work Items", response)
+            if success:
+                work_items = response.json()
+                print(f"Found {len(work_items)} work items for project {project_id}")
+                
+                # If work items exist, test getting a specific work item
+                if len(work_items) > 0:
+                    work_item_id = work_items[0]["id"]
+                    
+                    # Test GET /api/work-items/{work_item_id} - Get work item details
+                    response = requests.get(
+                        f"{BACKEND_URL}/work-items/{work_item_id}",
+                        headers=get_headers()
+                    )
+                    
+                    success = print_test_result("Get Work Item Details", response)
+                    if success:
+                        work_item = response.json()
+                        print(f"Work item details: {work_item['name']} - Status: {work_item['status']}")
+        else:
+            print("❌ No projects found to test work items")
+            return False
+    else:
+        print(f"❌ Failed to get projects: {response.status_code} - {response.text}")
+        return False
+    
+    return success
+
+def test_users():
+    """Test Users API endpoints"""
+    print("\n=== Testing Users API ===")
+    
+    # Test GET /api/users/ - Get list of users
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Users List", response)
+    if success:
+        users = response.json()
+        print(f"Found {len(users)} users")
+    
+    # Test GET /api/users/by-role/{role} - Get users by role
+    roles = ["manager", "account", "content", "design", "editor", "sale"]
+    role_results = {}
+    
+    for role in roles:
+        response = requests.get(
+            f"{BACKEND_URL}/users/by-role/{role}",
+            headers=get_headers()
+        )
+        
+        role_success = print_test_result(f"Get Users by Role: {role}", response)
+        role_results[role] = role_success
+        
+        if role_success:
+            role_users = response.json()
+            print(f"Found {len(role_users)} users with role '{role}'")
+    
+    # Test invalid role
+    response = requests.get(
+        f"{BACKEND_URL}/users/by-role/invalid_role",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Users by Invalid Role", response, expected_status=400)
+    
+    return success and all(role_results.values())
+
 def main_auth_test():
     """Main test function for authentication and basic APIs"""
     print("=== Starting CRM Backend Tests ===")
@@ -1171,11 +1451,34 @@ def main_auth_test():
         # Test user info retrieval
         user_info_success = test_user_info()
         
+        # Test users API
+        users_success = test_users()
+        
         # Test main APIs
         projects_success = test_projects_api()
         campaigns_success = test_campaigns_api()
         clients_success = test_clients()
         templates_success = test_templates_api()
+        
+        # Test expense management
+        expense_categories_success = test_expense_categories()
+        expense_folders_success = test_expense_folders()
+        expenses_success = test_expenses(expense_categories_success, expense_folders_success)
+        expense_statistics_success = test_expense_statistics()
+        
+        # Test financial management
+        invoices_success = test_invoices()
+        contracts_success = test_contracts()
+        
+        # Test document management
+        documents_success = test_documents()
+        
+        # Test services and work items
+        services_success = test_services()
+        work_items_success = test_work_items()
+        
+        # Test dashboard
+        dashboard_success = test_dashboard()
         
         # Create and test a new user account
         create_user_success = create_test_user()
@@ -1186,10 +1489,21 @@ def main_auth_test():
         print(f"Setup System: {'✅' if setup_success else '❌'}")
         print(f"Authentication: {'✅' if auth_success else '❌'}")
         print(f"User Info: {'✅' if user_info_success else '❌'}")
+        print(f"Users API: {'✅' if users_success else '❌'}")
         print(f"Projects API: {'✅' if projects_success else '❌'}")
         print(f"Campaigns API: {'✅' if campaigns_success else '❌'}")
         print(f"Clients API: {'✅' if clients_success else '❌'}")
         print(f"Templates API: {'✅' if templates_success else '❌'}")
+        print(f"Expense Categories: {'✅' if expense_categories_success else '❌'}")
+        print(f"Expense Folders: {'✅' if expense_folders_success else '❌'}")
+        print(f"Expenses: {'✅' if expenses_success else '❌'}")
+        print(f"Expense Statistics: {'✅' if expense_statistics_success else '❌'}")
+        print(f"Invoices: {'✅' if invoices_success else '❌'}")
+        print(f"Contracts: {'✅' if contracts_success else '❌'}")
+        print(f"Documents: {'✅' if documents_success else '❌'}")
+        print(f"Services: {'✅' if services_success else '❌'}")
+        print(f"Work Items: {'✅' if work_items_success else '❌'}")
+        print(f"Dashboard: {'✅' if dashboard_success else '❌'}")
         print(f"Create Test User: {'✅' if create_user_success else '❌'}")
     else:
         print("\n❌ Authentication failed. Skipping other tests.")
