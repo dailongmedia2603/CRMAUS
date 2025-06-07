@@ -1577,47 +1577,77 @@ const Clients = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Khách hàng</h1>
+    <div className="space-y-6 fade-in">
+      {/* Modern Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Khách hàng</h1>
+          <p className="text-gray-600 mt-1">Quản lý thông tin khách hàng và mối quan hệ</p>
+        </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+          className="btn-primary"
         >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
           Thêm khách hàng
         </button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
+      {/* Modern Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
-              <p className="text-2xl font-bold text-gray-900">{statsData.totalClients}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.totalClients}</p>
+              <p className="text-sm text-blue-600 mt-1">
+                <span className="font-medium">+12%</span> so với tháng trước
+              </p>
             </div>
-            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Đang hoạt động</p>
-              <p className="text-2xl font-bold text-green-600">{statsData.activeClients}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.activeClients}</p>
+              <p className="text-sm text-green-600 mt-1">
+                <span className="font-medium">Hoạt động tích cực</span>
+              </p>
             </div>
-            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
+
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Mới tháng này</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.newClientsThisMonth}</p>
+              <p className="text-sm text-purple-600 mt-1">
+                <span className="font-medium">Khách hàng mới</span>
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
