@@ -392,7 +392,7 @@ const MainLayout = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+      <div className="flex flex-col w-0 flex-1 overflow-hidden bg-gray-50">
         {/* Modern Header */}
         <div className="modern-header flex items-center justify-between px-6 py-4">
           {/* Breadcrumb */}
