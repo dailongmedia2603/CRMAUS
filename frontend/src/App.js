@@ -233,22 +233,385 @@ const Dashboard = () => {
 };
 
 const Clients = () => {
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const response = await axios.get(`${API}/api/clients/`);
+      setClients(response.data);
+    } catch (error) {
+      toast.error('Lỗi khi tải danh sách khách hàng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateClient = async (clientData) => {
+    try {
+      await axios.post(`${API}/api/clients/`, clientData);
+      toast.success('Tạo khách hàng thành công!');
+      setShowCreateModal(false);
+      fetchClients();
+    } catch (error) {
+      toast.error('Lỗi khi tạo khách hàng');
+    }
+  };
+
+  const handleUpdateClient = async (clientData) => {
+    try {
+      await axios.put(`${API}/api/clients/${editingClient.id}`, clientData);
+      toast.success('Cập nhật khách hàng thành công!');
+      setEditingClient(null);
+      fetchClients();
+    } catch (error) {
+      toast.error('Lỗi khi cập nhật khách hàng');
+    }
+  };
+
+  const handleDeleteClient = async (clientId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
+      try {
+        await axios.delete(`${API}/api/clients/${clientId}`);
+        toast.success('Xóa khách hàng thành công!');
+        fetchClients();
+      } catch (error) {
+        toast.error('Lỗi khi xóa khách hàng');
+      }
+    }
+  };
+
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.company.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Khách hàng</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý khách hàng</h1>
           <p className="text-gray-600 mt-1">Quản lý thông tin khách hàng và mối quan hệ</p>
         </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="btn-primary"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Thêm khách hàng
+        </button>
       </div>
-      <div className="modern-card p-6">
-        <div className="text-center py-12">
-          <svg className="w-12 h-12 text-purple-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+      {/* Search */}
+      <div className="modern-card p-4">
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Tìm kiếm khách hàng..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="modern-input pl-10"
+          />
+        </div>
+      </div>
+
+      {/* Clients Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredClients.map((client) => (
+          <div key={client.id} className="modern-card p-6 hover:shadow-lg transition-shadow duration-200">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-semibold text-lg">
+                    {client.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
+                  <p className="text-sm text-gray-600">{client.company}</p>
+                </div>
+              </div>
+              <div className="relative">
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                {client.contact_email || 'Chưa có email'}
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                {client.phone || 'Chưa có SĐT'}
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {client.industry || 'Chưa phân loại'}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 mt-4">
+              <button
+                onClick={() => setEditingClient(client)}
+                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              >
+                Sửa
+              </button>
+              <button
+                onClick={() => handleDeleteClient(client.id)}
+                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filteredClients.length === 0 && (
+        <div className="modern-card p-12 text-center">
+          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý khách hàng</h3>
-          <p className="text-gray-600">Tính năng quản lý khách hàng sẽ được khôi phục đầy đủ</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có khách hàng</h3>
+          <p className="text-gray-600">Bắt đầu bằng cách thêm khách hàng đầu tiên của bạn</p>
         </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      {(showCreateModal || editingClient) && (
+        <ClientModal
+          client={editingClient}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingClient(null);
+          }}
+          onSubmit={editingClient ? handleUpdateClient : handleCreateClient}
+        />
+      )}
+    </div>
+  );
+};
+
+// Client Modal Component
+const ClientModal = ({ client, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: client?.name || '',
+    company: client?.company || '',
+    industry: client?.industry || '',
+    size: client?.size || '',
+    website: client?.website || '',
+    phone: client?.phone || '',
+    contact_name: client?.contact_name || '',
+    contact_email: client?.contact_email || '',
+    contact_phone: client?.contact_phone || '',
+    notes: client?.notes || '',
+    address: client?.address || '',
+    tags: client?.tags || []
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">
+            {client ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tên khách hàng *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="modern-input w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tên công ty *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.company}
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                className="modern-input w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lĩnh vực
+              </label>
+              <select
+                value={formData.industry}
+                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                className="modern-input w-full"
+              >
+                <option value="">Chọn lĩnh vực</option>
+                <option value="Technology">Technology</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Finance">Finance</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Education">Education</option>
+                <option value="Retail">Retail</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Other">Khác</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quy mô công ty
+              </label>
+              <select
+                value={formData.size}
+                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                className="modern-input w-full"
+              >
+                <option value="">Chọn quy mô</option>
+                <option value="1-10">1-10 nhân viên</option>
+                <option value="11-50">11-50 nhân viên</option>
+                <option value="51-200">51-200 nhân viên</option>
+                <option value="201-500">201-500 nhân viên</option>
+                <option value="500+">Hơn 500 nhân viên</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Website
+              </label>
+              <input
+                type="url"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                className="modern-input w-full"
+                placeholder="https://example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Số điện thoại
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="modern-input w-full"
+                placeholder="+84901234567"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Người liên hệ
+              </label>
+              <input
+                type="text"
+                value={formData.contact_name}
+                onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                className="modern-input w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email liên hệ
+              </label>
+              <input
+                type="email"
+                value={formData.contact_email}
+                onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                className="modern-input w-full"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Địa chỉ
+            </label>
+            <textarea
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="modern-input w-full"
+              rows="2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ghi chú
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="modern-input w-full"
+              rows="3"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+            >
+              {client ? 'Cập nhật' : 'Tạo mới'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
