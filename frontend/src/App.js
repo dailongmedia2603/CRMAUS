@@ -678,16 +678,7 @@ const Clients = () => {
   );
 };
 
-// Client Detail Component
-const ClientDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [client, setClient] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [contracts, setContracts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingClient, setEditingClient] = useState(null);
+// ClientDetail component is imported from ./components/ClientDetail.js
 
   useEffect(() => {
     fetchClientDetails();
