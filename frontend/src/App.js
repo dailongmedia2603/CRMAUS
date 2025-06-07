@@ -402,25 +402,24 @@ const MainLayout = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
               </svg>
               <span className="breadcrumb-item">Trang chủ</span>
-              {currentPage !== 'dashboard' && (
+              {window.location.pathname !== '/' && (
                 <>
                   <svg className="w-4 h-4 mx-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                   <span className="breadcrumb-item active">
-                    {currentPage === 'clients' ? 'Khách hàng' :
-                     currentPage === 'client-detail' ? 'Chi tiết khách hàng' :
-                     currentPage === 'projects' ? 'Dự án' :
-                     currentPage === 'project-detail' ? 'Chi tiết dự án' :
-                     currentPage === 'task' ? 'Nhiệm vụ' :
-                     currentPage === 'task-templates' ? 'Template dịch vụ' :
-                     currentPage === 'campaigns' ? 'Chiến dịch' :
-                     currentPage === 'campaign-detail' ? 'Chi tiết chiến dịch' :
-                     currentPage === 'invoices' ? 'Hóa đơn' :
-                     currentPage === 'contracts' ? 'Hợp đồng' :
-                     currentPage === 'expenses' ? 'Quản lý chi phí' :
-                     currentPage === 'documents' ? 'Tài liệu' :
-                     currentPage === 'settings' ? 'Cài đặt' :
+                    {window.location.pathname.startsWith('/clients') ? 'Khách hàng' :
+                     window.location.pathname.startsWith('/projects') ? 'Dự án' :
+                     window.location.pathname.startsWith('/task-templates') ? 'Template dịch vụ' :
+                     window.location.pathname.startsWith('/task') ? 'Nhiệm vụ' :
+                     window.location.pathname.startsWith('/campaigns') ? 'Chiến dịch' :
+                     window.location.pathname.startsWith('/invoices') ? 'Hóa đơn' :
+                     window.location.pathname.startsWith('/contracts') ? 'Hợp đồng' :
+                     window.location.pathname.startsWith('/expenses') ? 'Quản lý chi phí' :
+                     window.location.pathname.startsWith('/documents') ? 'Tài liệu' :
+                     window.location.pathname.startsWith('/settings') ? 'Cài đặt' :
+                     window.location.pathname.startsWith('/account') ? 'Tài khoản' :
+                     window.location.pathname.startsWith('/reports') ? 'Báo cáo' :
                      'Trang'}
                   </span>
                 </>
@@ -447,7 +446,7 @@ const MainLayout = () => {
 
             {/* Settings */}
             <button 
-              onClick={() => user?.role === 'admin' && setCurrentPage('settings')}
+              onClick={() => user?.role === 'admin' && window.location.href = '/settings'}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               disabled={user?.role !== 'admin'}
             >
