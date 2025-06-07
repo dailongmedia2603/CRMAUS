@@ -11,6 +11,7 @@ import CampaignsComponent from "./components/Campaigns";
 import CampaignDetailComponent from "./components/CampaignDetail";
 import TemplatesComponent from "./components/Templates";
 import { ExpenseOverview, ExpenseList, ExpenseConfig } from "./components/ExpenseComponents";
+import ClientDetail from './components/ClientDetail';
 
 // Environment variables
 const API = process.env.REACT_APP_BACKEND_URL;
