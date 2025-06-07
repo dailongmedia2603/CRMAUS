@@ -5,7 +5,7 @@ import time
 import uuid
 
 # Backend URL
-BACKEND_URL = "https://061ff524-a028-4b9e-b0ac-3a1cd098f8bb.preview.emergentagent.com/api"
+BACKEND_URL = "https://de7e1af5-1ae0-4625-927a-73a124f01177.preview.emergentagent.com/api"
 
 # Test user credentials
 EMAIL = "admin@example.com"
