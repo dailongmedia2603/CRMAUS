@@ -1747,27 +1747,8 @@ const SidebarContent = ({ user, logout }) => {
   );
 };
 
-// Project detail placeholder  
-const ProjectDetail = () => {
-  const { id } = useParams();
-  
-  return (
-    <div className="space-y-6 fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Chi tiết dự án</h1>
-          <p className="text-gray-600 mt-1">ID: {id}</p>
-        </div>
-      </div>
-      <div className="modern-card p-6">
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Chi tiết dự án</h3>
-          <p className="text-gray-600">Trang chi tiết sẽ được phát triển đầy đủ</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Project Detail Placeholder
+const ProjectDetail = () => <div className="modern-card p-6"><h2>Project Detail</h2></div>;
 
 // Remaining component placeholders
 const Task = () => <div className="modern-card p-6"><h2>Task Management</h2></div>;
