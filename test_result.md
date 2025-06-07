@@ -1,3 +1,63 @@
+  - task: "Expense Categories API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expense categories API endpoint: GET /api/expense-categories/"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/expense-categories/ endpoint. The endpoint returns the list of expense categories correctly with all required fields including id, name, description, color, and is_active status."
+
+  - task: "Expense Folders API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expense folders API endpoint: GET /api/expense-folders/"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/expense-folders/ endpoint. The endpoint returns the list of expense folders correctly with all required fields including id, name, description, color, and is_active status."
+
+  - task: "Expenses API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expenses API endpoint: GET /api/expenses/"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/expenses/ endpoint. The endpoint returns the list of expenses correctly with all required fields. The filtering functionality also works correctly, allowing filtering by category_id, folder_id, status, payment_method, and date range."
+
+  - task: "Expense Statistics API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the expense statistics API endpoint: GET /api/expenses/statistics"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the GET /api/expenses/statistics endpoint. The endpoint returns comprehensive statistics about expenses including total count, amounts by status (pending, approved, paid), counts by status, expenses by category, and monthly trends. The filtering functionality also works correctly, allowing filtering by year, quarter, month, and category_id."
+
   - task: "Invoices API"
     implemented: true
     working: false
