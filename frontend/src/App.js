@@ -1769,30 +1769,30 @@ const Clients = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Trạng thái
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Hành động
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {clients.map((client) => (
-                <tr key={client.id} className="hover:bg-gray-50">
+                <tr key={client.id} className="hover:bg-blue-50 transition-colors duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedClients.includes(client.id)}
                       onChange={() => handleSelectClient(client.id)}
-                      className="rounded border-gray-300"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0">
+                      <div className="h-12 w-12 flex-shrink-0">
                         {client.avatar_url ? (
-                          <img className="h-10 w-10 rounded-full object-cover" src={client.avatar_url} alt="" />
+                          <img className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-200" src={client.avatar_url} alt="" />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-700">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-white">
                               {client.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -1801,22 +1801,22 @@ const Clients = () => {
                       <div className="ml-4">
                         <button
                           onClick={() => navigate(`/clients/${client.id}`)}
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                          className="text-sm font-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors duration-200"
                         >
                           {client.name}
                         </button>
-                        <div className="text-sm text-gray-500">{client.company}</div>
+                        <div className="text-sm text-gray-600 font-medium">{client.company}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{client.contact_name}</div>
-                    <div className="text-sm text-gray-500">{client.contact_email}</div>
-                    <div className="text-sm text-gray-500">{client.contact_phone}</div>
+                    <div className="text-sm font-medium text-gray-900">{client.contact_name}</div>
+                    <div className="text-sm text-gray-600">{client.contact_email}</div>
+                    <div className="text-sm text-gray-600">{client.contact_phone}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{client.industry}</div>
-                    <div className="text-sm text-gray-500">{client.size}</div>
+                    <div className="text-sm font-medium text-gray-900">{client.industry}</div>
+                    <div className="text-sm text-gray-600">{client.size}</div>
                     {client.website && (
                       <div className="text-sm text-blue-500">
                         <a href={client.website} target="_blank" rel="noopener noreferrer">
