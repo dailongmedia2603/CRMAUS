@@ -3332,6 +3332,159 @@ const ProjectDetail = () => {
 const Task = () => <div>Task component placeholder</div>;
 const Contracts = () => <div>Contracts component placeholder</div>;
 const Invoices = () => <div>Invoices component placeholder</div>;
-const Settings = () => <div>Settings component placeholder</div>;
+// Component placeholders cho các trang chưa implement
+const Settings = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Cài đặt hệ thống</h3>
+        <p className="text-gray-600">Trang cài đặt sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Account = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Thông tin tài khoản</h3>
+        <p className="text-gray-600">Trang quản lý tài khoản sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Reports = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo tổng hợp</h3>
+        <p className="text-gray-600">Hệ thống báo cáo sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const FinancialReports = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Báo cáo tài chính</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo tài chính</h3>
+        <p className="text-gray-600">Báo cáo doanh thu, chi phí và lợi nhuận sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Opportunities = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý cơ hội</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý cơ hội bán hàng</h3>
+        <p className="text-gray-600">Tính năng quản lý leads và cơ hội sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const SalesReports = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Báo cáo bán hàng</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo bán hàng</h3>
+        <p className="text-gray-600">Thống kê hiệu suất bán hàng sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Task = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý nhiệm vụ</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý nhiệm vụ</h3>
+        <p className="text-gray-600">Hệ thống task management sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Contracts = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý hợp đồng</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý hợp đồng</h3>
+        <p className="text-gray-600">Tính năng quản lý hợp đồng sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Invoices = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý hóa đơn</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý hóa đơn</h3>
+        <p className="text-gray-600">Hệ thống hóa đơn sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
 
 export default App;
