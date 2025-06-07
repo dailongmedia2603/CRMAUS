@@ -2156,7 +2156,7 @@ const Clients = () => {
 
 
 // Component chi tiet khach hang  
-const ClientDetail = () => {
+function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
