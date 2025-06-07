@@ -2155,6 +2155,7 @@ const Clients = () => {
 };
 // Component chi tiết khách hàng
 const ClientDetail = () => {
+  // eslint-disable-next-line
   const { id } = useParams();
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
