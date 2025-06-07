@@ -10,6 +10,7 @@ import ProjectsComponent from "./components/Projects";
 import CampaignsComponent from "./components/Campaigns";
 import CampaignDetailComponent from "./components/CampaignDetail";
 import TemplatesComponent from "./components/Templates";
+import { ExpenseOverview, ExpenseList, ExpenseConfig } from "./components/ExpenseComponents";
 
 // Biến môi trường
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -384,61 +385,91 @@ const MainLayout = () => {
       {/* Static sidebar for desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex flex-col h-0 flex-1 bg-indigo-700">
+          <div className="flex flex-col h-0 flex-1">
             <SidebarContent user={user} logout={logout} />
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
-          <button
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <span className="sr-only">Open sidebar</span>
-            <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <div className="flex-1 px-4 flex justify-between">
-            <div className="flex-1 flex">
-              <form className="w-full flex md:ml-0" action="#" method="GET">
-                <label htmlFor="search-field" className="sr-only">
-                  Tìm kiếm
-                </label>
-                <div className="relative w-full text-gray-400 focus-within:text-gray-600">
-                  <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <input
-                    id="search-field"
-                    className="block w-full h-full pl-8 pr-3 py-2 border-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-0 focus:border-transparent sm:text-sm"
-                    placeholder="Tìm kiếm"
-                    type="search"
-                    name="search"
-                  />
-                </div>
-              </form>
+      <div className="flex flex-col w-0 flex-1 overflow-hidden bg-gray-50">
+        {/* Modern Header */}
+        <div className="modern-header flex items-center justify-between px-6 py-4">
+          {/* Breadcrumb */}
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center text-sm text-gray-500">
+              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+              </svg>
+              <span className="breadcrumb-item">Trang chủ</span>
+              {window.location.pathname !== '/' && (
+                <>
+                  <svg className="w-4 h-4 mx-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="breadcrumb-item active">
+                    {window.location.pathname.startsWith('/clients') ? 'Khách hàng' :
+                     window.location.pathname.startsWith('/projects') ? 'Dự án' :
+                     window.location.pathname.startsWith('/task-templates') ? 'Template dịch vụ' :
+                     window.location.pathname.startsWith('/task') ? 'Nhiệm vụ' :
+                     window.location.pathname.startsWith('/campaigns') ? 'Chiến dịch' :
+                     window.location.pathname.startsWith('/invoices') ? 'Hóa đơn' :
+                     window.location.pathname.startsWith('/contracts') ? 'Hợp đồng' :
+                     window.location.pathname.startsWith('/expenses') ? 'Quản lý chi phí' :
+                     window.location.pathname.startsWith('/documents') ? 'Tài liệu' :
+                     window.location.pathname.startsWith('/settings') ? 'Cài đặt' :
+                     window.location.pathname.startsWith('/account') ? 'Tài khoản' :
+                     window.location.pathname.startsWith('/reports') ? 'Báo cáo' :
+                     'Trang'}
+                  </span>
+                </>
+              )}
             </div>
-            <div className="ml-4 flex items-center md:ml-6">
-              {/* Profile dropdown */}
-              <div className="ml-3 relative">
-                <div>
-                  <button
-                    className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    id="user-menu"
-                    aria-haspopup="true"
-                  >
-                    <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-                      {user.full_name.charAt(0)}
-                    </div>
-                  </button>
-                </div>
+          </div>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {/* Search Button */}
+            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
+            {/* Notifications */}
+            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM5.07 7A7.002 7.002 0 0112 2c1.857 0 3.547.72 4.816 1.898M15 17h5l-5 5v-5z" />
+              </svg>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            {/* Settings */}
+            <button 
+              onClick={() => {
+                if (user?.role === 'admin') {
+                  window.location.href = '/settings';
+                }
+              }}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              disabled={user?.role !== 'admin'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            {/* User Menu */}
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
+                <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
+              </div>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">
+                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
             </div>
           </div>
@@ -451,20 +482,22 @@ const MainLayout = () => {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/clients/:id" element={<ClientDetail />} />
-                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects" element={<ProjectsComponent />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/task" element={<Task />} />
-                <Route path="/task-templates" element={<Templates />} />
+                <Route path="/task-templates" element={<TemplatesComponent />} />
                 <Route path="/contracts" element={<Contracts />} />
                 <Route path="/invoices" element={<Invoices />} />
-                <Route path="/revenue" element={<Revenue />} />
-                <Route path="/expense" element={<Expense />} />
-                <Route path="/revenue" element={<Revenue />} />
-                <Route path="/expense" element={<Expense />} />
+                <Route path="/expenses" element={<ExpenseOverview />} />
                 <Route path="/campaigns" element={<CampaignsComponent />} />
                 <Route path="/campaigns/:id" element={<CampaignDetailComponent />} />
-                <Route path="/documents" element={<Documents />} />
+                <Route path="/documents" element={<DocumentsComponent />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/financial-reports" element={<FinancialReports />} />
+                <Route path="/opportunities" element={<Opportunities />} />
+                <Route path="/sales-reports" element={<SalesReports />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </div>
@@ -499,1016 +532,405 @@ const SidebarContent = ({ user, logout }) => {
   };
 
   return (
-    <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
-      <div className="flex items-center flex-shrink-0 px-4">
-        <span className="text-white text-xl font-bold">CRM Marketing</span>
-      </div>
-      <div className="mt-5 flex-1 flex flex-col">
-        <nav className="flex-1 px-2 bg-indigo-700 space-y-1">
-          {/* Dashboard */}
-          <button
-            onClick={() => navigate("/")}
-            className={`${
-              location === "/"
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-          >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            Dashboard
-          </button>
-
-          {/* Client */}
-          <button
-            onClick={() => navigate("/clients")}
-            className={`${
-              location.startsWith("/clients")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-          >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            Client
-          </button>
-
-          {/* Task */}
-          <button
-            onClick={() => navigate("/task")}
-            className={`${
-              location.startsWith("/task")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-          >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            Task
-          </button>
-
-          {/* Dự án (với submenu) */}
-          <div>
-            <button
-              onClick={() => toggleSubmenu("project")}
-              className={`${
-                location.startsWith("/projects") || location.startsWith("/campaigns")
-                  ? "bg-indigo-800 text-white"
-                  : "text-indigo-100 hover:bg-indigo-600"
-              } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
-            >
-              <div className="flex items-center">
-                <svg
-                  className="mr-3 h-6 w-6 text-indigo-300"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                Dự án
-              </div>
-              <svg
-                className={`${openSubmenus.project ? "transform rotate-180" : ""} h-5 w-5 text-indigo-300`}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            {openSubmenus.project && (
-              <div className="pl-8 space-y-1">
-                <button
-                  onClick={() => navigate("/projects")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Danh sách dự án
-                </button>
-                <button
-                  onClick={() => navigate("/campaigns")}
-                  className={`${
-                    location.startsWith("/campaigns")
-                      ? "bg-indigo-700 text-white"
-                      : "text-indigo-100 hover:bg-indigo-600"
-                  } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-                >
-                  Chiến dịch
-                </button>
-                <button
-                  onClick={() => navigate("/task-templates")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Template dịch vụ
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Tài chính (với submenu) */}
-          <div>
-            <button
-              onClick={() => toggleSubmenu("finance")}
-              className={`${
-                location.startsWith("/invoices") || location.startsWith("/finance-reports") || location.startsWith("/revenue") || location.startsWith("/expense")
-                  ? "bg-indigo-800 text-white"
-                  : "text-indigo-100 hover:bg-indigo-600"
-              } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
-            >
-              <div className="flex items-center">
-                <svg
-                  className="mr-3 h-6 w-6 text-indigo-300"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Tài chính
-              </div>
-              <svg
-                className={`${openSubmenus.finance ? "transform rotate-180" : ""} h-5 w-5 text-indigo-300`}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            {openSubmenus.finance && (
-              <div className="pl-8 space-y-1">
-                <button
-                  onClick={() => navigate("/invoices")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Hợp đồng - Hóa đơn
-                </button>
-                <button
-                  onClick={() => navigate("/revenue")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Thu
-                </button>
-                <button
-                  onClick={() => navigate("/expense")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Chi
-                </button>
-                <button
-                  onClick={() => navigate("/finance-reports")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Báo cáo tài chính
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Bán hàng (với submenu) */}
-          <div>
-            <button
-              onClick={() => toggleSubmenu("sales")}
-              className={`${
-                location.startsWith("/sales")
-                  ? "bg-indigo-800 text-white"
-                  : "text-indigo-100 hover:bg-indigo-600"
-              } group flex w-full items-center justify-between px-2 py-2 text-sm font-medium rounded-md text-left`}
-            >
-              <div className="flex items-center">
-                <svg
-                  className="mr-3 h-6 w-6 text-indigo-300"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Bán hàng
-              </div>
-              <svg
-                className={`${openSubmenus.sales ? "transform rotate-180" : ""} h-5 w-5 text-indigo-300`}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            {openSubmenus.sales && (
-              <div className="pl-8 space-y-1">
-                <button
-                  onClick={() => navigate("/sales/customers")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Khách hàng
-                </button>
-                <button
-                  onClick={() => navigate("/sales/opportunities")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Cơ hội
-                </button>
-                <button
-                  onClick={() => navigate("/sales/reports")}
-                  className="text-indigo-100 hover:bg-indigo-600 group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left"
-                >
-                  Báo cáo
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Tài liệu */}
-          <button
-            onClick={() => navigate("/documents")}
-            className={`${
-              location.startsWith("/documents")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-          >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Tài liệu
-          </button>
-
-          {/* Báo cáo */}
-          <button
-            onClick={() => navigate("/reports")}
-            className={`${
-              location.startsWith("/reports")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-          >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Báo cáo
-          </button>
-
-          {/* Tài khoản */}
-          <button
-            onClick={() => navigate("/account")}
-            className={`${
-              location.startsWith("/account")
-                ? "bg-indigo-800 text-white"
-                : "text-indigo-100 hover:bg-indigo-600"
-            } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-          >
-            <svg
-              className="mr-3 h-6 w-6 text-indigo-300"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            Tài khoản
-          </button>
-
-          {/* Cài đặt */}
-          {user.role === "admin" && (
-            <button
-              onClick={() => navigate("/settings")}
-              className={`${
-                location.startsWith("/settings")
-                  ? "bg-indigo-800 text-white"
-                  : "text-indigo-100 hover:bg-indigo-600"
-              } group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-left`}
-            >
-              <svg
-                className="mr-3 h-6 w-6 text-indigo-300"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Cài đặt
-            </button>
-          )}
-        </nav>
-      </div>
-      <div className="flex-shrink-0 flex border-t border-indigo-800 p-4">
+    <div className="modern-sidebar flex flex-col h-full">
+      {/* Logo Section */}
+      <div className="sidebar-logo m-4">
         <div className="flex items-center">
-          <div>
-            <div className="h-9 w-9 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-              {user.full_name.charAt(0)}
-            </div>
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
+            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-white">{user.full_name}</p>
-            <button
-              onClick={handleLogout}
-              className="text-xs font-medium text-indigo-200 hover:text-white"
-            >
-              Đăng xuất
-            </button>
+          <div>
+            <div className="text-white font-bold text-lg">CRM Pro</div>
+            <div className="text-blue-100 text-xs">Marketing System</div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
 
-// Tab 2: Danh sách chi phí với CRUD operations
-const ExpenseList = () => {
-  const [expenses, setExpenses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentExpense, setCurrentExpense] = useState(null);
-  const [selectedExpenses, setSelectedExpenses] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [actionMenuOpen, setActionMenuOpen] = useState(null);
-  const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    title: '',
-    amount: '',
-    category_id: '',
-    folder_id: '',
-    project_id: '',
-    client_id: '',
-    expense_date: format(new Date(), 'yyyy-MM-dd'),
-    description: '',
-    vendor: '',
-    payment_method: 'cash',
-    status: 'pending',
-    tags: []
-  });
-
-  // Reference data
-  const [categories, setCategories] = useState([]);
-  const [folders, setFolders] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [clients, setClients] = useState([]);
-
-  const paymentMethods = [
-    { value: 'cash', label: 'Tiền mặt' },
-    { value: 'credit_card', label: 'Thẻ tín dụng' },
-    { value: 'bank_transfer', label: 'Chuyển khoản' },
-    { value: 'check', label: 'Séc' }
-  ];
-
-  const statusOptions = [
-    { value: 'pending', label: 'Chờ duyệt', color: 'orange' },
-    { value: 'approved', label: 'Đã duyệt', color: 'blue' },
-    { value: 'rejected', label: 'Từ chối', color: 'red' },
-    { value: 'paid', label: 'Đã thanh toán', color: 'green' }
-  ];
-
-  useEffect(() => {
-    fetchExpenses();
-    fetchReferenceData();
-  }, [statusFilter, categoryFilter, searchTerm]);
-
-  const fetchExpenses = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
-      if (categoryFilter) params.append('category_id', categoryFilter);
-      if (searchTerm) params.append('search', searchTerm);
-
-      const response = await axios.get(`${API}/expenses/?${params}`);
-      setExpenses(response.data);
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
-      toast.error('Không thể tải danh sách chi phí');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchReferenceData = async () => {
-    try {
-      const [categoriesRes, foldersRes, projectsRes, clientsRes] = await Promise.all([
-        axios.get(`${API}/expense-categories/`),
-        axios.get(`${API}/expense-folders/`),
-        axios.get(`${API}/projects/`),
-        axios.get(`${API}/clients/`)
-      ]);
-
-      setCategories(categoriesRes.data);
-      setFolders(foldersRes.data);
-      setProjects(projectsRes.data);
-      setClients(clientsRes.data);
-    } catch (error) {
-      console.error('Error fetching reference data:', error);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEditing) {
-        await axios.put(`${API}/expenses/${currentExpense.id}`, formData);
-        toast.success('Cập nhật chi phí thành công!');
-      } else {
-        await axios.post(`${API}/expenses/`, formData);
-        toast.success('Thêm chi phí thành công!');
-      }
-      setIsModalOpen(false);
-      resetForm();
-      fetchExpenses();
-    } catch (error) {
-      console.error('Error saving expense:', error);
-      toast.error(isEditing ? 'Không thể cập nhật chi phí' : 'Không thể tạo chi phí mới');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      amount: '',
-      category_id: '',
-      folder_id: '',
-      project_id: '',
-      client_id: '',
-      expense_date: format(new Date(), 'yyyy-MM-dd'),
-      description: '',
-      vendor: '',
-      payment_method: 'cash',
-      status: 'pending',
-      tags: []
-    });
-    setIsEditing(false);
-    setCurrentExpense(null);
-  };
-
-  const handleEdit = (expense) => {
-    setCurrentExpense(expense);
-    setFormData({
-      title: expense.title,
-      amount: expense.amount,
-      category_id: expense.category_id,
-      folder_id: expense.folder_id || '',
-      project_id: expense.project_id || '',
-      client_id: expense.client_id || '',
-      expense_date: format(new Date(expense.expense_date), 'yyyy-MM-dd'),
-      description: expense.description || '',
-      vendor: expense.vendor || '',
-      payment_method: expense.payment_method,
-      status: expense.status,
-      tags: expense.tags || []
-    });
-    setIsEditing(true);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (expenseId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa chi phí này?')) {
-      try {
-        await axios.delete(`${API}/expenses/${expenseId}`);
-        toast.success('Xóa chi phí thành công!');
-        fetchExpenses();
-      } catch (error) {
-        console.error('Error deleting expense:', error);
-        toast.error('Không thể xóa chi phí');
-      }
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedExpenses.length} chi phí đã chọn?`)) {
-      try {
-        await axios.post(`${API}/expenses/bulk-delete`, selectedExpenses);
-        toast.success('Xóa các chi phí thành công!');
-        setSelectedExpenses([]);
-        fetchExpenses();
-      } catch (error) {
-        console.error('Error bulk deleting expenses:', error);
-        toast.error('Không thể xóa chi phí');
-      }
-    }
-  };
-
-  const handleBulkStatusUpdate = async (status) => {
-    try {
-      await axios.post(`${API}/expenses/bulk-update-status`, selectedExpenses, {
-        params: { status }
-      });
-      toast.success('Cập nhật trạng thái thành công!');
-      setSelectedExpenses([]);
-      setBulkActionMenuOpen(false);
-      fetchExpenses();
-    } catch (error) {
-      console.error('Error bulk updating status:', error);
-      toast.error('Không thể cập nhật trạng thái');
-    }
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedExpenses(expenses.map(expense => expense.id));
-    } else {
-      setSelectedExpenses([]);
-    }
-  };
-
-  const handleSelectExpense = (expenseId) => {
-    if (selectedExpenses.includes(expenseId)) {
-      setSelectedExpenses(selectedExpenses.filter(id => id !== expenseId));
-    } else {
-      setSelectedExpenses([...selectedExpenses, expenseId]);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    const statusConfig = statusOptions.find(opt => opt.value === status);
-    return statusConfig ? statusConfig.color : 'gray';
-  };
-
-  const getStatusLabel = (status) => {
-    const statusConfig = statusOptions.find(opt => opt.value === status);
-    return statusConfig ? statusConfig.label : status;
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Đang tải danh sách chi phí...</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header và Filter */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Danh sách chi phí</h3>
+      {/* Navigation */}
+      <nav className="flex-1 px-4 space-y-2">
+        {/* Dashboard */}
         <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+          onClick={() => navigate("/")}
+          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location === "/"
+              ? "active text-white"
+              : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+          }`}
         >
-          Thêm chi phí
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5v14l4-2 4 2V5z" />
+          </svg>
+          Trang chủ
         </button>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tiêu đề, mô tả..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="">Tất cả trạng thái</option>
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="">Tất cả hạng mục</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>{category.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => setBulkActionMenuOpen(!bulkActionMenuOpen)}
-              disabled={selectedExpenses.length === 0}
-              className={`w-full px-3 py-2 text-sm border rounded-md ${
-                selectedExpenses.length === 0 
-                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Thao tác hàng loạt ({selectedExpenses.length})
-            </button>
-            {bulkActionMenuOpen && selectedExpenses.length > 0 && (
-              <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                <div className="py-1">
-                  <button
-                    onClick={() => handleBulkStatusUpdate('approved')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Duyệt tất cả
-                  </button>
-                  <button
-                    onClick={() => handleBulkStatusUpdate('rejected')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Từ chối tất cả
-                  </button>
-                  <button
-                    onClick={() => handleBulkStatusUpdate('paid')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Đánh dấu đã thanh toán
-                  </button>
-                  <button
-                    onClick={handleBulkDelete}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                  >
-                    Xóa tất cả
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        {/* Client */}
+        <button
+          onClick={() => navigate("/clients")}
+          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/clients")
+              ? "active text-white"
+              : "text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+          }`}
+        >
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Client
+        </button>
 
-      {/* Expense Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    checked={selectedExpenses.length === expenses.length && expenses.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mã số / Tiêu đề
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Số tiền
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hạng mục
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ngày chi
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {expenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedExpenses.includes(expense.id)}
-                      onChange={() => handleSelectExpense(expense.id)}
-                      className="rounded border-gray-300"
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{expense.expense_number}</div>
-                    <div className="text-sm text-gray-500">{expense.title}</div>
-                    {expense.vendor && (
-                      <div className="text-xs text-gray-400">Nhà cung cấp: {expense.vendor}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {expense.amount.toLocaleString('vi-VN')} VNĐ
-                    </div>
-                    <div className="text-xs text-gray-500">{expense.payment_method}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{expense.category_name}</div>
-                    {expense.folder_name && (
-                      <div className="text-xs text-gray-500">{expense.folder_name}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(expense.expense_date), 'dd/MM/yyyy')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      getStatusColor(expense.status) === 'orange' ? 'bg-orange-100 text-orange-800' :
-                      getStatusColor(expense.status) === 'blue' ? 'bg-blue-100 text-blue-800' :
-                      getStatusColor(expense.status) === 'red' ? 'bg-red-100 text-red-800' :
-                      getStatusColor(expense.status) === 'green' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {getStatusLabel(expense.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="relative">
-                      <button
-                        onClick={() => setActionMenuOpen(actionMenuOpen === expense.id ? null : expense.id)}
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                        </svg>
-                      </button>
-                      {actionMenuOpen === expense.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                          <div className="py-1">
-                            <button
-                              onClick={() => {
-                                handleEdit(expense);
-                                setActionMenuOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDelete(expense.id);
-                                setActionMenuOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                            >
-                              Xóa
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {expenses.length === 0 && (
-          <div className="text-center py-10 text-gray-500">
-            Chưa có chi phí nào
-          </div>
-        )}
-      </div>
+        {/* Task */}
+        <button
+          onClick={() => navigate("/task")}
+          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/task") && !location.startsWith("/task-templates")
+              ? "active text-white"
+              : "text-gray-700 hover:bg-yellow-50 hover:text-yellow-700"
+          }`}
+        >
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+          Task
+        </button>
 
-      {/* Modal for Add/Edit Expense */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
-                {isEditing ? 'Chỉnh sửa chi phí' : 'Thêm chi phí mới'}
-              </h3>
+        {/* Dự án (với submenu) */}
+        <div>
+          <button
+            onClick={() => toggleSubmenu("project")}
+            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-green-50 hover:text-green-700"
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              Dự án
+            </div>
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.project ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {openSubmenus.project && (
+            <div className="mt-2 ml-4 space-y-1 slide-in">
               <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={() => navigate("/projects")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/projects") ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
+                Danh sách dự án
+              </button>
+              <button
+                onClick={() => navigate("/campaigns")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/campaigns") ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                Chiến dịch
+              </button>
+              <button
+                onClick={() => navigate("/task-templates")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/task-templates") ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Template dịch vụ
               </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tiêu đề *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số tiền *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Hạng mục *
-                  </label>
-                  <select
-                    required
-                    value={formData.category_id}
-                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Chọn hạng mục</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>{category.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Thư mục
-                  </label>
-                  <select
-                    value={formData.folder_id}
-                    onChange={(e) => setFormData({ ...formData, folder_id: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Chọn thư mục</option>
-                    {folders.map(folder => (
-                      <option key={folder.id} value={folder.id}>{folder.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dự án
-                  </label>
-                  <select
-                    value={formData.project_id}
-                    onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Chọn dự án</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>{project.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Khách hàng
-                  </label>
-                  <select
-                    value={formData.client_id}
-                    onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Chọn khách hàng</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>{client.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngày chi *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.expense_date}
-                    onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phương thức thanh toán
-                  </label>
-                  <select
-                    value={formData.payment_method}
-                    onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    {paymentMethods.map(method => (
-                      <option key={method.value} value={method.value}>{method.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Trạng thái
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    {statusOptions.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nhà cung cấp
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.vendor}
-                    onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mô tả
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isEditing ? 'Cập nhật' : 'Thêm'}
-                </button>
-              </div>
-            </form>
-          </div>
+          )}
         </div>
-      )}
+
+        {/* Tài chính (với submenu) */}
+        <div>
+          <button
+            onClick={() => toggleSubmenu("finance")}
+            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+              Tài chính
+            </div>
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.finance ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {openSubmenus.finance && (
+            <div className="mt-2 ml-4 space-y-1 slide-in">
+              <button
+                onClick={() => navigate("/invoices")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/invoices") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Hóa đơn
+              </button>
+              <button
+                onClick={() => navigate("/contracts")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/contracts") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Hợp đồng
+              </button>
+              <button
+                onClick={() => navigate("/expenses")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/expenses") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Quản lý chi phí
+              </button>
+              <button
+                onClick={() => navigate("/financial-reports")}
+                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/financial-reports") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Báo cáo tài chính
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Bán hàng (với submenu) */}
+        <div>
+          <button
+            onClick={() => toggleSubmenu("sales")}
+            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              Bán hàng
+            </div>
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.sales ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {openSubmenus.sales && (
+            <div className="mt-2 ml-4 space-y-1 slide-in">
+              <button
+                onClick={() => navigate("/clients")}
+                className="w-full flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                Khách hàng
+              </button>
+              <button
+                onClick={() => navigate("/opportunities")}
+                className="w-full flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                Cơ hội
+              </button>
+              <button
+                onClick={() => navigate("/sales-reports")}
+                className="w-full flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+                Báo cáo
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Documents */}
+        <button
+          onClick={() => navigate("/documents")}
+          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/documents")
+              ? "active text-white"
+              : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+          }`}
+        >
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Tài liệu
+        </button>
+
+        {/* Reports */}
+        <button
+          onClick={() => navigate("/reports")}
+          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/reports")
+              ? "active text-white"
+              : "text-gray-700 hover:bg-red-50 hover:text-red-700"
+          }`}
+        >
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Báo cáo
+        </button>
+
+        {/* Account */}
+        <button
+          onClick={() => navigate("/account")}
+          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/account")
+              ? "active text-white"
+              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          }`}
+        >
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          Tài khoản
+        </button>
+
+        {/* Settings - Admin only */}
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => navigate("/settings")}
+            className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.startsWith("/settings")
+                ? "active text-white"
+                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Cài đặt
+          </button>
+        )}
+      </nav>
+
+      {/* User Profile Section */}
+      <div className="p-4">
+        <div className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold text-sm">
+                {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+              </span>
+            </div>
+          </div>
+          <div className="ml-3 flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.full_name || 'User'}
+            </p>
+            <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors duration-200"
+            title="Đăng xuất"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+// Component Expense Management (Quản lý Chi phí)
+const Expense = () => {
+  const [activeTab, setActiveTab] = useState('overview'); // overview, expenses, config
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <div className="w-full max-w-none">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Quản lý Chi phí</h1>
+        <p className="text-gray-600">Theo dõi và quản lý tất cả chi phí của doanh nghiệp</p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`${
+              activeTab === 'overview'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Tổng quan
+          </button>
+          <button
+            onClick={() => setActiveTab('expenses')}
+            className={`${
+              activeTab === 'expenses'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Chi phí
+          </button>
+          <button
+            onClick={() => setActiveTab('config')}
+            className={`${
+              activeTab === 'config'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Cấu hình
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="w-full">
+        {activeTab === 'overview' && <ExpenseOverview />}
+        {activeTab === 'expenses' && <ExpenseList />}
+        {activeTab === 'config' && <ExpenseConfig />}
+      </div>
     </div>
   );
 };
 
-// Các component cho từng trang
+// Component placeholder cho Revenue
+const Revenue = () => (
+  <div>
+    <h1 className="text-2xl font-semibold text-gray-900">Revenue</h1>
+    <p className="text-gray-600">Quản lý doanh thu</p>
+  </div>
+);
+
+// Các component placeholder cho Dashboard, Clients, etc.
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1530,7 +952,14 @@ const Dashboard = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!dashboardData) {
@@ -1538,162 +967,284 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      
-      {/* Thống kê */}
-      <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Thẻ thống kê khách hàng */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Tổng số khách hàng
-                  </dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900">
-                      {dashboardData.client_count}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
+    <div className="space-y-6 fade-in">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Chào mừng trở lại! Dưới đây là tổng quan về hệ thống CRM.</p>
+        </div>
+        <div className="flex space-x-3">
+          <button className="btn-secondary">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Xuất báo cáo
+          </button>
+          <button className="btn-primary">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Tạo mới
+          </button>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Clients */}
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{dashboardData.client_count || 0}</p>
+              <p className="text-sm text-green-600 mt-1">
+                <span className="font-medium">+12%</span> so với tháng trước
+              </p>
             </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <a href="/clients" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Xem tất cả khách hàng
-              </a>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
             </div>
           </div>
         </div>
 
-        {/* Thẻ thống kê dự án */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Dự án đang chạy
-                  </dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900">
-                      {dashboardData.projects_by_status.in_progress}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
+        {/* Active Projects */}
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Dự án đang hoạt động</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {dashboardData.projects_by_status?.in_progress || 0}
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                <span className="font-medium">+5</span> dự án mới
+              </p>
             </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <a href="/projects" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Xem tất cả dự án
-              </a>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
           </div>
         </div>
 
-        {/* Thẻ thống kê tài chính */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 bg-red-500 rounded-md p-3">
-                <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Hóa đơn chờ thanh toán
-                  </dt>
-                  <dd>
-                    <div className="text-lg font-medium text-gray-900">
-                      {dashboardData.invoices_by_status.sent}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
+        {/* Pending Invoices */}
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Hóa đơn chờ thanh toán</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {dashboardData.invoices_by_status?.sent || 0}
+              </p>
+              <p className="text-sm text-orange-600 mt-1">
+                <span className="font-medium">
+                  {(dashboardData.financial?.total_pending || 0).toLocaleString()} VNĐ
+                </span>
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <a href="/invoices" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Xem tất cả hóa đơn
-              </a>
+        </div>
+
+        {/* User Tasks */}
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Nhiệm vụ của tôi</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {(dashboardData.user_tasks?.pending || 0) + (dashboardData.user_tasks?.in_progress || 0)}
+              </p>
+              <p className="text-sm text-purple-600 mt-1">
+                <span className="font-medium">{dashboardData.user_tasks?.pending || 0}</span> cần thực hiện
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Hợp đồng sắp hết hạn */}
-      <div className="mt-8">
-        <h2 className="text-lg leading-6 font-medium text-gray-900">
-          Hợp đồng sắp hết hạn
-        </h2>
-        <div className="mt-2 bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {dashboardData.expiring_contracts && dashboardData.expiring_contracts.length > 0 ? (
-              dashboardData.expiring_contracts.map((contract) => (
-                <li key={contract.id}>
-                  <a href={`/contracts/${contract.id}`} className="block hover:bg-gray-50">
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-indigo-600 truncate">
-                          {contract.title}
-                        </p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                            Sắp hết hạn
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 sm:flex sm:justify-between">
-                        <div className="sm:flex">
-                          <p className="flex items-center text-sm text-gray-500">
-                            {contract.client_id}
-                          </p>
-                        </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                          </svg>
-                          <p>
-                            Hết hạn {new Date(contract.end_date).toLocaleDateString('vi-VN')}
-                          </p>
-                        </div>
-                      </div>
+      {/* Charts and Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Project Status Chart */}
+        <div className="modern-card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Phân bố trạng thái dự án</h3>
+          <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <p>Biểu đồ thống kê</p>
+              <p className="text-sm">Chart component sẽ được tích hợp</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Revenue Chart */}
+        <div className="modern-card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Xu hướng doanh thu</h3>
+          <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+              <p>Biểu đồ doanh thu</p>
+              <p className="text-sm">Line chart sẽ được tích hợp</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Quick Action 1 */}
+        <div className="action-card-blue">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Thêm khách hàng mới</h3>
+              <p className="text-blue-100 mt-1">Tạo hồ sơ khách hàng và bắt đầu quản lý dự án</p>
+              <button className="mt-4 bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200">
+                Tạo ngay
+              </button>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Action 2 */}
+        <div className="action-card-green">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Tạo dự án mới</h3>
+              <p className="text-green-100 mt-1">Lập kế hoạch và triển khai dự án cho khách hàng</p>
+              <button className="mt-4 bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition-colors duration-200">
+                Bắt đầu
+              </button>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Action 3 */}
+        <div className="action-card-purple">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Xuất hóa đơn</h3>
+              <p className="text-purple-100 mt-1">Tạo và gửi hóa đơn cho khách hàng</p>
+              <button className="mt-4 bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-50 transition-colors duration-200">
+                Tạo hóa đơn
+              </button>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activities */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upcoming Tasks */}
+        <div className="modern-card">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Nhiệm vụ sắp tới</h3>
+              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">Xem tất cả</button>
+            </div>
+          </div>
+          <div className="p-6">
+            {dashboardData.upcoming_tasks && dashboardData.upcoming_tasks.length > 0 ? (
+              <div className="space-y-4">
+                {dashboardData.upcoming_tasks.slice(0, 5).map((task, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{task.name}</p>
+                      <p className="text-xs text-gray-500">
+                        Hạn: {task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Không xác định'}
+                      </p>
                     </div>
-                  </a>
-                </li>
-              ))
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {task.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <li className="px-4 py-4 sm:px-6 text-center text-gray-500">
-                Không có hợp đồng nào sắp hết hạn
-              </li>
+              <div className="text-center py-8 text-gray-500">
+                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p>Không có nhiệm vụ sắp tới</p>
+              </div>
             )}
-          </ul>
+          </div>
+        </div>
+
+        {/* Expiring Contracts */}
+        <div className="modern-card">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Hợp đồng sắp hết hạn</h3>
+              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">Xem tất cả</button>
+            </div>
+          </div>
+          <div className="p-6">
+            {dashboardData.expiring_contracts && dashboardData.expiring_contracts.length > 0 ? (
+              <div className="space-y-4">
+                {dashboardData.expiring_contracts.slice(0, 5).map((contract, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{contract.title}</p>
+                      <p className="text-xs text-gray-500">
+                        Hết hạn: {contract.end_date ? format(new Date(contract.end_date), 'dd/MM/yyyy') : 'Không xác định'}
+                      </p>
+                    </div>
+                    <span className="text-sm font-medium text-orange-600">
+                      {contract.value ? contract.value.toLocaleString() : '0'} VNĐ
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>Không có hợp đồng sắp hết hạn</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Component Clients
 const Clients = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
@@ -1706,8 +1257,8 @@ const Clients = () => {
   const [statusFilter, setStatusFilter] = useState("active"); // active, archived, all
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // Thêm state để kiểm tra đang chỉnh sửa hay thêm mới
-  const [currentClientId, setCurrentClientId] = useState(null); // Lưu ID của client đang chỉnh sửa
+  const [isEditing, setIsEditing] = useState(false); 
+  const [currentClientId, setCurrentClientId] = useState(null); 
   const [statsData, setStatsData] = useState({
     totalClients: 0,
     activeClients: 0,
@@ -1749,10 +1300,8 @@ const Clients = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      // Lấy danh sách khách hàng từ API
       const response = await axios.get(`${API}/clients/`);
       
-      // Lọc dữ liệu dựa trên statusFilter
       let filteredClients = response.data;
       
       if (statusFilter === "active") {
@@ -1761,7 +1310,6 @@ const Clients = () => {
         filteredClients = filteredClients.filter(client => client.archived);
       }
 
-      // Lọc dựa trên từ khóa tìm kiếm
       if (searchTerm) {
         filteredClients = filteredClients.filter(client => 
           client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -1782,16 +1330,12 @@ const Clients = () => {
 
   const fetchStats = async () => {
     try {
-      // Trong thực tế, bạn có thể gọi một API riêng để lấy thống kê
       const response = await axios.get(`${API}/clients/`);
       const allClients = response.data;
       
-      // Tính toán các chỉ số thống kê
       const totalClients = allClients.length;
-      
       const activeClients = allClients.filter(client => !client.archived).length;
       
-      // Tính số khách hàng mới trong tháng
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const newClientsThisMonth = allClients.filter(client => {
@@ -1845,7 +1389,6 @@ const Clients = () => {
     setBulkActionMenuOpen(!bulkActionMenuOpen);
   };
   
-  // Xử lý upload avatar
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -1858,13 +1401,11 @@ const Clients = () => {
     }
   };
   
-  // Xử lý thay đổi input trong form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
   
-  // Xử lý lựa chọn tag
   const handleTagSelect = (e) => {
     const tag = e.target.value;
     if (tag && !formData.tags.includes(tag)) {
@@ -1875,7 +1416,6 @@ const Clients = () => {
     }
   };
   
-  // Xử lý xóa tag
   const removeTag = (tagToRemove) => {
     setFormData({
       ...formData,
@@ -1883,13 +1423,10 @@ const Clients = () => {
     });
   };
   
-  // Xử lý chỉnh sửa client
   const handleEditClient = (client) => {
-    // Thiết lập trạng thái chỉnh sửa
     setIsEditing(true);
     setCurrentClientId(client.id);
     
-    // Điền dữ liệu vào form
     setFormData({
       name: client.name || "",
       company: client.company || "",
@@ -1905,24 +1442,18 @@ const Clients = () => {
       tags: client.tags || []
     });
     
-    // Thiết lập avatar preview
     setAvatarPreview(client.avatar_url || null);
-    
-    // Mở modal
     setIsModalOpen(true);
   };
   
-  // Xử lý submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Đảm bảo có tên công ty
       const clientData = {
         ...formData,
-        company: formData.company || formData.name // Sử dụng tên client làm tên công ty nếu không có
+        company: formData.company || formData.name
       };
 
-      // Xử lý upload avatar nếu có
       if (avatarFile) {
         const formDataUpload = new FormData();
         formDataUpload.append('file', avatarFile);
@@ -1933,32 +1464,28 @@ const Clients = () => {
           }
         });
         
-        // Thêm avatar_url vào clientData
         clientData.avatar_url = uploadResponse.data.avatar_url;
       }
 
       let response;
       if (isEditing) {
-        // Cập nhật client hiện có
         response = await axios.put(`${API}/clients/${currentClientId}`, clientData);
         toast.success("Cập nhật khách hàng thành công!");
       } else {
-        // Tạo client mới
         response = await axios.post(`${API}/clients/`, clientData);
         toast.success("Thêm khách hàng thành công!");
       }
-      
-      setIsModalOpen(false);
+
       resetForm();
+      setIsModalOpen(false);
       fetchClients();
       fetchStats();
     } catch (error) {
       console.error("Error saving client:", error);
-      toast.error(isEditing ? "Không thể cập nhật khách hàng" : "Không thể tạo khách hàng mới");
+      toast.error(isEditing ? "Không thể cập nhật khách hàng" : "Không thể thêm khách hàng mới");
     }
   };
-  
-  // Reset form và trạng thái chỉnh sửa
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -1974,128 +1501,74 @@ const Clients = () => {
       address: "",
       tags: []
     });
+    setAvatarPreview(null);
+    setAvatarFile(null);
     setIsEditing(false);
     setCurrentClientId(null);
-    setAvatarFile(null);
-    setAvatarPreview(null);
   };
 
-  const handleArchiveClient = async (clientId) => {
+  const handleDeleteClient = async (clientId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
+      try {
+        await axios.delete(`${API}/clients/${clientId}`);
+        toast.success("Xóa khách hàng thành công!");
+        fetchClients();
+        fetchStats();
+      } catch (error) {
+        console.error("Error deleting client:", error);
+        toast.error("Không thể xóa khách hàng");
+      }
+    }
+  };
+
+  const handleArchiveClient = async (clientId, isArchived) => {
     try {
       const client = clients.find(c => c.id === clientId);
-      if (!client) return;
-
-      await axios.put(`${API}/clients/${clientId}`, {
-        ...client,
-        archived: true
-      });
-
-      toast.success("Đã lưu trữ khách hàng");
+      const updatedClient = { ...client, archived: !isArchived };
+      
+      await axios.put(`${API}/clients/${clientId}`, updatedClient);
+      toast.success(isArchived ? "Khôi phục khách hàng thành công!" : "Lưu trữ khách hàng thành công!");
       fetchClients();
       fetchStats();
     } catch (error) {
       console.error("Error archiving client:", error);
-      toast.error("Không thể lưu trữ khách hàng");
+      toast.error("Không thể cập nhật trạng thái khách hàng");
     }
   };
 
-  const handleRestoreClient = async (clientId) => {
-    try {
-      const client = clients.find(c => c.id === clientId);
-      if (!client) return;
-
-      await axios.put(`${API}/clients/${clientId}`, {
-        ...client,
-        archived: false
-      });
-
-      toast.success("Đã khôi phục khách hàng");
-      fetchClients();
-      fetchStats();
-    } catch (error) {
-      console.error("Error restoring client:", error);
-      toast.error("Không thể khôi phục khách hàng");
+  const handleBulkAction = async (action) => {
+    if (selectedClients.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất một khách hàng");
+      return;
     }
-  };
 
-  const handleDeleteClient = async (clientId) => {
-    try {
-      await axios.delete(`${API}/clients/${clientId}`);
-      toast.success("Đã xóa khách hàng");
-      fetchClients();
-      fetchStats();
-    } catch (error) {
-      console.error("Error deleting client:", error);
-      toast.error("Không thể xóa khách hàng");
-    }
-  };
+    const confirmMessage = action === 'delete' 
+      ? `Bạn có chắc chắn muốn xóa ${selectedClients.length} khách hàng đã chọn?`
+      : `Bạn có chắc chắn muốn ${action === 'archive' ? 'lưu trữ' : 'khôi phục'} ${selectedClients.length} khách hàng đã chọn?`;
 
-  const handleBulkArchive = async () => {
-    try {
-      for (const clientId of selectedClients) {
-        const client = clients.find(c => c.id === clientId);
-        if (client) {
-          await axios.put(`${API}/clients/${clientId}`, {
-            ...client,
-            archived: true
-          });
+    if (window.confirm(confirmMessage)) {
+      try {
+        if (action === 'delete') {
+          await Promise.all(selectedClients.map(id => axios.delete(`${API}/clients/${id}`)));
+          toast.success("Xóa các khách hàng thành công!");
+        } else {
+          const isArchive = action === 'archive';
+          await Promise.all(selectedClients.map(async (id) => {
+            const client = clients.find(c => c.id === id);
+            const updatedClient = { ...client, archived: isArchive };
+            return axios.put(`${API}/clients/${id}`, updatedClient);
+          }));
+          toast.success(isArchive ? "Lưu trữ các khách hàng thành công!" : "Khôi phục các khách hàng thành công!");
         }
+        
+        setSelectedClients([]);
+        setBulkActionMenuOpen(false);
+        fetchClients();
+        fetchStats();
+      } catch (error) {
+        console.error(`Error ${action} clients:`, error);
+        toast.error("Có lỗi xảy ra khi thực hiện thao tác");
       }
-      toast.success("Đã lưu trữ các khách hàng đã chọn");
-      setSelectedClients([]);
-      fetchClients();
-      fetchStats();
-    } catch (error) {
-      console.error("Error archiving clients:", error);
-      toast.error("Không thể lưu trữ khách hàng");
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      for (const clientId of selectedClients) {
-        await axios.delete(`${API}/clients/${clientId}`);
-      }
-      toast.success("Đã xóa các khách hàng đã chọn");
-      setSelectedClients([]);
-      fetchClients();
-      fetchStats();
-    } catch (error) {
-      console.error("Error deleting clients:", error);
-      toast.error("Không thể xóa khách hàng");
-    }
-  };
-
-  const applyAdvancedFilters = () => {
-    // Thực hiện lọc nâng cao và cập nhật danh sách clients
-    // Trong môi trường thực, bạn có thể cần gọi API với các tham số lọc
-    setIsFilterModalOpen(false);
-    toast.info("Đã áp dụng bộ lọc");
-  };
-
-  const resetAdvancedFilters = () => {
-    setFilterData({
-      tags: [],
-      hasProjects: null,
-      hasInvoices: null,
-      dateFrom: "",
-      dateTo: ""
-    });
-    setIsFilterModalOpen(false);
-    fetchClients();
-  };
-
-  const toggleTagFilter = (tag) => {
-    if (filterData.tags.includes(tag)) {
-      setFilterData({
-        ...filterData,
-        tags: filterData.tags.filter(t => t !== tag)
-      });
-    } else {
-      setFilterData({
-        ...filterData,
-        tags: [...filterData.tags, tag]
-      });
     }
   };
 
@@ -2104,305 +1577,265 @@ const Clients = () => {
   }
 
   return (
-    <div className="px-4">
-      {/* Widget thống kê */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
-          <div>
-            <h3 className="text-gray-500 text-sm font-medium">Tổng client</h3>
-            <p className="text-4xl font-bold">{statsData.totalClients}</p>
-          </div>
-          <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg className="h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
+    <div className="space-y-6 fade-in">
+      {/* Modern Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Khách hàng</h1>
+          <p className="text-gray-600 mt-1">Quản lý thông tin khách hàng và mối quan hệ</p>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
-          <div>
-            <h3 className="text-gray-500 text-sm font-medium">Đang làm việc</h3>
-            <p className="text-4xl font-bold">{statsData.activeClients}</p>
-          </div>
-          <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-            <svg className="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
-          <div>
-            <h3 className="text-gray-500 text-sm font-medium">Client mới trong tháng</h3>
-            <p className="text-4xl font-bold">{statsData.newClientsThisMonth}</p>
-          </div>
-          <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <svg className="h-6 w-6 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-        </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="btn-primary"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Thêm khách hàng
+        </button>
       </div>
 
-      {/* Header và công cụ */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Clients</h1>
-          <div className="flex space-x-2">
-            <div className="relative">
-              <button
-                onClick={toggleBulkActionMenu}
-                disabled={selectedClients.length === 0}
-                className={`inline-flex items-center px-4 py-2 border ${selectedClients.length === 0 ? 'border-gray-300 text-gray-400' : 'border-gray-300 text-gray-700'} rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none`}
-              >
-                Xóa / Lưu trữ
-                <svg className="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {bulkActionMenuOpen && selectedClients.length > 0 && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                  <div className="py-1">
-                    <button
-                      onClick={() => {
-                        handleBulkArchive();
-                        setBulkActionMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Lưu trữ
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleBulkDelete();
-                        setBulkActionMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      Xóa
-                    </button>
-                  </div>
-                </div>
-              )}
+      {/* Modern Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.totalClients}</p>
+              <p className="text-sm text-blue-600 mt-1">
+                <span className="font-medium">+12%</span> so với tháng trước
+              </p>
             </div>
-            <button
-              onClick={() => setViewArchived(!viewArchived)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-            >
-              <svg className="mr-2 -ml-0.5 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              Xem lưu trữ
-            </button>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Thêm Client
-            </button>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-          <div className="flex-1 mb-2 md:mb-0">
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={handleSearch}
-                placeholder="Tìm kiếm theo tên, email, website..."
-                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 sm:text-sm border-gray-300 rounded-md py-2"
-              />
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Đang hoạt động</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.activeClients}</p>
+              <p className="text-sm text-green-600 mt-1">
+                <span className="font-medium">Hoạt động tích cực</span>
+              </p>
             </div>
-          </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+      </div>
 
-          <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-2">
-            <div className="relative">
+      {/* Modern Search and Filter Bar */}
+      <div className="modern-card">
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            {/* Search */}
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khách hàng..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="modern-input pl-10"
+                />
+              </div>
+            </div>
+            
+            {/* Filter Controls */}
+            <div className="flex gap-3">
               <select
                 value={statusFilter}
                 onChange={handleStatusFilterChange}
-                className="focus:ring-indigo-500 focus:border-indigo-500 h-full py-2 pl-3 pr-10 border-gray-300 bg-white rounded-md shadow-sm text-sm appearance-none"
+                className="modern-input"
               >
                 <option value="active">Đang hoạt động</option>
                 <option value="archived">Đã lưu trữ</option>
                 <option value="all">Tất cả</option>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
 
-            <button
-              onClick={() => setIsFilterModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              Bộ lọc
-            </button>
+              {selectedClients.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={toggleBulkActionMenu}
+                    className="btn-secondary"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                    </svg>
+                    Thao tác ({selectedClients.length})
+                  </button>
+                  {bulkActionMenuOpen && (
+                    <div className="dropdown-menu">
+                      {bulkActionMenuOpen && <div className="dropdown-backdrop" onClick={() => setBulkActionMenuOpen(false)}></div>}
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleBulkAction('archive')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Lưu trữ
+                      </button>
+                      <button
+                        onClick={() => handleBulkAction('restore')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Khôi phục
+                      </button>
+                      <button
+                        onClick={() => handleBulkAction('delete')}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Danh sách khách hàng */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <input
-                  type="checkbox"
-                  onChange={handleSelectAll}
-                  checked={selectedClients.length === clients.length && clients.length > 0}
-                  className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                />
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact Name
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Website
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tags
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {clients.length > 0 ? (
-              clients.map((client) => (
-                <tr key={client.id} className="hover:bg-gray-50">
+      {/* Modern Client Table */}
+      <div className="modern-table">
+        <div className="table-container">
+          <table className="min-w-full divide-y divide-gray-300">
+            <thead>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    checked={selectedClients.length === clients.length && clients.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Khách hàng
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Liên hệ
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Thông tin
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Tags
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Hành động
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {clients.map((client) => (
+                <tr key={client.id} className="hover:bg-blue-50 transition-colors duration-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedClients.includes(client.id)}
                       onChange={() => handleSelectClient(client.id)}
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                      <div className="h-12 w-12 flex-shrink-0">
                         {client.avatar_url ? (
-                          <img src={client.avatar_url} alt={client.name} className="h-full w-full object-cover" />
+                          <img className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-200" src={client.avatar_url} alt="" />
                         ) : (
-                          <span className="text-sm font-medium text-gray-500">
-                            {client.name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()}
-                          </span>
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-white">
+                              {client.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
                         )}
                       </div>
                       <div className="ml-4">
-                        <div 
-                          className="text-sm font-medium text-indigo-600 cursor-pointer hover:text-indigo-800"
+                        <button
                           onClick={() => navigate(`/clients/${client.id}`)}
+                          className="text-sm font-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors duration-200"
                         >
                           {client.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {client.company}
-                        </div>
+                        </button>
+                        <div className="text-sm text-gray-600 font-medium">{client.company}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {client.contact_name || "—"}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{client.contact_name}</div>
+                    <div className="text-sm text-gray-600">{client.contact_email}</div>
+                    <div className="text-sm text-gray-600">{client.contact_phone}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {client.contact_email || "—"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600 hover:text-indigo-900">
-                    {client.website ? (
-                      <a href={client.website.startsWith('http') ? client.website : `https://${client.website}`} target="_blank" rel="noopener noreferrer">
-                        {client.website}
-                      </a>
-                    ) : (
-                      "—"
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{client.industry}</div>
+                    <div className="text-sm text-gray-600">{client.size}</div>
+                    {client.website && (
+                      <div className="text-sm text-blue-600 hover:text-blue-800">
+                        <a href={client.website} target="_blank" rel="noopener noreferrer" className="transition-colors duration-200">
+                          {client.website}
+                        </a>
+                      </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-1">
-                      {client.tags && client.tags.length > 0 ? (
-                        client.tags.map((tag, index) => (
-                          <span key={index} className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-sm text-gray-500">—</span>
-                      )}
+                      {client.tags && client.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="status-badge status-info"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`status-badge ${
+                      client.archived 
+                        ? 'bg-gray-100 text-gray-800' 
+                        : 'status-success'
+                    }`}>
+                      {client.archived ? 'Đã lưu trữ' : 'Hoạt động'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="relative">
                       <button
                         onClick={() => toggleActionMenu(client.id)}
-                        className="text-gray-400 hover:text-gray-500"
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
                       >
-                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                         </svg>
                       </button>
                       {actionMenuOpen === client.id && (
-                        <div 
-                          className="fixed origin-top-right z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                          style={{
-                            top: 'auto',
-                            right: 'auto',
-                            left: 'auto'
-                          }}
-                          ref={(node) => {
-                            if (node) {
-                              const rect = node.getBoundingClientRect();
-                              const buttonRect = node.parentElement.getBoundingClientRect();
-                              
-                              // Tính toán vị trí tốt nhất
-                              let left = buttonRect.left - rect.width + 20;
-                              
-                              // Đảm bảo không vượt quá bên trái màn hình
-                              if (left < 10) {
-                                left = 10;
-                              }
-                              
-                              // Đảm bảo không vượt quá bên phải màn hình
-                              if (left + rect.width > window.innerWidth - 10) {
-                                left = window.innerWidth - rect.width - 10;
-                              }
-                              
-                              node.style.position = 'fixed';
-                              node.style.top = `${buttonRect.bottom + window.scrollY}px`;
-                              node.style.left = `${left}px`;
-                            }
-                          }}
-                        >
+                        <div className="dropdown-menu">
+                          {actionMenuOpen === client.id && <div className="dropdown-backdrop" onClick={() => setActionMenuOpen(null)}></div>}
                           <div className="py-1">
                             <button
                               onClick={() => {
                                 navigate(`/clients/${client.id}`);
                                 setActionMenuOpen(null);
                               }}
-                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              className="dropdown-menu-item"
                             >
-                              <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
                               Xem chi tiết
                             </button>
@@ -2411,52 +1844,26 @@ const Clients = () => {
                                 handleEditClient(client);
                                 setActionMenuOpen(null);
                               }}
-                              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                              <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
                               Chỉnh sửa
                             </button>
-                            {!client.archived ? (
-                              <button
-                                onClick={() => {
-                                  handleArchiveClient(client.id);
-                                  setActionMenuOpen(null);
-                                }}
-                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                </svg>
-                                Lưu trữ
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  handleRestoreClient(client.id);
-                                  setActionMenuOpen(null);
-                                }}
-                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <svg className="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                </svg>
-                                Khôi phục
-                              </button>
-                            )}
                             <button
                               onClick={() => {
-                                if (window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
-                                  handleDeleteClient(client.id);
-                                }
+                                handleArchiveClient(client.id, client.archived);
                                 setActionMenuOpen(null);
                               }}
-                              className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                              <svg className="mr-3 h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                              {client.archived ? 'Khôi phục' : 'Lưu trữ'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDeleteClient(client.id);
+                                setActionMenuOpen(null);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
                               Xóa
                             </button>
                           </div>
@@ -2465,1827 +1872,397 @@ const Clients = () => {
                     </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7" className="px-6 py-10 text-center text-gray-500">
-                  {statusFilter === "archived" ? (
-                    "Không có khách hàng nào trong lưu trữ."
-                  ) : searchTerm ? (
-                    "Không tìm thấy khách hàng phù hợp với từ khóa."
-                  ) : (
-                    "Chưa có khách hàng nào. Bắt đầu bằng cách thêm khách hàng mới."
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal thêm khách hàng */}
-      {isModalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="px-4 pt-5 pb-4 sm:p-6">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {isEditing ? "Chỉnh sửa client" : "Thêm client mới"}
-                  </h3>
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-500"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      resetForm();
-                    }}
-                  >
-                    <span className="sr-only">Đóng</span>
-                    <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="mt-6">
-                  {/* Avatar */}
-                  <div className="flex justify-center mb-6">
-                    <div className="relative">
-                      <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                        {avatarPreview ? (
-                          <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-2xl font-medium text-gray-500">
-                            {formData.name ? formData.name.substring(0, 2).toUpperCase() : "CL"}
-                          </span>
-                        )}
-                      </div>
-                      <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-indigo-600 rounded-full p-1 cursor-pointer">
-                        <svg className="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                      </label>
-                      <input
-                        id="avatar-upload"
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tên client */}
-                  <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Tên client <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      id="name"
-                      placeholder="Nhập tên client"
-                      required
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                  </div>
-
-                  {/* Tên người liên hệ */}
-                  <div className="mb-4">
-                    <label htmlFor="contact_name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Tên người liên hệ
-                    </label>
-                    <input
-                      type="text"
-                      name="contact_name"
-                      id="contact_name"
-                      placeholder="Nhập tên người liên hệ"
-                      value={formData.contact_name || ""}
-                      onChange={handleInputChange}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                  </div>
-
-                  {/* Email và SĐT */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        name="contact_email"
-                        id="contact_email"
-                        placeholder="Email"
-                        value={formData.contact_email || ""}
-                        onChange={handleInputChange}
-                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        Số điện thoại
-                      </label>
-                      <input
-                        type="text"
-                        name="contact_phone"
-                        id="contact_phone"
-                        placeholder="Số điện thoại"
-                        value={formData.contact_phone || ""}
-                        onChange={handleInputChange}
-                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Website */}
-                  <div className="mb-4">
-                    <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
-                      Website
-                    </label>
-                    <input
-                      type="text"
-                      name="website"
-                      id="website"
-                      placeholder="www.example.com"
-                      value={formData.website || ""}
-                      onChange={handleInputChange}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                  </div>
-
-                  {/* Tags */}
-                  <div className="mb-4">
-                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
-                      Tag
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="tags"
-                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        value=""
-                        onChange={handleTagSelect}
-                      >
-                        <option value="" disabled>Chọn tag</option>
-                        {availableTags.map(tag => (
-                          <option key={tag} value={tag} disabled={formData.tags.includes(tag)}>
-                            {tag}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {formData.tags.map(tag => (
-                          <span 
-                            key={tag} 
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                          >
-                            {tag}
-                            <button 
-                              type="button" 
-                              className="ml-1.5 inline-flex text-indigo-400 hover:text-indigo-600"
-                              onClick={() => removeTag(tag)}
-                            >
-                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Địa chỉ */}
-                  <div className="mb-4">
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Địa chỉ
-                    </label>
-                    <textarea
-                      id="address"
-                      name="address"
-                      rows="3"
-                      placeholder="Địa chỉ"
-                      value={formData.address || ""}
-                      onChange={handleInputChange}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    ></textarea>
-                  </div>
-
-                  {/* Ghi chú */}
-                  <div className="mb-4">
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                      Ghi chú
-                    </label>
-                    <textarea
-                      id="notes"
-                      name="notes"
-                      rows="3"
-                      placeholder="Ghi chú"
-                      value={formData.notes || ""}
-                      onChange={handleInputChange}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    ></textarea>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsModalOpen(false);
-                        resetForm();
-                      }}
-                      className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-                    >
-                      {isEditing ? "Cập nhật" : "Thêm mới"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal lọc nâng cao */}
-      {isFilterModalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
-                      Bộ lọc danh sách Client
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Áp dụng các bộ lọc để tìm kiếm chính xác hơn.
-                    </p>
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {availableTags.map((tag) => (
-                          <button
-                            key={tag}
-                            onClick={() => toggleTagFilter(tag)}
-                            className={`px-3 py-1 rounded-full text-sm ${
-                              filterData.tags.includes(tag)
-                                ? 'bg-indigo-100 text-indigo-800 border border-indigo-300'
-                                : 'bg-gray-100 text-gray-800 border border-gray-200'
-                            }`}
-                          >
-                            {tag}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Trạng thái dự án</h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <input
-                              id="has-projects"
-                              type="checkbox"
-                              checked={filterData.hasProjects === true}
-                              onChange={() => setFilterData({...filterData, hasProjects: filterData.hasProjects === true ? null : true})}
-                              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                            <label htmlFor="has-projects" className="ml-2 text-sm text-gray-700">
-                              Có dự án
-                            </label>
-                          </div>
-                          <div className="flex items-center">
-                            <input
-                              id="no-projects"
-                              type="checkbox"
-                              checked={filterData.hasProjects === false}
-                              onChange={() => setFilterData({...filterData, hasProjects: filterData.hasProjects === false ? null : false})}
-                              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                            <label htmlFor="no-projects" className="ml-2 text-sm text-gray-700">
-                              Không có dự án
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Trạng thái hóa đơn</h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <input
-                              id="has-invoices"
-                              type="checkbox"
-                              checked={filterData.hasInvoices === true}
-                              onChange={() => setFilterData({...filterData, hasInvoices: filterData.hasInvoices === true ? null : true})}
-                              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                            <label htmlFor="has-invoices" className="ml-2 text-sm text-gray-700">
-                              Có hóa đơn
-                            </label>
-                          </div>
-                          <div className="flex items-center">
-                            <input
-                              id="no-invoices"
-                              type="checkbox"
-                              checked={filterData.hasInvoices === false}
-                              onChange={() => setFilterData({...filterData, hasInvoices: filterData.hasInvoices === false ? null : false})}
-                              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            />
-                            <label htmlFor="no-invoices" className="ml-2 text-sm text-gray-700">
-                              Không có hóa đơn
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Ngày tạo</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label htmlFor="date-from" className="block text-xs text-gray-500 mb-1">
-                            Từ ngày
-                          </label>
-                          <input
-                            type="date"
-                            id="date-from"
-                            value={filterData.dateFrom}
-                            onChange={(e) => setFilterData({...filterData, dateFrom: e.target.value})}
-                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="date-to" className="block text-xs text-gray-500 mb-1">
-                            Đến ngày
-                          </label>
-                          <input
-                            type="date"
-                            id="date-to"
-                            value={filterData.dateTo}
-                            onChange={(e) => setFilterData({...filterData, dateTo: e.target.value})}
-                            className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={applyAdvancedFilters}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Áp dụng
-                </button>
-                <button
-                  type="button"
-                  onClick={resetAdvancedFilters}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Xóa bộ lọc
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsFilterModalOpen(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Hủy
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const ClientDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [client, setClient] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview"); // overview, projects, tasks, contracts
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  
-  useEffect(() => {
-    fetchClientDetails();
-  }, [id]);
-  
-  const fetchClientDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/clients/${id}`);
-      setClient(response.data);
-    } catch (error) {
-      console.error("Error fetching client details:", error);
-      toast.error("Không thể tải thông tin chi tiết khách hàng");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditClient = () => {
-    setIsEditModalOpen(true);
-  };
-  
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="spinner"></div>
-        <p className="ml-2 text-gray-600">Đang tải thông tin...</p>
-      </div>
-    );
-  }
-  
-  if (!client) {
-    return (
-      <div className="text-center py-10">
-        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h3 className="mt-2 text-lg font-medium text-gray-900">Không tìm thấy thông tin khách hàng</h3>
-        <p className="mt-1 text-gray-500">Khách hàng này có thể đã bị xóa hoặc không tồn tại.</p>
-        <div className="mt-6">
-          <button 
-            onClick={() => navigate("/clients")}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-          >
-            Quay lại danh sách
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  // Lấy hai chữ cái đầu của tên client làm avatar
-  const avatarText = client.name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-  
-  return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* Header với nút quay lại và tiêu đề */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate("/clients")}
-              className="flex items-center text-gray-500 hover:text-gray-700 mr-4 focus:outline-none"
-            >
-              <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="ml-1 text-sm font-medium">Quay lại</span>
-            </button>
-            <h1 className="text-xl font-semibold text-gray-900">Chi tiết Client</h1>
-          </div>
-        </div>
-      </div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Phần thông tin chi tiết client - bên trái */}
-          <div className="w-full md:w-1/3">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex flex-col items-center mb-6">
-                <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-2xl font-medium text-gray-700 mb-4 overflow-hidden">
-                  {client.avatar_url ? (
-                    <img src={client.avatar_url} alt={client.name} className="h-full w-full object-cover" />
-                  ) : (
-                    avatarText
-                  )}
-                </div>
-                <h2 className="text-xl font-bold text-center">{client.name}</h2>
-                <p className="text-gray-600 text-center">{client.contact_name || "Chưa có tên liên hệ"}</p>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {client.archived ? "Đã lưu trữ" : "Đang hoạt động"}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <button 
-                    className="flex items-center text-gray-700 hover:text-indigo-600"
-                    onClick={handleEditClient}
-                  >
-                    <svg className="h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    Chỉnh sửa
-                  </button>
-                  <div className="relative">
-                    <button 
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={toggleMenu}
-                    >
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                      </svg>
-                    </button>
-                    {menuOpen && (
-                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                        <div className="py-1">
-                          <button 
-                            onClick={() => {
-                              // Handle archive action
-                              setMenuOpen(false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            {client.archived ? "Khôi phục" : "Lưu trữ"}
-                          </button>
-                          <button 
-                            onClick={() => {
-                              // Handle delete action
-                              if (window.confirm("Bạn có chắc chắn muốn xóa client này?")) {
-                                // Delete logic
-                              }
-                              setMenuOpen(false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            Xóa client
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-3 text-sm">
-                  {client.contact_email && (
-                    <div className="flex items-center">
-                      <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <a href={`mailto:${client.contact_email}`} className="text-gray-700 hover:text-indigo-600">
-                        {client.contact_email}
-                      </a>
-                    </div>
-                  )}
-                  
-                  {client.contact_phone && (
-                    <div className="flex items-center">
-                      <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <a href={`tel:${client.contact_phone}`} className="text-gray-700 hover:text-indigo-600">
-                        {client.contact_phone}
-                      </a>
-                    </div>
-                  )}
-                  
-                  {client.website && (
-                    <div className="flex items-center">
-                      <svg className="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                      </svg>
-                      <a 
-                        href={client.website.startsWith('http') ? client.website : `https://${client.website}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-gray-700 hover:text-indigo-600"
-                      >
-                        {client.website}
-                      </a>
-                    </div>
-                  )}
-                  
-                  {client.address && (
-                    <div className="flex items-start">
-                      <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-gray-700">{client.address}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {client.tags && client.tags.length > 0 && (
-                  <div className="mt-4 pt-4 border-t">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {client.tags.map((tag, index) => (
-                        <span key={index} className="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {client.notes && (
-                  <div className="mt-4 pt-4 border-t">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Ghi chú</h3>
-                    <div className="bg-gray-50 rounded p-3 max-h-40 overflow-y-auto">
-                      <p className="text-sm text-gray-600">{client.notes}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Phần tab nội dung - bên phải */}
-          <div className="w-full md:w-2/3">
-            <div className="bg-white rounded-lg shadow-sm">
-              {/* Tab navigation */}
-              <div className="border-b">
-                <nav className="flex -mb-px">
-                  <button
-                    onClick={() => setActiveTab("overview")}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                      activeTab === "overview"
-                        ? "border-indigo-500 text-indigo-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } focus:outline-none transition duration-150 ease-in-out`}
-                  >
-                    Tổng quan
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("projects")}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                      activeTab === "projects"
-                        ? "border-indigo-500 text-indigo-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } focus:outline-none transition duration-150 ease-in-out`}
-                  >
-                    Dự án
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("tasks")}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                      activeTab === "tasks"
-                        ? "border-indigo-500 text-indigo-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } focus:outline-none transition duration-150 ease-in-out`}
-                  >
-                    Công việc
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("contracts")}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                      activeTab === "contracts"
-                        ? "border-indigo-500 text-indigo-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } focus:outline-none transition duration-150 ease-in-out`}
-                  >
-                    Hợp đồng
-                  </button>
-                </nav>
-              </div>
-              
-              {/* Tab content */}
-              <div className="p-6">
-                {activeTab === "overview" && <ClientOverviewTab clientId={id} />}
-                {activeTab === "projects" && <ClientProjectsTab clientId={id} />}
-                {activeTab === "tasks" && <ClientTasksTab clientId={id} />}
-                {activeTab === "contracts" && <ClientContractsTab clientId={id} />}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Modal chỉnh sửa client */}
-      {isEditModalOpen && (
-        <EditClientModal 
-          client={client} 
-          onClose={() => setIsEditModalOpen(false)} 
-          onUpdate={() => {
-            fetchClientDetails();
-            setIsEditModalOpen(false);
-          }} 
-        />
-      )}
-    </div>
-  );
-};
-
-// Modal chỉnh sửa client
-const EditClientModal = ({ client, onClose, onUpdate }) => {
-  const [formData, setFormData] = useState({
-    name: client.name || "",
-    company: client.company || "",
-    contact_name: client.contact_name || "",
-    contact_email: client.contact_email || "",
-    contact_phone: client.contact_phone || "",
-    website: client.website || "",
-    address: client.address || "",
-    notes: client.notes || "",
-    tags: client.tags || []
-  });
-  const [tagInput, setTagInput] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleTagInputKeyDown = (e) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      if (!formData.tags.includes(tagInput.trim())) {
-        setFormData({
-          ...formData,
-          tags: [...formData.tags, tagInput.trim()]
-        });
-      }
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tagToRemove) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove)
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await axios.put(`${API}/clients/${client.id}`, formData);
-      toast.success("Cập nhật khách hàng thành công!");
-      onUpdate();
-    } catch (error) {
-      console.error("Error updating client:", error);
-      toast.error("Không thể cập nhật thông tin khách hàng");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed z-10 inset-0 overflow-y-auto">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="sm:flex sm:items-start">
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Chỉnh sửa thông tin client
-                </h3>
-                <form onSubmit={handleSubmit} className="mt-2">
-                  <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div className="sm:col-span-6">
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Tên <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        required
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="contact_name" className="block text-sm font-medium text-gray-700">
-                        Tên người liên hệ
-                      </label>
-                      <input
-                        type="text"
-                        name="contact_name"
-                        id="contact_name"
-                        value={formData.contact_name}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-3">
-                      <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        name="contact_email"
-                        id="contact_email"
-                        value={formData.contact_email}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-3">
-                      <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700">
-                        Số điện thoại
-                      </label>
-                      <input
-                        type="text"
-                        name="contact_phone"
-                        id="contact_phone"
-                        value={formData.contact_phone}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="website" className="block text-sm font-medium text-gray-700">
-                        Website
-                      </label>
-                      <input
-                        type="text"
-                        name="website"
-                        id="website"
-                        value={formData.website}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                        Địa chỉ
-                      </label>
-                      <textarea
-                        name="address"
-                        id="address"
-                        rows="2"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      ></textarea>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
-                        Tags
-                      </label>
-                      <div className="mt-1">
-                        <input
-                          type="text"
-                          name="tags"
-                          id="tags"
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyDown={handleTagInputKeyDown}
-                          placeholder="Nhập tag và nhấn Enter"
-                          className="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                        />
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {formData.tags.map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
-                            >
-                              {tag}
-                              <button
-                                type="button"
-                                onClick={() => removeTag(tag)}
-                                className="ml-1.5 text-indigo-400 hover:text-indigo-600 focus:outline-none"
-                              >
-                                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                        Ghi chú
-                      </label>
-                      <textarea
-                        name="notes"
-                        id="notes"
-                        rows="3"
-                        value={formData.notes}
-                        onChange={handleInputChange}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                      ></textarea>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Hủy
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Tab Tổng quan
-const ClientOverviewTab = ({ clientId }) => {
-  const [stats, setStats] = useState({
-    projectCount: 0,
-    revenue: 0,
-    debt: 0
-  });
-  const [recentTasks, setRecentTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchData();
-  }, [clientId]);
-  
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch dự án của client
-      const projectsResponse = await axios.get(`${API}/projects/client/${clientId}`);
-      const projects = projectsResponse.data;
-      
-      // TODO: Trong thực tế, sẽ cần API để lấy doanh thu và công nợ
-      // Giả lập dữ liệu cho mục đích demo
-      setStats({
-        projectCount: projects.length,
-        revenue: 0, // Sẽ cập nhật khi có API thực tế
-        debt: 0 // Sẽ cập nhật khi có API thực tế
-      });
-      
-      // Fetch công việc gần đây của client
-      // TODO: Trong thực tế, cần API để lấy công việc của client
-      // Giả lập dữ liệu cho mục đích demo
-      setRecentTasks([
-        { id: '1', title: 'Thu tiền', completed: true, created_at: new Date('2023-05-17T19:37:00'), completed_at: new Date('2023-05-21T16:31:00') },
-        { id: '2', title: 'Làm BBNT', completed: true, created_at: new Date('2023-05-17T19:19:00'), completed_at: new Date('2023-05-17T19:36:00') },
-        { id: '3', title: 'Tạo hợp đồng', completed: true, created_at: new Date('2023-05-17T19:19:00'), completed_at: new Date('2023-05-17T19:36:00') }
-      ]);
-    } catch (error) {
-      console.error("Error fetching client overview data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-  
-  return (
-    <div>
-      {/* Thống kê */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white overflow-hidden rounded-lg border">
-          <div className="p-5">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Dự án</h3>
-                <p className="text-3xl font-bold">{stats.projectCount}</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden rounded-lg border">
-          <div className="p-5">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Doanh thu</h3>
-                <p className="text-3xl font-bold">0 đ</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white overflow-hidden rounded-lg border">
-          <div className="p-5">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Công nợ</h3>
-                <p className="text-3xl font-bold">0 đ</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Task gần đây */}
-      <div className="mt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Task gần đây</h3>
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg border">
-          {recentTasks.length > 0 ? (
-            <ul className="divide-y divide-gray-200">
-              {recentTasks.map(task => (
-                <li key={task.id} className="px-6 py-4 flex items-center">
-                  <div className="flex-shrink-0">
-                    <span className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg className="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </span>
-                  </div>
-                  <div className="ml-4 flex-1 flex justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 line-through">{task.title}</p>
-                      <div className="text-xs text-gray-500">
-                        <span>Tạo: {task.created_at.toLocaleDateString('vi-VN')} {task.created_at.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="mx-2">•</span>
-                        <span>Hoàn thành: {task.completed_at.toLocaleDateString('vi-VN')} {task.completed_at.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                    </div>
-                  </div>
-                </li>
               ))}
-            </ul>
-          ) : (
-            <div className="p-6 text-center text-gray-500">
-              Không có công việc nào gần đây
-            </div>
-          )}
+            </tbody>
+          </table>
         </div>
+        
+        {clients.length === 0 && (
+          <div className="text-center py-10 text-gray-500">
+            {statusFilter === 'all' ? 'Chưa có khách hàng nào' : 
+             statusFilter === 'archived' ? 'Chưa có khách hàng nào bị lưu trữ' :
+             'Chưa có khách hàng hoạt động nào'}
+          </div>
+        )}
       </div>
-    </div>
-  );
-};
 
-// Tab Dự án
-const ClientProjectsTab = ({ clientId }) => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchProjects();
-  }, [clientId]);
-  
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/projects/client/${clientId}`);
-      setProjects(response.data);
-    } catch (error) {
-      console.error("Error fetching client projects:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-  
-  // Mock dữ liệu dự án cho mục đích hiển thị
-  const mockProjects = [
-    { id: '1', name: 'vvvv', status: 'active', start_date: '2023-05-21', end_date: '2023-05-22' },
-    { id: '2', name: 'jahsdjá', status: 'active', start_date: '2023-05-21', end_date: '2023-05-31' },
-    { id: '3', name: 'Build Fanpage', status: 'active', start_date: '2023-05-19', end_date: '2023-05-31' },
-    { id: '4', name: 'Dự án Test', status: 'active', start_date: '2023-05-19', end_date: '2023-06-18' },
-    { id: '5', name: 'Marketing Vua Seeding', status: 'active', start_date: '2023-05-19', end_date: '2023-06-25' }
-  ];
-  
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-medium text-gray-900">Dự án</h3>
-        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Thêm dự án
-        </button>
-      </div>
-      
-      <div className="bg-white shadow overflow-hidden rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tên dự án
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ngày bắt đầu
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ngày kết thúc
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {mockProjects.map(project => (
-              <tr key={project.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{project.name}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    {project.status === 'active' ? 'Đang hoạt động' : project.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {project.start_date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {project.end_date}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-// Tab Công việc
-const ClientTasksTab = ({ clientId }) => {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchTasks();
-  }, [clientId]);
-  
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      // TODO: Trong thực tế, cần API để lấy các task của client
-      // Mock dữ liệu cho mục đích demo
-      setTasks([
-        { id: '1', title: 'Thu tiền', completed: true, created_at: new Date('2023-05-17T19:37:00'), completed_at: new Date('2023-05-21T16:31:00') },
-        { id: '2', title: 'Làm BBNT', completed: true, created_at: new Date('2023-05-17T19:19:00'), completed_at: new Date('2023-05-17T19:36:00') },
-        { id: '3', title: 'Tạo hợp đồng', completed: true, created_at: new Date('2023-05-17T19:19:00'), completed_at: new Date('2023-05-17T19:36:00') }
-      ]);
-    } catch (error) {
-      console.error("Error fetching client tasks:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-  
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative w-64">
-          <input
-            type="text"
-            placeholder="Thêm công việc mới..."
-            className="w-full pl-3 pr-10 py-2 border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-          <button className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-600">
-            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        {tasks.map(task => (
-          <div key={task.id} className="bg-white shadow overflow-hidden rounded-lg border p-4">
-            <div className="flex items-start">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1"
-                checked={task.completed}
-                readOnly
-              />
-              <div className="ml-3 flex-1">
-                <p className={`text-sm font-medium ${task.completed ? "text-gray-500 line-through" : "text-gray-900"}`}>
-                  {task.title}
-                </p>
-                <div className="mt-1 text-xs text-gray-500">
-                  <span>Tạo: {task.created_at.toLocaleDateString('vi-VN')} {task.created_at.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
-                  {task.completed && (
-                    <>
-                      <span className="mx-2">•</span>
-                      <span>Hoàn thành: {task.completed_at.toLocaleDateString('vi-VN')} {task.completed_at.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <button className="text-gray-400 hover:text-gray-500">
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+      {/* Add/Edit Client Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {isEditing ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Avatar Upload */}
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar preview"
+                      className="h-20 w-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                      <svg className="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  id="avatar-upload"
+                />
+                <label
+                  htmlFor="avatar-upload"
+                  className="cursor-pointer bg-white border border-gray-300 rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Chọn ảnh đại diện
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên khách hàng *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên công ty *
+                  </label>
+                  <input
+                    type="text"
+                    name="company"
+                    required
+                    value={formData.company}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ngành nghề
+                  </label>
+                  <input
+                    type="text"
+                    name="industry"
+                    value={formData.industry}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quy mô
+                  </label>
+                  <select
+                    name="size"
+                    value={formData.size}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn quy mô</option>
+                    <option value="1-10">1-10 nhân viên</option>
+                    <option value="11-50">11-50 nhân viên</option>
+                    <option value="51-200">51-200 nhân viên</option>
+                    <option value="201-500">201-500 nhân viên</option>
+                    <option value="500+">Trên 500 nhân viên</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Website
+                  </label>
+                  <input
+                    type="url"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên người liên hệ
+                  </label>
+                  <input
+                    type="text"
+                    name="contact_name"
+                    value={formData.contact_name}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email liên hệ
+                  </label>
+                  <input
+                    type="email"
+                    name="contact_email"
+                    value={formData.contact_email}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Điện thoại liên hệ
+                  </label>
+                  <input
+                    type="tel"
+                    name="contact_phone"
+                    value={formData.contact_phone}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <select
+                  onChange={handleTagSelect}
+                  value=""
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">Chọn tag</option>
+                  {availableTags.map((tag) => (
+                    <option key={tag} value={tag}>
+                      {tag}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ghi chú
+                </label>
+                <textarea
+                  name="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isEditing ? 'Cập nhật' : 'Thêm'}
+                </button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Tab Hợp đồng
-const ClientContractsTab = ({ clientId }) => {
-  const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchContracts();
-  }, [clientId]);
-  
-  const fetchContracts = async () => {
-    try {
-      setLoading(true);
-      // TODO: Trong thực tế, cần API để lấy hợp đồng của client
-      // Giả lập dữ liệu cho mục đích demo
-      setContracts([
-        { id: '1', name: 'Hợp đồng 2', status: 'signed', created_at: new Date(), url: '#' }
-      ]);
-    } catch (error) {
-      console.error("Error fetching client contracts:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-  
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-medium text-gray-900">Hợp đồng</h3>
-        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Thêm hợp đồng
-        </button>
-      </div>
-      
-      <div className="bg-white shadow overflow-hidden rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tên file
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Link
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {contracts.map(contract => (
-              <tr key={contract.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{contract.name}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <a href={contract.url} className="text-indigo-600 hover:text-indigo-900 flex items-center text-sm">
-                    <svg className="mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    Xem hợp đồng
-                  </a>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    Đã ký
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center space-x-3">
-                    <button className="text-indigo-600 hover:text-indigo-900">
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-const Projects = () => {
-  const { user } = React.useContext(AuthContext);
-  return <ProjectsComponent user={user} />;
-};
-
-const ProjectDetail = ({ user }) => {
+// Component chi tiết dự án
+const ProjectDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
-  const [campaign, setCampaign] = useState(null);
-  const [services, setServices] = useState([]);
   const [client, setClient] = useState(null);
+  const [contracts, setContracts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
-  const [tasks, setTasks] = useState([]);
-  const [documents, setDocuments] = useState([]);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  
-  // Work Items State
-  const [workItems, setWorkItems] = useState([]);
-  const [showWorkItemModal, setShowWorkItemModal] = useState(false);
-  const [editingWorkItem, setEditingWorkItem] = useState(null);
-  const [selectedWorkItems, setSelectedWorkItems] = useState([]);
-  const [showWorkItemDetail, setShowWorkItemDetail] = useState(false);
-  const [selectedWorkItemDetail, setSelectedWorkItemDetail] = useState(null);
-  const [projectUsers, setProjectUsers] = useState([]);
-  const [serviceTasks, setServiceTasks] = useState({});
-  
-  // Feedback State
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedWorkItemForFeedback, setSelectedWorkItemForFeedback] = useState(null);
-  const [feedbackMessages, setFeedbackMessages] = useState([]);
-  const [newFeedbackMessage, setNewFeedbackMessage] = useState('');
-  
-  // Work Item Form State
-  const [workItemForm, setWorkItemForm] = useState({
-    name: '',
-    description: '',
-    service_id: '',
-    task_id: '',
-    assigned_to: '',
-    deadline: '',
-    priority: 'normal'
-  });
 
   useEffect(() => {
-    if (id) {
-      fetchProjectDetails();
-    }
+    fetchProjectDetail();
+    fetchProjectTasks();
+    fetchProjectContracts();
+    fetchProjectInvoices();
   }, [id]);
 
-  useEffect(() => {
-    if (project) {
-      fetchWorkItems();
-      fetchProjectUsers();
-    }
-  }, [project]);
-
-  useEffect(() => {
-    // Initialize rich text editor content when editing
-    if (showWorkItemModal && editingWorkItem) {
-      setTimeout(() => {
-        const editor = document.getElementById('workItemEditor');
-        if (editor) {
-          editor.innerHTML = workItemForm.description || '';
-        }
-      }, 100);
-    } else if (showWorkItemModal && !editingWorkItem) {
-      setTimeout(() => {
-        const editor = document.getElementById('workItemEditor');
-        if (editor) {
-          editor.innerHTML = '';
-        }
-      }, 100);
-    }
-  }, [showWorkItemModal, editingWorkItem]);
-
-  useEffect(() => {
-    // Initialize rich text editor content when editing
-    if (showWorkItemModal && editingWorkItem) {
-      setTimeout(() => {
-        const editor = document.getElementById('workItemEditor');
-        if (editor) {
-          editor.innerHTML = workItemForm.description || '';
-        }
-      }, 100);
-    } else if (showWorkItemModal && !editingWorkItem) {
-      setTimeout(() => {
-        const editor = document.getElementById('workItemEditor');
-        if (editor) {
-          editor.innerHTML = '';
-        }
-      }, 100);
-    }
-  }, [showWorkItemModal, editingWorkItem]);
-
-  const fetchProjectDetails = async () => {
+  const fetchProjectDetail = async () => {
     try {
-      setLoading(true);
+      const response = await axios.get(`${API}/projects/${id}`);
+      setProject(response.data);
       
-      // Fetch project details
-      const projectResponse = await axios.get(`${API}/projects/${id}`);
-      const projectData = projectResponse.data;
-      setProject(projectData);
-
       // Fetch client info
-      if (projectData.client_id) {
-        const clientResponse = await axios.get(`${API}/clients/${projectData.client_id}`);
+      if (response.data.client_id) {
+        const clientResponse = await axios.get(`${API}/clients/${response.data.client_id}`);
         setClient(clientResponse.data);
       }
-
-      // Fetch campaign and services if project has campaign
-      if (projectData.campaign_id) {
-        const campaignResponse = await axios.get(`${API}/campaigns/${projectData.campaign_id}`);
-        setCampaign(campaignResponse.data);
-
-        const servicesResponse = await axios.get(`${API}/campaigns/${projectData.campaign_id}/services/`);
-        setServices(servicesResponse.data);
-
-        // Fetch tasks for each service
-        const allTasks = [];
-        for (const service of servicesResponse.data) {
-          try {
-            const tasksResponse = await axios.get(`${API}/services/${service.id}/tasks/`);
-            allTasks.push(...tasksResponse.data.map(task => ({...task, service_name: service.name, service_id: service.id})));
-          } catch (error) {
-            console.log(`No tasks found for service ${service.id}`);
-          }
-        }
-        setTasks(allTasks);
-      }
-
-      // Fetch documents related to project
-      try {
-        const documentsResponse = await axios.get(`${API}/documents/`);
-        setDocuments(documentsResponse.data.filter(doc => 
-          doc.title.toLowerCase().includes(projectData.name.toLowerCase()) ||
-          doc.description?.toLowerCase().includes(projectData.name.toLowerCase())
-        ));
-      } catch (error) {
-        console.log('No documents found');
-      }
-
     } catch (error) {
-      console.error('Error fetching project details:', error);
-      toast.error('Không thể tải thông tin dự án');
-    } finally {
+      console.error("Error fetching project:", error);
+      toast.error("Không thể tải thông tin dự án");
+      navigate('/projects');
+    }
+  };
+
+  const fetchProjectTasks = async () => {
+    try {
+      // Note: This would need to be implemented based on your task structure
+      // For now, we'll set empty array
+      setTasks([]);
+    } catch (error) {
+      console.error("Error fetching project tasks:", error);
+    }
+  };
+
+  const fetchProjectContracts = async () => {
+    try {
+      const response = await axios.get(`${API}/contracts/`);
+      // Filter contracts by project_id
+      const projectContracts = response.data.filter(contract => contract.project_id === id);
+      setContracts(projectContracts);
+    } catch (error) {
+      console.error("Error fetching project contracts:", error);
+    }
+  };
+
+  const fetchProjectInvoices = async () => {
+    try {
+      const response = await axios.get(`${API}/invoices/`);
+      // Filter invoices by project_id
+      const projectInvoices = response.data.filter(invoice => invoice.project_id === id);
+      setInvoices(projectInvoices);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching project invoices:", error);
       setLoading(false);
     }
   };
 
-  const getProjectProgress = () => {
-    if (!project) return 0;
-    const now = new Date();
-    const start = new Date(project.start_date);
-    const end = new Date(project.end_date);
-    
-    if (now < start) return 0;
-    if (now > end) return 100;
-    
-    const total = end - start;
-    const elapsed = now - start;
-    return Math.round((elapsed / total) * 100);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">Đang tải thông tin dự án...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Work Item Functions
-  const fetchWorkItems = async () => {
-    try {
-      const response = await axios.get(`${API}/projects/${id}/work-items/`);
-      setWorkItems(response.data);
-    } catch (error) {
-      console.error('Error fetching work items:', error);
-    }
-  };
-
-  const fetchProjectUsers = async () => {
-    try {
-      if (!project) return;
-      
-      const allUsers = [];
-      const roleFields = ['manager_ids', 'account_ids', 'content_ids', 'design_ids', 'editor_ids', 'sale_ids'];
-      
-      for (const field of roleFields) {
-        const userIds = project[field] || [];
-        for (const userId of userIds) {
-          const response = await axios.get(`${API}/users/${userId}`);
-          if (response.data && !allUsers.find(u => u.id === response.data.id)) {
-            allUsers.push(response.data);
-          }
-        }
-      }
-      setProjectUsers(allUsers);
-    } catch (error) {
-      console.error('Error fetching project users:', error);
-    }
-  };
-
-  const fetchServiceTasks = async (serviceId) => {
-    try {
-      const response = await axios.get(`${API}/services/${serviceId}/tasks/`);
-      setServiceTasks(prev => ({...prev, [serviceId]: response.data}));
-    } catch (error) {
-      console.error('Error fetching service tasks:', error);
-      setServiceTasks(prev => ({...prev, [serviceId]: []}));
-    }
-  };
-
-  const handleWorkItemSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const workItemData = {
-        ...workItemForm,
-        deadline: workItemForm.deadline ? new Date(workItemForm.deadline).toISOString() : null
-      };
-
-      if (editingWorkItem) {
-        await axios.put(`${API}/work-items/${editingWorkItem.id}`, workItemData);
-        toast.success('Cập nhật công việc thành công!');
-      } else {
-        await axios.post(`${API}/projects/${id}/work-items/`, workItemData);
-        toast.success('Tạo công việc thành công!');
-      }
-
-      setShowWorkItemModal(false);
-      resetWorkItemForm();
-      fetchWorkItems();
-    } catch (error) {
-      console.error('Error saving work item:', error);
-      toast.error('Có lỗi xảy ra khi lưu công việc!');
-    }
-  };
-
-  const resetWorkItemForm = () => {
-    setWorkItemForm({
-      name: '',
-      description: '',
-      service_id: '',
-      task_id: '',
-      assigned_to: '',
-      deadline: '',
-      priority: 'normal'
-    });
-    setEditingWorkItem(null);
-  };
-
-  const handleEditWorkItem = (workItem) => {
-    setEditingWorkItem(workItem);
-    setWorkItemForm({
-      name: workItem.name,
-      description: workItem.description || '',
-      service_id: workItem.service_id || '',
-      task_id: workItem.task_id || '',
-      assigned_to: workItem.assigned_to || '',
-      deadline: workItem.deadline ? new Date(workItem.deadline).toISOString().slice(0, 16) : '',
-      priority: workItem.priority
-    });
-    
-    // Load tasks for selected service
-    if (workItem.service_id) {
-      fetchServiceTasks(workItem.service_id);
-    }
-    
-    setShowWorkItemModal(true);
-  };
-
-  const handleDeleteWorkItem = async (workItemId) => {
-    if (window.confirm('Bạn có chắc muốn xóa công việc này?')) {
-      try {
-        await axios.delete(`${API}/work-items/${workItemId}`);
-        toast.success('Xóa công việc thành công!');
-        fetchWorkItems();
-      } catch (error) {
-        console.error('Error deleting work item:', error);
-        toast.error('Có lỗi xảy ra khi xóa công việc!');
-      }
-    }
-  };
-
-  const handleStatusUpdate = async (workItemId, currentStatus) => {
-    let newStatus;
-    switch (currentStatus) {
-      case 'not_started':
-        newStatus = 'in_progress';
-        break;
-      case 'in_progress':
-        newStatus = 'completed';
-        break;
-      case 'completed':
-        newStatus = 'not_started'; // Reset cycle
-        break;
-      default:
-        newStatus = 'in_progress';
-    }
-    
-    try {
-      await axios.patch(`${API}/work-items/${workItemId}/status`, null, {
-        params: { status: newStatus }
-      });
-      fetchWorkItems();
-      toast.success('Cập nhật trạng thái thành công!');
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật trạng thái!');
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'not_started':
-        return '▶️'; // Play icon for start
-      case 'in_progress':
-        return '✅'; // Check for complete
-      case 'completed':
-        return '🔄'; // Reset icon
-      default:
-        return '▶️';
-    }
-  };
-
-  const getStatusTooltip = (status) => {
-    switch (status) {
-      case 'not_started':
-        return 'Click để bắt đầu';
-      case 'in_progress':
-        return 'Click để hoàn thành';
-      case 'completed':
-        return 'Click để reset';
-      default:
-        return 'Click để bắt đầu';
-    }
-  };
-
-  const navigateToServiceTask = (serviceId, taskId) => {
-    // Navigate to service tab
-    setActiveTab(`service-${serviceId}`);
-    
-    // Scroll to task after tab change
-    setTimeout(() => {
-      if (taskId) {
-        const taskElement = document.getElementById(`task-${taskId}`);
-        if (taskElement) {
-          taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Highlight the task temporarily
-          taskElement.style.backgroundColor = '#fef3c7';
-          setTimeout(() => {
-            taskElement.style.backgroundColor = '';
-          }, 2000);
-        }
-      }
-    }, 300);
-  };
-
-  const handleServiceChange = (serviceId) => {
-    setWorkItemForm({...workItemForm, service_id: serviceId, task_id: ''});
-    if (serviceId) {
-      fetchServiceTasks(serviceId);
-    }
-  };
-
-  // Feedback Functions
-  const fetchFeedback = async (workItemId) => {
-    try {
-      const response = await axios.get(`${API}/work-items/${workItemId}/feedback/`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
-      return [];
-    }
-  };
-
-  const sendFeedback = async (workItemId, message) => {
-    try {
-      await axios.post(`${API}/work-items/${workItemId}/feedback/`, { message });
-      return true;
-    } catch (error) {
-      console.error('Error sending feedback:', error);
-      toast.error('Không thể gửi feedback!');
-      return false;
-    }
-  };
-
-  const openFeedbackModal = async (workItem) => {
-    setSelectedWorkItemForFeedback(workItem);
-    setShowFeedbackModal(true);
-    
-    // Load existing feedback
-    const feedbackData = await fetchFeedback(workItem.id);
-    const formattedMessages = feedbackData.map(feedback => ({
-      content: feedback.message,
-      sender: feedback.user_name,
-      time: format(new Date(feedback.created_at), 'HH:mm'),
-      isCurrentUser: feedback.user_id === user?.id
-    }));
-    setFeedbackMessages(formattedMessages);
-  };
-
-  const handleSendFeedback = async () => {
-    if (!newFeedbackMessage.trim() || !selectedWorkItemForFeedback) return;
-    
-    const success = await sendFeedback(selectedWorkItemForFeedback.id, newFeedbackMessage.trim());
-    if (success) {
-      const newMessage = {
-        content: newFeedbackMessage.trim(),
-        sender: user?.full_name || 'Current User',
-        time: format(new Date(), 'HH:mm'),
-        isCurrentUser: true
-      };
-      setFeedbackMessages([...feedbackMessages, newMessage]);
-      setNewFeedbackMessage('');
-      toast.success('Feedback đã được gửi!');
-    }
-  };
-
-  const openWorkItemDetail = (workItem) => {
-    setSelectedWorkItemDetail(workItem);
-    setShowWorkItemDetail(true);
-  };
+  if (!project) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-600">Không tìm thấy thông tin dự án</p>
+        <button
+          onClick={() => navigate('/projects')}
+          className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+        >
+          Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
 
   const getStatusColor = (status) => {
-    const colors = {
-      'planning': 'bg-yellow-100 text-yellow-800',
-      'in_progress': 'bg-blue-100 text-blue-800',
-      'on_hold': 'bg-gray-100 text-gray-800',
-      'completed': 'bg-green-100 text-green-800',
-      'cancelled': 'bg-red-100 text-red-800',
-      'overdue': 'bg-red-100 text-red-800',
-      'pending': 'bg-purple-100 text-purple-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'on_hold': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const getStatusText = (status) => {
-    const texts = {
+    const statusMap = {
       'planning': 'Đang lập kế hoạch',
       'in_progress': 'Đang thực hiện',
       'on_hold': 'Tạm dừng',
@@ -4294,3153 +2271,634 @@ const ProjectDetail = ({ user }) => {
       'overdue': 'Quá hạn',
       'pending': 'Chờ xử lý'
     };
-    return texts[status] || status;
+    return statusMap[status] || status;
   };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 ₫';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
-  };
-
-  const calculatePaidAmount = () => {
-    if (!project) return 0;
-    return (project.contract_value || 0) - (project.debt || 0);
-  };
-
-  const openTaskDetail = (task) => {
-    setSelectedTask(task);
-    setShowTaskModal(true);
-  };
-
-  const renderTaskContent = (task) => {
-    if (!task.template_id) {
-      return <div className="text-gray-500 italic">Chưa có template cho nhiệm vụ này</div>;
-    }
-
-    // This would be the template content rendered
-    // For now, we'll show a placeholder
-    return (
-      <div className="space-y-4">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Chi tiết nhiệm vụ</h4>
-          <p className="text-gray-700">{task.description || 'Chưa có mô tả chi tiết'}</p>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
-            <p className="text-gray-900">{task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : 'Chưa xác định'}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
-            <p className="text-gray-900">{task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}</p>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
-            {getStatusText(task.status)}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (!project) {
-    return (
-      <div className="p-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Không tìm thấy dự án</h2>
-          <p className="text-gray-600 mt-2">Dự án không tồn tại hoặc đã bị xóa</p>
-        </div>
-      </div>
-    );
-  }
-
-  const progress = getProjectProgress();
-  
-  // Create tabs dynamically
-  const tabs = [
-    { id: 'overview', name: 'Tổng quan', icon: '📊' },
-    ...services.map(service => ({
-      id: `service-${service.id}`,
-      name: service.name,
-      icon: '🔧',
-      serviceId: service.id
-    })),
-    { id: 'tasks', name: 'Công việc', icon: '✅' },
-    { id: 'documents', name: 'Tài liệu', icon: '📄' },
-    { id: 'files', name: 'Hồ sơ dự án', icon: '📁' },
-    { id: 'log', name: 'Log', icon: '📝' }
-  ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Project Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-            <p className="text-gray-600 mt-1">{client?.name}</p>
-          </div>
-          <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}>
-            {getStatusText(project.status)}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-600 mb-1">Thời gian triển khai</h3>
-            <p className="text-lg font-semibold text-blue-900">
-              {project.start_date ? format(new Date(project.start_date), 'dd/MM/yyyy') : 'Chưa xác định'} - 
-              {project.end_date ? format(new Date(project.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
-            </p>
-          </div>
-
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-green-600 mb-1">Giá trị hợp đồng</h3>
-            <p className="text-lg font-semibold text-green-900">{formatCurrency(project.contract_value)}</p>
-          </div>
-
-          <div className="bg-indigo-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-indigo-600 mb-1">Đã thanh toán</h3>
-            <p className="text-lg font-semibold text-indigo-900">{formatCurrency(calculatePaidAmount())}</p>
-          </div>
-
-          <div className="bg-red-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-red-600 mb-1">Còn lại</h3>
-            <p className="text-lg font-semibold text-red-900">{formatCurrency(project.debt)}</p>
-          </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Chiến dịch</h4>
-            <p className="text-gray-900">{campaign?.name || 'Chưa liên kết'}</p>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Dịch vụ triển khai</h4>
-            <div className="flex flex-wrap gap-2">
-              {services.map(service => (
-                <span key={service.id} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
-                  {service.name}
-                </span>
-              ))}
+    <div className="space-y-6">
+      {/* Header với thông tin cơ bản */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/projects')}
+              className="flex items-center text-gray-600 hover:text-gray-900"
+            >
+              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Quay lại danh sách dự án
+            </button>
+            <div className="flex space-x-3">
+              <button className="bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Chỉnh sửa
+              </button>
+              <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                Tạo hóa đơn
+              </button>
             </div>
           </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Hồ sơ</h4>
-            <p className="text-gray-900">{documents.length} tài liệu</p>
-          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="text-sm font-medium text-gray-700">Tiến độ dự án</h4>
-            <span className="text-sm font-medium text-gray-900">{progress}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            ></div>
+        <div className="px-6 py-6">
+          <div className="flex items-start space-x-6">
+            {/* Icon dự án */}
+            <div className="flex-shrink-0">
+              <div className="h-24 w-24 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <svg className="h-12 w-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Thông tin chính */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-3">
+                <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(project.status)}`}>
+                  {getStatusText(project.status)}
+                </span>
+              </div>
+              
+              {client && (
+                <button
+                  onClick={() => navigate(`/clients/${client.id}`)}
+                  className="text-lg text-indigo-600 hover:text-indigo-800 mt-1"
+                >
+                  {client.name} - {client.company}
+                </button>
+              )}
+              
+              {project.description && (
+                <p className="text-sm text-gray-600 mt-2">{project.description}</p>
+              )}
+
+              {/* Team members */}
+              {project.team && project.team.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-500 mb-2">Thành viên nhóm:</p>
+                  <div className="flex space-x-2">
+                    {project.team.map((member, index) => (
+                      <div
+                        key={index}
+                        className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center"
+                      >
+                        <span className="text-xs font-medium text-gray-700">
+                          {member.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stats cards mini */}
+              <div className="grid grid-cols-4 gap-4 mt-6">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">
+                    {project.budget ? project.budget.toLocaleString() : '0'} VNĐ
+                  </div>
+                  <div className="text-sm text-gray-600">Ngân sách</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">
+                    {project.contract_value ? project.contract_value.toLocaleString() : '0'} VNĐ
+                  </div>
+                  <div className="text-sm text-gray-600">Giá trị hợp đồng</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">{contracts.length}</div>
+                  <div className="text-sm text-gray-600">Hợp đồng</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-lg font-semibold text-gray-900">{invoices.length}</div>
+                  <div className="text-sm text-gray-600">Hóa đơn</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Thông tin thời gian và tài chính */}
+            <div className="flex-shrink-0 w-80">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Thông tin dự án</h3>
+                <div className="space-y-3">
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Ngày bắt đầu</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.start_date ? format(new Date(project.start_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+                    </dd>
+                  </div>
+                  
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Ngày kết thúc</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.end_date ? format(new Date(project.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
+                    </dd>
+                  </div>
+
+                  {project.debt && project.debt > 0 && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Công nợ</dt>
+                      <dd className="mt-1 text-sm text-red-600 font-semibold">
+                        {project.debt.toLocaleString()} VNĐ
+                      </dd>
+                    </div>
+                  )}
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Ngày tạo</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.created_at ? format(new Date(project.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">Cập nhật cuối</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {project.updated_at ? format(new Date(project.updated_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                    </dd>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-sm">
+      {/* Tab Navigation */}
+      <div className="bg-white shadow rounded-lg">
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.name}
-              </button>
-            ))}
+          <nav className="-mb-px flex space-x-8 px-6">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`${
+                activeTab === 'overview'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Tổng quan
+            </button>
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={`${
+                activeTab === 'tasks'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Nhiệm vụ ({tasks.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('contracts')}
+              className={`${
+                activeTab === 'contracts'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Hợp đồng ({contracts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`${
+                activeTab === 'invoices'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Hóa đơn ({invoices.length})
+            </button>
           </nav>
         </div>
 
         <div className="p-6">
-          {/* Overview Tab */}
+          {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              {/* Progress Summary */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Tổng quan dự án</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-gray-700">{project.description || 'Chưa có mô tả dự án'}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Tiến độ dự án</h3>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-indigo-600">
+                        {project.status === 'completed' ? '100%' : 
+                         project.status === 'in_progress' ? '60%' : 
+                         project.status === 'on_hold' ? '30%' : '0%'}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Hoàn thành</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">
+                        {invoices.filter(inv => inv.status === 'paid').length}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Hóa đơn đã thanh toán</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">
+                        {project.team ? project.team.length : 0}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Thành viên tham gia</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Project Description */}
+              {project.description && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Thông tin khách hàng</h4>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Tên:</span> {client?.name}</p>
-                    <p><span className="font-medium">Công ty:</span> {client?.company}</p>
-                    <p><span className="font-medium">Email:</span> {client?.contact_email}</p>
-                    <p><span className="font-medium">Điện thoại:</span> {client?.phone}</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Mô tả dự án</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Thống kê</h4>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Tổng nhiệm vụ:</span> {tasks.length}</p>
-                    <p><span className="font-medium">Hoàn thành:</span> {tasks.filter(t => t.status === 'completed').length}</p>
-                    <p><span className="font-medium">Đang thực hiện:</span> {tasks.filter(t => t.status === 'in_progress').length}</p>
-                    <p><span className="font-medium">Chưa bắt đầu:</span> {tasks.filter(t => t.status === 'not_started').length}</p>
+              {/* Financial Summary */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Tổng quan tài chính</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-lg font-semibold text-blue-900">
+                      {project.budget ? project.budget.toLocaleString() : '0'} VNĐ
+                    </div>
+                    <div className="text-sm text-blue-600">Ngân sách dự án</div>
                   </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-lg font-semibold text-green-900">
+                      {project.contract_value ? project.contract_value.toLocaleString() : '0'} VNĐ
+                    </div>
+                    <div className="text-sm text-green-600">Giá trị hợp đồng</div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <div className="text-lg font-semibold text-yellow-900">
+                      {invoices.reduce((total, inv) => total + (inv.amount || 0), 0).toLocaleString()} VNĐ
+                    </div>
+                    <div className="text-sm text-yellow-600">Tổng hóa đơn</div>
+                  </div>
+                  
+                  {project.debt && project.debt > 0 && (
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <div className="text-lg font-semibold text-red-900">
+                        {project.debt.toLocaleString()} VNĐ
+                      </div>
+                      <div className="text-sm text-red-600">Công nợ</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Lịch sử hoạt động</h3>
+                <div className="flow-root">
+                  <ul className="-mb-8">
+                    <li>
+                      <div className="relative pb-8">
+                        <div className="relative flex space-x-3">
+                          <div>
+                            <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                              <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                              </svg>
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                            <div>
+                              <p className="text-sm text-gray-500">
+                                Dự án được tạo
+                              </p>
+                            </div>
+                            <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                              {project.created_at ? format(new Date(project.created_at), 'dd/MM/yyyy') : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Service Tabs */}
-          {services.map(service => activeTab === `service-${service.id}` && (
-            <div key={service.id} className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Dịch vụ: {service.name}</h3>
-              <p className="text-gray-600">{service.description}</p>
-              
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-3">Danh sách nhiệm vụ</h4>
-                <div className="space-y-2">
-                  {tasks.filter(task => task.service_id === service.id).map(task => (
-                    <div 
-                      key={task.id}
-                      id={`task-${task.id}`}
-                      onClick={() => openTaskDetail(task)}
-                      className="flex items-center justify-between p-3 bg-white rounded border hover:shadow-sm cursor-pointer transition-all"
-                    >
-                      <div>
-                        <h5 className="font-medium text-gray-900">{task.name}</h5>
-                        <p className="text-sm text-gray-600">
-                          {task.start_date ? format(new Date(task.start_date), 'dd/MM/yyyy') : 'Chưa xác định'} - 
-                          {task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(task.status)}`}>
-                        {getStatusText(task.status)}
-                      </span>
-                    </div>
-                  ))}
-                  {tasks.filter(task => task.service_id === service.id).length === 0 && (
-                    <p className="text-gray-500 italic">Chưa có nhiệm vụ nào</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Tasks Tab - Work Items Management */}
           {activeTab === 'tasks' && (
-            <div className="space-y-6">
-              {/* Thanh công cụ */}
-              <div className="flex items-center justify-between bg-white p-4 rounded-lg border">
-                <h3 className="text-lg font-medium text-gray-900">Quản lý công việc</h3>
-                <button
-                  onClick={() => {
-                    resetWorkItemForm();
-                    setShowWorkItemModal(true);
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <span>+</span>
-                  Thêm công việc
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Nhiệm vụ</h3>
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                  Tạo nhiệm vụ mới
                 </button>
               </div>
+              <div className="text-center py-12">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có nhiệm vụ nào</h3>
+                <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo nhiệm vụ mới cho dự án này.</p>
+              </div>
+            </div>
+          )}
 
-              {/* Danh sách công việc */}
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '1200px' }}>
+          {activeTab === 'contracts' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Hợp đồng</h3>
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                  Tạo hợp đồng mới
+                </button>
+              </div>
+              {contracts.length > 0 ? (
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          <input
-                            type="checkbox"
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedWorkItems(workItems.map(item => item.id));
-                              } else {
-                                setSelectedWorkItems([]);
-                              }
-                            }}
-                            className="rounded border-gray-300"
-                          />
+                          Tiêu đề
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tên công việc
+                          Giá trị
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Mô tả
+                          Trạng thái
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Người giao
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Người nhận
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Deadline
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Dịch vụ
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Ưu tiên
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tiến độ
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Kết quả
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Feedback
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Hành động
+                          Ngày kết thúc
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {workItems.map((workItem) => (
-                        <tr key={workItem.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              checked={selectedWorkItems.includes(workItem.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedWorkItems([...selectedWorkItems, workItem.id]);
-                                } else {
-                                  setSelectedWorkItems(selectedWorkItems.filter(id => id !== workItem.id));
-                                }
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{workItem.name}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => openWorkItemDetail(workItem)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              Xem
-                            </button>
+                      {contracts.map((contract) => (
+                        <tr key={contract.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {contract.title}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {workItem.assigned_by_name || 'Unknown'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {workItem.assigned_to_name || 'Chưa giao'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {workItem.deadline ? format(new Date(workItem.deadline), 'dd/MM/yyyy - HH:mm') : 'Chưa có'}
+                            {contract.value?.toLocaleString()} VNĐ
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {workItem.service_name ? (
-                              <button
-                                onClick={() => navigateToServiceTask(workItem.service_id, workItem.task_id)}
-                                className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium hover:bg-blue-200"
-                              >
-                                Xem {workItem.service_name}
-                              </button>
-                            ) : (
-                              <span className="text-gray-400 text-xs">Chưa liên kết</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              workItem.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                              workItem.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {workItem.priority === 'urgent' ? 'Gấp' :
-                               workItem.priority === 'high' ? 'Cao' : 'Bình thường'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              workItem.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              workItem.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              contract.status === 'signed' ? 'bg-green-100 text-green-800' :
+                              contract.status === 'active' ? 'bg-blue-100 text-blue-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {workItem.status === 'completed' ? 'Hoàn thành' :
-                               workItem.status === 'in_progress' ? 'Đang làm' : 'Chưa làm'}
+                              {contract.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => handleStatusUpdate(workItem.id, workItem.status)}
-                              className="text-lg hover:scale-110 transition-transform"
-                              title={getStatusTooltip(workItem.status)}
-                            >
-                              {getStatusIcon(workItem.status)}
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={async () => {
-                                setSelectedWorkItemForFeedback(workItem);
-                                setShowFeedbackModal(true);
-                                
-                                // Load existing feedback
-                                try {
-                                  const response = await axios.get(`${API}/work-items/${workItem.id}/feedback/`);
-                                  const formattedMessages = response.data.map(feedback => ({
-                                    content: feedback.message,
-                                    sender: feedback.user_name,
-                                    time: format(new Date(feedback.created_at), 'HH:mm'),
-                                    isCurrentUser: feedback.user_id === user?.id
-                                  }));
-                                  setFeedbackMessages(formattedMessages);
-                                } catch (error) {
-                                  console.error('Error loading feedback:', error);
-                                  setFeedbackMessages([]);
-                                }
-                              }}
-                              className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium hover:bg-gray-200"
-                            >
-                              Feedback
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleEditWorkItem(workItem)}
-                                className="text-indigo-600 hover:text-indigo-900"
-                                title="Sửa"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={() => handleDeleteWorkItem(workItem.id)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Xóa"
-                              >
-                                🗑️
-                              </button>
-                            </div>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {contract.end_date ? format(new Date(contract.end_date), 'dd/MM/yyyy') : 'N/A'}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                
-                {workItems.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">Chưa có công việc nào</p>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có hợp đồng nào</h3>
+                  <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo hợp đồng mới cho dự án này.</p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Documents Tab */}
-          {activeTab === 'documents' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Tài liệu dự án</h3>
-              <div className="grid gap-4">
-                {documents.map(doc => (
-                  <div key={doc.id} className="border rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900">{doc.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
-                    {doc.link && (
-                      <a 
-                        href={doc.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block"
-                      >
-                        Mở tài liệu →
-                      </a>
-                    )}
-                  </div>
-                ))}
-                {documents.length === 0 && (
-                  <p className="text-gray-500 italic text-center py-8">Chưa có tài liệu nào</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Project Files Tab */}
-          {activeTab === 'files' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Hồ sơ dự án</h3>
-              <div className="bg-gray-50 p-6 rounded-lg text-center">
-                <p className="text-gray-500">Chức năng quản lý hồ sơ dự án đang được phát triển</p>
-              </div>
-            </div>
-          )}
-
-          {/* Log Tab */}
-          {activeTab === 'log' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Nhật ký hoạt động</h3>
-              <div className="bg-gray-50 p-6 rounded-lg text-center">
-                <p className="text-gray-500">Chức năng nhật ký hoạt động đang được phát triển</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Task Detail Modal */}
-      {showTaskModal && selectedTask && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Chi tiết nhiệm vụ: {selectedTask.name}</h3>
-                <button
-                  onClick={() => setShowTaskModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-                >
-                  ×
+          {activeTab === 'invoices' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Hóa đơn</h3>
+                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                  Tạo hóa đơn mới
                 </button>
               </div>
-              
-              <div className="mb-4">
-                <span className="text-sm text-gray-600">Thuộc dịch vụ: </span>
-                <span className="font-medium">{selectedTask.service_name}</span>
-              </div>
-
-              {renderTaskContent(selectedTask)}
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setShowTaskModal(false)}
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Work Item Modal */}
-      {showWorkItemModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {editingWorkItem ? 'Sửa công việc' : 'Thêm công việc mới'}
-                </h3>
-                <button
-                  onClick={() => setShowWorkItemModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-                >
-                  ×
-                </button>
-              </div>
-
-              <form onSubmit={handleWorkItemSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Tên công việc *</label>
-                    <input
-                      type="text"
-                      value={workItemForm.name}
-                      onChange={(e) => setWorkItemForm({...workItemForm, name: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Ưu tiên</label>
-                    <select
-                      value={workItemForm.priority}
-                      onChange={(e) => setWorkItemForm({...workItemForm, priority: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="normal">Bình thường</option>
-                      <option value="high">Cao</option>
-                      <option value="urgent">Gấp</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Dịch vụ liên quan</label>
-                    <select
-                      value={workItemForm.service_id}
-                      onChange={(e) => handleServiceChange(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="">Chọn dịch vụ</option>
-                      {services.map(service => (
-                        <option key={service.id} value={service.id}>{service.name}</option>
+              {invoices.length > 0 ? (
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Số hóa đơn
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tiêu đề
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Số tiền
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Trạng thái
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Hạn thanh toán
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {invoices.map((invoice) => (
+                        <tr key={invoice.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {invoice.invoice_number}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {invoice.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {invoice.amount?.toLocaleString()} VNĐ
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                              invoice.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                              invoice.status === 'sent' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {invoice.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yyyy') : 'N/A'}
+                          </td>
+                        </tr>
                       ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Nhiệm vụ</label>
-                    <select
-                      value={workItemForm.task_id}
-                      onChange={(e) => setWorkItemForm({...workItemForm, task_id: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      disabled={!workItemForm.service_id}
-                    >
-                      <option value="">Chọn nhiệm vụ</option>
-                      {workItemForm.service_id && serviceTasks[workItemForm.service_id] && serviceTasks[workItemForm.service_id].map(task => (
-                        <option key={task.id} value={task.id}>{task.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Giao cho</label>
-                    <select
-                      value={workItemForm.assigned_to}
-                      onChange={(e) => setWorkItemForm({...workItemForm, assigned_to: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="">Chọn người nhận</option>
-                      {projectUsers.map(user => (
-                        <option key={user.id} value={user.id}>{user.full_name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Deadline</label>
-                    <input
-                      type="datetime-local"
-                      value={workItemForm.deadline}
-                      onChange={(e) => setWorkItemForm({...workItemForm, deadline: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
+                    </tbody>
+                  </table>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
-                  <div className="border border-gray-300 rounded-md">
-                    {/* Toolbar */}
-                    <div className="border-b border-gray-200 p-2 bg-gray-50 flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const editor = document.getElementById('workItemEditor');
-                          editor.focus();
-                          document.execCommand('bold');
-                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
-                        }}
-                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
-                        title="Bold"
-                      >
-                        <strong>B</strong>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const editor = document.getElementById('workItemEditor');
-                          editor.focus();
-                          document.execCommand('italic');
-                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
-                        }}
-                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
-                        title="Italic"
-                      >
-                        <em>I</em>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const editor = document.getElementById('workItemEditor');
-                          editor.focus();
-                          document.execCommand('underline');
-                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
-                        }}
-                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
-                        title="Underline"
-                      >
-                        <u>U</u>
-                      </button>
-                      <div className="border-l border-gray-300 h-6 mx-1"></div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const editor = document.getElementById('workItemEditor');
-                          editor.focus();
-                          document.execCommand('insertUnorderedList');
-                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
-                        }}
-                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
-                        title="Bullet List"
-                      >
-                        • List
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const editor = document.getElementById('workItemEditor');
-                          editor.focus();
-                          document.execCommand('insertOrderedList');
-                          setWorkItemForm({...workItemForm, description: editor.innerHTML});
-                        }}
-                        className="px-2 py-1 text-sm border rounded hover:bg-gray-200"
-                        title="Numbered List"
-                      >
-                        1. List
-                      </button>
-                      <div className="border-l border-gray-300 h-6 mx-1"></div>
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const editor = document.getElementById('workItemEditor');
-                            editor.focus();
-                            document.execCommand('formatBlock', false, e.target.value);
-                            setWorkItemForm({...workItemForm, description: editor.innerHTML});
-                          }
-                        }}
-                        className="text-sm border rounded px-2 py-1"
-                        defaultValue=""
-                      >
-                        <option value="">Định dạng</option>
-                        <option value="h1">Tiêu đề 1</option>
-                        <option value="h2">Tiêu đề 2</option>
-                        <option value="h3">Tiêu đề 3</option>
-                        <option value="p">Đoạn văn</option>
-                      </select>
-                    </div>
-                    
-                    {/* Editor */}
-                    <div
-                      id="workItemEditor"
-                      contentEditable
-                      suppressContentEditableWarning={true}
-                      onInput={(e) => {
-                        setWorkItemForm({...workItemForm, description: e.target.innerHTML});
-                      }}
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const text = e.clipboardData.getData('text/plain');
-                        document.execCommand('insertText', false, text);
-                        setWorkItemForm({...workItemForm, description: e.target.innerHTML});
-                      }}
-                      className="min-h-[200px] p-3 focus:outline-none"
-                      style={{ minHeight: '200px' }}
-                    />
-                  </div>
-                  
-                  {/* Hidden textarea for form submission */}
-                  <textarea
-                    value={workItemForm.description}
-                    onChange={() => {}} // Read-only, updated by contentEditable
-                    style={{ display: 'none' }}
-                    name="description"
-                  />
+              ) : (
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có hóa đơn nào</h3>
+                  <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo hóa đơn mới cho dự án này.</p>
                 </div>
-
-                <div className="flex justify-end gap-4 pt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowWorkItemModal(false)}
-                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    {editingWorkItem ? 'Cập nhật' : 'Tạo mới'}
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Work Item Detail Modal - Only Description */}
-      {showWorkItemDetail && selectedWorkItemDetail && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Mô tả công việc: {selectedWorkItemDetail.name}</h3>
-                <button
-                  onClick={() => setShowWorkItemDetail(false)}
-                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Rich Text Viewer with Editor-like Interface */}
-              <div className="border border-gray-300 rounded-md bg-white">
-                {/* Toolbar (Read-only) */}
-                <div className="border-b border-gray-200 p-2 bg-gray-50 flex items-center gap-2 flex-wrap">
-                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
-                    <strong>B</strong>
-                  </button>
-                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
-                    <em>I</em>
-                  </button>
-                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
-                    <u>U</u>
-                  </button>
-                  <div className="border-l border-gray-300 h-6 mx-1"></div>
-                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
-                    • List
-                  </button>
-                  <button className="px-2 py-1 text-sm border rounded bg-gray-100 cursor-not-allowed" disabled>
-                    1. List
-                  </button>
-                  <div className="border-l border-gray-300 h-6 mx-1"></div>
-                  <select className="text-sm border rounded px-2 py-1 bg-gray-100 cursor-not-allowed" disabled>
-                    <option>Định dạng</option>
-                  </select>
-                  <div className="ml-auto text-xs text-gray-500">Chế độ xem</div>
-                </div>
-                
-                {/* Content Viewer */}
-                <div 
-                  className="min-h-[300px] p-4 bg-white prose max-w-none"
-                  style={{
-                    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto',
-                    lineHeight: '1.6',
-                    fontSize: '14px'
-                  }}
-                >
-                  <div 
-                    dangerouslySetInnerHTML={{ 
-                      __html: selectedWorkItemDetail.description || '<p style="color: #9CA3AF; font-style: italic;">Chưa có mô tả</p>' 
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setShowWorkItemDetail(false)}
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Feedback Modal */}
-      {showFeedbackModal && selectedWorkItemForFeedback && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">
-                  💬 Feedback: {selectedWorkItemForFeedback.name}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowFeedbackModal(false);
-                    setSelectedWorkItemForFeedback(null);
-                    setFeedbackMessages([]);
-                    setNewFeedbackMessage('');
-                  }}
-                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Chat Messages Area */}
-              <div className="bg-gray-50 rounded-lg p-4 h-80 overflow-y-auto mb-4 border">
-                {feedbackMessages.length === 0 ? (
-                  <div className="text-center text-gray-500 mt-16">
-                    <div className="text-4xl mb-2">💭</div>
-                    <p>Chưa có feedback nào</p>
-                    <p className="text-sm">Hãy bắt đầu cuộc trò chuyện!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {feedbackMessages.map((message, index) => (
-                      <div key={index} className={`flex ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          message.isCurrentUser 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-white border shadow-sm'
-                        }`}>
-                          <div className="text-sm">{message.content}</div>
-                          <div className={`text-xs mt-1 ${
-                            message.isCurrentUser ? 'text-blue-200' : 'text-gray-500'
-                          }`}>
-                            {message.sender} • {message.time}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Message Input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newFeedbackMessage}
-                  onChange={(e) => setNewFeedbackMessage(e.target.value)}
-                  placeholder="Nhập feedback của bạn..."
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={async (e) => {
-                    if (e.key === 'Enter' && newFeedbackMessage.trim()) {
-                      try {
-                        // Send to backend
-                        await axios.post(`${API}/work-items/${selectedWorkItemForFeedback.id}/feedback/`, {
-                          message: newFeedbackMessage.trim()
-                        });
-                        
-                        // Add to local state
-                        const newMessage = {
-                          content: newFeedbackMessage.trim(),
-                          sender: user?.full_name || 'Current User',
-                          time: format(new Date(), 'HH:mm'),
-                          isCurrentUser: true
-                        };
-                        setFeedbackMessages([...feedbackMessages, newMessage]);
-                        setNewFeedbackMessage('');
-                        toast.success('Feedback đã được gửi!');
-                      } catch (error) {
-                        console.error('Error sending feedback:', error);
-                        toast.error('Không thể gửi feedback!');
-                      }
-                    }
-                  }}
-                />
-                <button
-                  onClick={async () => {
-                    if (newFeedbackMessage.trim()) {
-                      try {
-                        // Send to backend
-                        await axios.post(`${API}/work-items/${selectedWorkItemForFeedback.id}/feedback/`, {
-                          message: newFeedbackMessage.trim()
-                        });
-                        
-                        // Add to local state
-                        const newMessage = {
-                          content: newFeedbackMessage.trim(),
-                          sender: user?.full_name || 'Current User',
-                          time: format(new Date(), 'HH:mm'),
-                          isCurrentUser: true
-                        };
-                        setFeedbackMessages([...feedbackMessages, newMessage]);
-                        setNewFeedbackMessage('');
-                        toast.success('Feedback đã được gửi!');
-                      } catch (error) {
-                        console.error('Error sending feedback:', error);
-                        toast.error('Không thể gửi feedback!');
-                      }
-                    }
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  📤 Gửi
-                </button>
-              </div>
-
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowFeedbackModal(false);
-                    setSelectedWorkItemForFeedback(null);
-                    setFeedbackMessages([]);
-                    setNewFeedbackMessage('');
-                  }}
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
-
-const Task = () => {
-  return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-4">Task</h1>
-      <p className="text-gray-600">Module Task đang được phát triển...</p>
+// Component placeholders cho các trang chưa implement
+const Settings = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Cài đặt hệ thống</h1>
     </div>
-  );
-};
-
-const Contracts = () => {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    project_id: "",
-    description: "",
-    assigned_to: "",
-    due_date: "",
-    priority: "medium",
-    status: "to_do"
-  });
-
-  useEffect(() => {
-    fetchTasks();
-    fetchProjects();
-    fetchUsers();
-  }, []);
-
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/tasks/`);
-      setTasks(response.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast.error("Không thể tải danh sách công việc");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get(`${API}/projects/`);
-      setProjects(response.data);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      toast.error("Không thể tải danh sách dự án");
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(`${API}/users/`);
-      setUsers(response.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      console.log("Hiện tại không thể tải danh sách người dùng. Sẽ sử dụng danh sách trống.");
-      setUsers([]);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${API}/tasks/`, formData);
-      toast.success("Thêm công việc thành công!");
-      setIsModalOpen(false);
-      resetForm();
-      fetchTasks();
-    } catch (error) {
-      console.error("Error creating task:", error);
-      toast.error("Không thể tạo công việc mới");
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      project_id: "",
-      description: "",
-      assigned_to: "",
-      due_date: "",
-      priority: "medium",
-      status: "to_do"
-    });
-  };
-
-  const getProjectName = (projectId) => {
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.name : "Không xác định";
-  };
-
-  const getUserName = (userId) => {
-    if (!userId) return "Chưa phân công";
-    const user = users.find(u => u.id === userId);
-    return user ? user.full_name : "Không xác định";
-  };
-
-  const getPriorityBadgeClass = (priority) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "to_do":
-        return "bg-gray-100 text-gray-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
-      case "review":
-        return "bg-yellow-100 text-yellow-800";
-      case "completed":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPriorityText = (priority) => {
-    switch (priority) {
-      case "high":
-        return "Cao";
-      case "medium":
-        return "Trung bình";
-      case "low":
-        return "Thấp";
-      default:
-        return priority;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case "to_do":
-        return "Cần làm";
-      case "in_progress":
-        return "Đang làm";
-      case "review":
-        return "Đang xem xét";
-      case "completed":
-        return "Hoàn thành";
-      default:
-        return status;
-    }
-  };
-
-  // Hàm xử lý cập nhật trạng thái công việc
-  const handleUpdateStatus = async (taskId, newStatus) => {
-    try {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) {
-        toast.error("Không tìm thấy công việc");
-        return;
-      }
-      
-      await axios.put(`${API}/tasks/${taskId}`, {
-        ...task,
-        status: newStatus
-      });
-      
-      toast.success("Cập nhật trạng thái thành công!");
-      fetchTasks();
-    } catch (error) {
-      console.error("Error updating task status:", error);
-      toast.error("Không thể cập nhật trạng thái công việc");
-    }
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Công việc</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Thêm công việc
-        </button>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Cài đặt hệ thống</h3>
+        <p className="text-gray-600">Trang cài đặt sẽ được phát triển trong phiên bản tiếp theo</p>
       </div>
-
-      {/* Danh sách công việc */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        {tasks.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {tasks.map((task) => (
-              <li key={task.id}>
-                <div className="block hover:bg-gray-50">
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-indigo-600 truncate">
-                        {task.title}
-                      </p>
-                      <div className="ml-2 flex-shrink-0 flex">
-                        <span className={`mr-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityBadgeClass(task.priority)}`}>
-                          {getPriorityText(task.priority)}
-                        </span>
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(task.status)}`}>
-                          {getStatusText(task.status)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
-                          </svg>
-                          {getProjectName(task.project_id)}
-                        </p>
-                        <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                          {getUserName(task.assigned_to)}
-                        </p>
-                      </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        {task.due_date ? (
-                          <p>
-                            Đến hạn: {new Date(task.due_date).toLocaleDateString('vi-VN')}
-                          </p>
-                        ) : (
-                          <p>Chưa có thời hạn</p>
-                        )}
-                      </div>
-                    </div>
-                    {task.description && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-700">{task.description}</p>
-                      </div>
-                    )}
-                    <div className="mt-3 flex justify-end space-x-2">
-                      {task.status !== "completed" && (
-                        <button
-                          onClick={() => handleUpdateStatus(task.id, "completed")}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                        >
-                          Hoàn thành
-                        </button>
-                      )}
-                      
-                      {task.status === "to_do" && (
-                        <button
-                          onClick={() => handleUpdateStatus(task.id, "in_progress")}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          Bắt đầu
-                        </button>
-                      )}
-                      
-                      {task.status === "in_progress" && (
-                        <button
-                          onClick={() => handleUpdateStatus(task.id, "review")}
-                          className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                        >
-                          Gửi xem xét
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-center py-10 text-gray-500">
-            Chưa có công việc nào. Bắt đầu bằng cách thêm công việc mới.
-          </div>
-        )}
-      </div>
-
-      {/* Modal thêm công việc */}
-      {isModalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        Thêm công việc mới
-                      </h3>
-                      <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div className="sm:col-span-6">
-                          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                            Tiêu đề
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="text"
-                              name="title"
-                              id="title"
-                              required
-                              value={formData.title}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">
-                            Dự án
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="project_id"
-                              name="project_id"
-                              required
-                              value={formData.project_id}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="">Chọn dự án</option>
-                              {projects.map((project) => (
-                                <option key={project.id} value={project.id}>
-                                  {project.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                            Mô tả
-                          </label>
-                          <div className="mt-1">
-                            <textarea
-                              id="description"
-                              name="description"
-                              rows="3"
-                              value={formData.description}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            ></textarea>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
-                            Người phụ trách
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="assigned_to"
-                              name="assigned_to"
-                              value={formData.assigned_to}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="">Chưa phân công</option>
-                              {users.map((user) => (
-                                <option key={user.id} value={user.id}>
-                                  {user.full_name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-3">
-                          <label htmlFor="due_date" className="block text-sm font-medium text-gray-700">
-                            Thời hạn
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="date"
-                              name="due_date"
-                              id="due_date"
-                              value={formData.due_date}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-3">
-                          <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
-                            Độ ưu tiên
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="priority"
-                              name="priority"
-                              value={formData.priority}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="low">Thấp</option>
-                              <option value="medium">Trung bình</option>
-                              <option value="high">Cao</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                            Trạng thái
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="status"
-                              name="status"
-                              value={formData.status}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="to_do">Cần làm</option>
-                              <option value="in_progress">Đang làm</option>
-                              <option value="review">Đang xem xét</option>
-                              <option value="completed">Hoàn thành</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Thêm công việc
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
+  </div>
+);
 
-const ContractsComponent = () => {
-  const [contracts, setContracts] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    client_id: "",
-    project_id: "",
-    title: "",
-    start_date: "",
-    end_date: "",
-    value: "",
-    status: "draft",
-    terms: ""
-  });
-
-  useEffect(() => {
-    fetchContracts();
-    fetchClients();
-    fetchProjects();
-  }, []);
-
-  const fetchContracts = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/contracts/`);
-      setContracts(response.data);
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
-      toast.error("Không thể tải danh sách hợp đồng");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchClients = async () => {
-    try {
-      const response = await axios.get(`${API}/clients/`);
-      setClients(response.data);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      toast.error("Không thể tải danh sách khách hàng");
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get(`${API}/projects/`);
-      setProjects(response.data);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      toast.error("Không thể tải danh sách dự án");
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${API}/contracts/`, formData);
-      toast.success("Thêm hợp đồng thành công!");
-      setIsModalOpen(false);
-      resetForm();
-      fetchContracts();
-    } catch (error) {
-      console.error("Error creating contract:", error);
-      toast.error("Không thể tạo hợp đồng mới");
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      client_id: "",
-      project_id: "",
-      title: "",
-      start_date: "",
-      end_date: "",
-      value: "",
-      status: "draft",
-      terms: ""
-    });
-  };
-
-  const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? client.name : "Không xác định";
-  };
-
-  const getProjectName = (projectId) => {
-    if (!projectId) return "Không có";
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.name : "Không xác định";
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "sent":
-        return "bg-blue-100 text-blue-800";
-      case "signed":
-        return "bg-green-100 text-green-800";
-      case "active":
-        return "bg-indigo-100 text-indigo-800";
-      case "expired":
-        return "bg-yellow-100 text-yellow-800";
-      case "terminated":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case "draft":
-        return "Dự thảo";
-      case "sent":
-        return "Đã gửi";
-      case "signed":
-        return "Đã ký";
-      case "active":
-        return "Đang hiệu lực";
-      case "expired":
-        return "Hết hạn";
-      case "terminated":
-        return "Đã chấm dứt";
-      default:
-        return status;
-    }
-  };
-
-  // Hàm xử lý cập nhật trạng thái hợp đồng
-  const handleUpdateStatus = async (contractId, newStatus) => {
-    try {
-      const contract = contracts.find(c => c.id === contractId);
-      if (!contract) {
-        toast.error("Không tìm thấy hợp đồng");
-        return;
-      }
-      
-      await axios.put(`${API}/contracts/${contractId}`, {
-        ...contract,
-        status: newStatus
-      });
-      
-      toast.success("Cập nhật trạng thái thành công!");
-      fetchContracts();
-    } catch (error) {
-      console.error("Error updating contract status:", error);
-      toast.error("Không thể cập nhật trạng thái hợp đồng");
-    }
-  };
-
-  // Kiểm tra xem hợp đồng đã sắp hết hạn chưa (trong vòng 30 ngày)
-  const isNearExpiry = (endDate) => {
-    if (!endDate) return false;
-    const today = new Date();
-    const expiryDate = new Date(endDate);
-    const diffTime = expiryDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 && diffDays <= 30;
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Hợp đồng</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Thêm hợp đồng
-        </button>
-      </div>
-
-      {/* Danh sách hợp đồng */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        {contracts.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {contracts.map((contract) => (
-              <li key={contract.id}>
-                <div className="block hover:bg-gray-50">
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-indigo-600 truncate">
-                        {contract.title}
-                      </p>
-                      <div className="ml-2 flex-shrink-0 flex">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(contract.status)}`}>
-                          {getStatusText(contract.status)}
-                        </span>
-                        {isNearExpiry(contract.end_date) && contract.status === "active" && (
-                          <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                            Sắp hết hạn
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
-                          </svg>
-                          {getClientName(contract.client_id)}
-                        </p>
-                        {contract.project_id && (
-                          <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                            <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {getProjectName(contract.project_id)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        <p>
-                          {new Date(contract.start_date).toLocaleDateString('vi-VN')} - {new Date(contract.end_date).toLocaleDateString('vi-VN')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex justify-between items-center">
-                      <p className="text-sm text-gray-700 font-medium">
-                        Giá trị: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(contract.value)}
-                      </p>
-                      <div className="flex space-x-2">
-                        {contract.status === "draft" && (
-                          <button
-                            onClick={() => handleUpdateStatus(contract.id, "sent")}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Gửi hợp đồng
-                          </button>
-                        )}
-                        {contract.status === "sent" && (
-                          <button
-                            onClick={() => handleUpdateStatus(contract.id, "signed")}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                          >
-                            Đánh dấu đã ký
-                          </button>
-                        )}
-                        {contract.status === "signed" && (
-                          <button
-                            onClick={() => handleUpdateStatus(contract.id, "active")}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                          >
-                            Kích hoạt
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-center py-10 text-gray-500">
-            Chưa có hợp đồng nào. Bắt đầu bằng cách thêm hợp đồng mới.
-          </div>
-        )}
-      </div>
-
-      {/* Modal thêm hợp đồng */}
-      {isModalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        Thêm hợp đồng mới
-                      </h3>
-                      <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div className="sm:col-span-6">
-                          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                            Tiêu đề hợp đồng
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="text"
-                              name="title"
-                              id="title"
-                              required
-                              value={formData.title}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="client_id" className="block text-sm font-medium text-gray-700">
-                            Khách hàng
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="client_id"
-                              name="client_id"
-                              required
-                              value={formData.client_id}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="">Chọn khách hàng</option>
-                              {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
-                                  {client.name} - {client.company}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">
-                            Dự án (tùy chọn)
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="project_id"
-                              name="project_id"
-                              value={formData.project_id}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="">Không liên kết với dự án</option>
-                              {projects.filter(p => p.client_id === formData.client_id).map((project) => (
-                                <option key={project.id} value={project.id}>
-                                  {project.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-3">
-                          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
-                            Ngày bắt đầu
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="date"
-                              name="start_date"
-                              id="start_date"
-                              required
-                              value={formData.start_date}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-3">
-                          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
-                            Ngày kết thúc
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="date"
-                              name="end_date"
-                              id="end_date"
-                              required
-                              value={formData.end_date}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="value" className="block text-sm font-medium text-gray-700">
-                            Giá trị hợp đồng (VND)
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="number"
-                              name="value"
-                              id="value"
-                              required
-                              value={formData.value}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                            Trạng thái
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="status"
-                              name="status"
-                              value={formData.status}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="draft">Dự thảo</option>
-                              <option value="sent">Đã gửi</option>
-                              <option value="signed">Đã ký</option>
-                              <option value="active">Đang hiệu lực</option>
-                              <option value="expired">Hết hạn</option>
-                              <option value="terminated">Đã chấm dứt</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="terms" className="block text-sm font-medium text-gray-700">
-                            Điều khoản
-                          </label>
-                          <div className="mt-1">
-                            <textarea
-                              id="terms"
-                              name="terms"
-                              rows="3"
-                              value={formData.terms}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            ></textarea>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Thêm hợp đồng
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+const Account = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
     </div>
-  );
-};
-
-const Invoices = () => {
-  const [invoices, setInvoices] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    client_id: "",
-    project_id: "",
-    contract_id: "",
-    title: "",
-    amount: "",
-    due_date: "",
-    status: "draft",
-    notes: ""
-  });
-
-  useEffect(() => {
-    fetchInvoices();
-    fetchClients();
-    fetchProjects();
-    fetchContracts();
-  }, []);
-
-  const fetchInvoices = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/invoices/`);
-      setInvoices(response.data);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-      toast.error("Không thể tải danh sách hóa đơn");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchClients = async () => {
-    try {
-      const response = await axios.get(`${API}/clients/`);
-      setClients(response.data);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      toast.error("Không thể tải danh sách khách hàng");
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get(`${API}/projects/`);
-      setProjects(response.data);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      toast.error("Không thể tải danh sách dự án");
-    }
-  };
-
-  const fetchContracts = async () => {
-    try {
-      const response = await axios.get(`${API}/contracts/`);
-      setContracts(response.data);
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
-      toast.error("Không thể tải danh sách hợp đồng");
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleClientChange = (e) => {
-    const clientId = e.target.value;
-    setFormData({ 
-      ...formData, 
-      client_id: clientId,
-      project_id: "",
-      contract_id: ""
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${API}/invoices/`, formData);
-      toast.success("Thêm hóa đơn thành công!");
-      setIsModalOpen(false);
-      resetForm();
-      fetchInvoices();
-    } catch (error) {
-      console.error("Error creating invoice:", error);
-      toast.error("Không thể tạo hóa đơn mới");
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      client_id: "",
-      project_id: "",
-      contract_id: "",
-      title: "",
-      amount: "",
-      due_date: "",
-      status: "draft",
-      notes: ""
-    });
-  };
-
-  const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? client.name : "Không xác định";
-  };
-
-  const getProjectName = (projectId) => {
-    if (!projectId) return null;
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.name : "Không xác định";
-  };
-
-  const getContractTitle = (contractId) => {
-    if (!contractId) return null;
-    const contract = contracts.find(c => c.id === contractId);
-    return contract ? contract.title : "Không xác định";
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "sent":
-        return "bg-blue-100 text-blue-800";
-      case "paid":
-        return "bg-green-100 text-green-800";
-      case "overdue":
-        return "bg-red-100 text-red-800";
-      case "cancelled":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case "draft":
-        return "Dự thảo";
-      case "sent":
-        return "Đã gửi";
-      case "paid":
-        return "Đã thanh toán";
-      case "overdue":
-        return "Quá hạn";
-      case "cancelled":
-        return "Đã hủy";
-      default:
-        return status;
-    }
-  };
-
-  // Hàm xử lý cập nhật trạng thái hóa đơn
-  const handleUpdateStatus = async (invoiceId, newStatus) => {
-    try {
-      const invoice = invoices.find(i => i.id === invoiceId);
-      if (!invoice) {
-        toast.error("Không tìm thấy hóa đơn");
-        return;
-      }
-      
-      await axios.put(`${API}/invoices/${invoiceId}`, {
-        ...invoice,
-        status: newStatus
-      });
-      
-      toast.success("Cập nhật trạng thái thành công!");
-      fetchInvoices();
-    } catch (error) {
-      console.error("Error updating invoice status:", error);
-      toast.error("Không thể cập nhật trạng thái hóa đơn");
-    }
-  };
-
-  // Kiểm tra xem hóa đơn đã quá hạn chưa
-  const isOverdue = (dueDate) => {
-    if (!dueDate) return false;
-    const today = new Date();
-    const dueDateObj = new Date(dueDate);
-    return dueDateObj < today;
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Hóa đơn</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Thêm hóa đơn
-        </button>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Thông tin tài khoản</h3>
+        <p className="text-gray-600">Trang quản lý tài khoản sẽ được phát triển trong phiên bản tiếp theo</p>
       </div>
-
-      {/* Danh sách hóa đơn */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        {invoices.length > 0 ? (
-          <ul className="divide-y divide-gray-200">
-            {invoices.map((invoice) => (
-              <li key={invoice.id}>
-                <div className="block hover:bg-gray-50">
-                  <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-indigo-600 truncate">
-                          {invoice.title}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Mã: {invoice.invoice_number}
-                        </p>
-                      </div>
-                      <div className="ml-2 flex-shrink-0 flex">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(invoice.status)}`}>
-                          {getStatusText(invoice.status)}
-                        </span>
-                        {isOverdue(invoice.due_date) && invoice.status !== "paid" && invoice.status !== "cancelled" && (
-                          <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            Quá hạn
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex">
-                        <p className="flex items-center text-sm text-gray-500">
-                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
-                          </svg>
-                          {getClientName(invoice.client_id)}
-                        </p>
-                        {getProjectName(invoice.project_id) && (
-                          <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                            <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {getProjectName(invoice.project_id)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        <p>
-                          Hạn thanh toán: {new Date(invoice.due_date).toLocaleDateString('vi-VN')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex justify-between items-center">
-                      <p className="text-sm text-gray-700 font-medium">
-                        Số tiền: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.amount)}
-                      </p>
-                      <div className="flex space-x-2">
-                        {invoice.status === "draft" && (
-                          <button
-                            onClick={() => handleUpdateStatus(invoice.id, "sent")}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Gửi hóa đơn
-                          </button>
-                        )}
-                        {invoice.status === "sent" && (
-                          <button
-                            onClick={() => handleUpdateStatus(invoice.id, "paid")}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                          >
-                            Đánh dấu đã thanh toán
-                          </button>
-                        )}
-                        {(invoice.status === "sent" || invoice.status === "overdue") && (
-                          <button
-                            onClick={() => handleUpdateStatus(invoice.id, "cancelled")}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                          >
-                            Hủy
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-center py-10 text-gray-500">
-            Chưa có hóa đơn nào. Bắt đầu bằng cách thêm hóa đơn mới.
-          </div>
-        )}
-      </div>
-
-      {/* Modal thêm hóa đơn */}
-      {isModalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        Thêm hóa đơn mới
-                      </h3>
-                      <div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div className="sm:col-span-6">
-                          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                            Tiêu đề hóa đơn
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="text"
-                              name="title"
-                              id="title"
-                              required
-                              value={formData.title}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="client_id" className="block text-sm font-medium text-gray-700">
-                            Khách hàng
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="client_id"
-                              name="client_id"
-                              required
-                              value={formData.client_id}
-                              onChange={handleClientChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="">Chọn khách hàng</option>
-                              {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
-                                  {client.name} - {client.company}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        {formData.client_id && (
-                          <>
-                            <div className="sm:col-span-6">
-                              <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">
-                                Dự án (tùy chọn)
-                              </label>
-                              <div className="mt-1">
-                                <select
-                                  id="project_id"
-                                  name="project_id"
-                                  value={formData.project_id}
-                                  onChange={handleInputChange}
-                                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                >
-                                  <option value="">Không liên kết với dự án</option>
-                                  {projects
-                                    .filter(p => p.client_id === formData.client_id)
-                                    .map((project) => (
-                                      <option key={project.id} value={project.id}>
-                                        {project.name}
-                                      </option>
-                                    ))
-                                  }
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="sm:col-span-6">
-                              <label htmlFor="contract_id" className="block text-sm font-medium text-gray-700">
-                                Hợp đồng (tùy chọn)
-                              </label>
-                              <div className="mt-1">
-                                <select
-                                  id="contract_id"
-                                  name="contract_id"
-                                  value={formData.contract_id}
-                                  onChange={handleInputChange}
-                                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                >
-                                  <option value="">Không liên kết với hợp đồng</option>
-                                  {contracts
-                                    .filter(c => c.client_id === formData.client_id)
-                                    .map((contract) => (
-                                      <option key={contract.id} value={contract.id}>
-                                        {contract.title} ({new Date(contract.start_date).toLocaleDateString('vi-VN')})
-                                      </option>
-                                    ))
-                                  }
-                                </select>
-                              </div>
-                            </div>
-                          </>
-                        )}
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                            Số tiền (VND)
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="number"
-                              name="amount"
-                              id="amount"
-                              required
-                              value={formData.amount}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="due_date" className="block text-sm font-medium text-gray-700">
-                            Hạn thanh toán
-                          </label>
-                          <div className="mt-1">
-                            <input
-                              type="date"
-                              name="due_date"
-                              id="due_date"
-                              required
-                              value={formData.due_date}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                            Trạng thái
-                          </label>
-                          <div className="mt-1">
-                            <select
-                              id="status"
-                              name="status"
-                              value={formData.status}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            >
-                              <option value="draft">Dự thảo</option>
-                              <option value="sent">Đã gửi</option>
-                              <option value="paid">Đã thanh toán</option>
-                              <option value="overdue">Quá hạn</option>
-                              <option value="cancelled">Đã hủy</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-6">
-                          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-                            Ghi chú
-                          </label>
-                          <div className="mt-1">
-                            <textarea
-                              id="notes"
-                              name="notes"
-                              rows="3"
-                              value={formData.notes}
-                              onChange={handleInputChange}
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                            ></textarea>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Thêm hóa đơn
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
+  </div>
+);
 
-const Settings = () => {
-  return <div>Cài đặt hệ thống (đang phát triển)</div>;
-};
-      
-      {/* Sub-tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveConfigTab('categories')}
-            className={`${
-              activeConfigTab === 'categories'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Hạng mục chi phí
-          </button>
-          <button
-            onClick={() => setActiveConfigTab('folders')}
-            className={`${
-              activeConfigTab === 'folders'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Thư mục
-          </button>
-        </nav>
-      </div>
-
-      {/* Sub-tab Content */}
-      {activeConfigTab === 'categories' && <ExpenseCategoryManager />}
-      {activeConfigTab === 'folders' && <ExpenseFolderManager />}
+const Reports = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
     </div>
-  );
-};
-
-// Tab 3: Cấu hình hạng mục và thư mục
-const ExpenseConfig = () => {
-  const [activeConfigTab, setActiveConfigTab] = useState('categories'); // categories, folders
-  
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Cấu hình hạng mục và thư mục</h3>
-      
-      {/* Sub-tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveConfigTab('categories')}
-            className={`${
-              activeConfigTab === 'categories'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Hạng mục chi phí
-          </button>
-          <button
-            onClick={() => setActiveConfigTab('folders')}
-            className={`${
-              activeConfigTab === 'folders'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Thư mục
-          </button>
-        </nav>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo tổng hợp</h3>
+        <p className="text-gray-600">Hệ thống báo cáo sẽ được phát triển trong phiên bản tiếp theo</p>
       </div>
-
-      {/* Sub-tab Content */}
-      {activeConfigTab === 'categories' && <ExpenseCategoryManager />}
-      {activeConfigTab === 'folders' && <ExpenseFolderManager />}
     </div>
-  );
-};
+  </div>
+);
 
-// Component quản lý hạng mục chi phí
-const ExpenseCategoryManager = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    color: '#3B82F6',
-    is_active: true
-  });
-
-  const colorOptions = [
-    { value: '#3B82F6', label: 'Xanh dương', class: 'bg-blue-500' },
-    { value: '#10B981', label: 'Xanh lá', class: 'bg-green-500' },
-    { value: '#F59E0B', label: 'Vàng', class: 'bg-yellow-500' },
-    { value: '#EF4444', label: 'Đỏ', class: 'bg-red-500' },
-    { value: '#8B5CF6', label: 'Tím', class: 'bg-purple-500' },
-    { value: '#F97316', label: 'Cam', class: 'bg-orange-500' },
-    { value: '#06B6D4', label: 'Cyan', class: 'bg-cyan-500' },
-    { value: '#84CC16', label: 'Lime', class: 'bg-lime-500' }
-  ];
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/expense-categories/`);
-      setCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Không thể tải danh sách hạng mục');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEditing) {
-        await axios.put(`${API}/expense-categories/${currentCategory.id}`, formData);
-        toast.success('Cập nhật hạng mục thành công!');
-      } else {
-        await axios.post(`${API}/expense-categories/`, formData);
-        toast.success('Thêm hạng mục thành công!');
-      }
-      setIsModalOpen(false);
-      resetForm();
-      fetchCategories();
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast.error(isEditing ? 'Không thể cập nhật hạng mục' : 'Không thể tạo hạng mục mới');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      color: '#3B82F6',
-      is_active: true
-    });
-    setIsEditing(false);
-    setCurrentCategory(null);
-  };
-
-  const handleEdit = (category) => {
-    setCurrentCategory(category);
-    setFormData({
-      name: category.name,
-      description: category.description || '',
-      color: category.color,
-      is_active: category.is_active
-    });
-    setIsEditing(true);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (categoryId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa hạng mục này? Hành động này không thể hoàn tác.')) {
-      try {
-        await axios.delete(`${API}/expense-categories/${categoryId}`);
-        toast.success('Xóa hạng mục thành công!');
-        fetchCategories();
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        if (error.response?.status === 400) {
-          toast.error('Không thể xóa hạng mục đã có chi phí');
-        } else {
-          toast.error('Không thể xóa hạng mục');
-        }
-      }
-    }
-  };
-
-  const toggleStatus = async (category) => {
-    try {
-      await axios.put(`${API}/expense-categories/${category.id}`, {
-        ...category,
-        is_active: !category.is_active
-      });
-      toast.success('Cập nhật trạng thái thành công!');
-      fetchCategories();
-    } catch (error) {
-      console.error('Error updating category status:', error);
-      toast.error('Không thể cập nhật trạng thái');
-    }
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Đang tải danh sách hạng mục...</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h4 className="text-md font-medium">Quản lý hạng mục chi phí</h4>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-        >
-          Thêm hạng mục
-        </button>
-      </div>
-
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((category) => (
-          <div key={category.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div 
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: category.color }}
-                ></div>
-                <div>
-                  <h5 className="font-medium text-gray-900">{category.name}</h5>
-                  {category.description && (
-                    <p className="text-sm text-gray-500 mt-1">{category.description}</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  category.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {category.is_active ? 'Hoạt động' : 'Tạm dừng'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="mt-4 flex justify-end space-x-2">
-              <button
-                onClick={() => toggleStatus(category)}
-                className={`text-xs px-3 py-1 rounded ${
-                  category.is_active 
-                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-              >
-                {category.is_active ? 'Tạm dừng' : 'Kích hoạt'}
-              </button>
-              <button
-                onClick={() => handleEdit(category)}
-                className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-              >
-                Sửa
-              </button>
-              <button
-                onClick={() => handleDelete(category.id)}
-                className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-              >
-                Xóa
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {categories.length === 0 && (
-        <div className="text-center py-10 text-gray-500">
-          Chưa có hạng mục nào. Hãy thêm hạng mục đầu tiên.
-        </div>
-      )}
-
-      {/* Modal for Add/Edit Category */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
-                {isEditing ? 'Chỉnh sửa hạng mục' : 'Thêm hạng mục mới'}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên hạng mục *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mô tả
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Màu sắc
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: color.value })}
-                      className={`p-2 rounded-md border-2 ${
-                        formData.color === color.value ? 'border-gray-400' : 'border-gray-200'
-                      } hover:border-gray-400 transition-colors`}
-                    >
-                      <div className={`w-6 h-6 rounded-full mx-auto ${color.class}`}></div>
-                      <div className="text-xs mt-1 text-center">{color.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
-                  Kích hoạt ngay
-                </label>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isEditing ? 'Cập nhật' : 'Thêm'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+const FinancialReports = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Báo cáo tài chính</h1>
     </div>
-  );
-};
-
-// Component quản lý thư mục chi phí
-const ExpenseFolderManager = () => {
-  const [folders, setFolders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentFolder, setCurrentFolder] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    color: '#10B981',
-    is_active: true
-  });
-
-  const colorOptions = [
-    { value: '#10B981', label: 'Xanh lá', class: 'bg-green-500' },
-    { value: '#3B82F6', label: 'Xanh dương', class: 'bg-blue-500' },
-    { value: '#F59E0B', label: 'Vàng', class: 'bg-yellow-500' },
-    { value: '#EF4444', label: 'Đỏ', class: 'bg-red-500' },
-    { value: '#8B5CF6', label: 'Tím', class: 'bg-purple-500' },
-    { value: '#F97316', label: 'Cam', class: 'bg-orange-500' },
-    { value: '#06B6D4', label: 'Cyan', class: 'bg-cyan-500' },
-    { value: '#84CC16', label: 'Lime', class: 'bg-lime-500' }
-  ];
-
-  useEffect(() => {
-    fetchFolders();
-  }, []);
-
-  const fetchFolders = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/expense-folders/`);
-      setFolders(response.data);
-    } catch (error) {
-      console.error('Error fetching folders:', error);
-      toast.error('Không thể tải danh sách thư mục');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEditing) {
-        await axios.put(`${API}/expense-folders/${currentFolder.id}`, formData);
-        toast.success('Cập nhật thư mục thành công!');
-      } else {
-        await axios.post(`${API}/expense-folders/`, formData);
-        toast.success('Thêm thư mục thành công!');
-      }
-      setIsModalOpen(false);
-      resetForm();
-      fetchFolders();
-    } catch (error) {
-      console.error('Error saving folder:', error);
-      toast.error(isEditing ? 'Không thể cập nhật thư mục' : 'Không thể tạo thư mục mới');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      color: '#10B981',
-      is_active: true
-    });
-    setIsEditing(false);
-    setCurrentFolder(null);
-  };
-
-  const handleEdit = (folder) => {
-    setCurrentFolder(folder);
-    setFormData({
-      name: folder.name,
-      description: folder.description || '',
-      color: folder.color,
-      is_active: folder.is_active
-    });
-    setIsEditing(true);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (folderId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa thư mục này? Hành động này không thể hoàn tác.')) {
-      try {
-        await axios.delete(`${API}/expense-folders/${folderId}`);
-        toast.success('Xóa thư mục thành công!');
-        fetchFolders();
-      } catch (error) {
-        console.error('Error deleting folder:', error);
-        if (error.response?.status === 400) {
-          toast.error('Không thể xóa thư mục đã có chi phí');
-        } else {
-          toast.error('Không thể xóa thư mục');
-        }
-      }
-    }
-  };
-
-  const toggleStatus = async (folder) => {
-    try {
-      await axios.put(`${API}/expense-folders/${folder.id}`, {
-        ...folder,
-        is_active: !folder.is_active
-      });
-      toast.success('Cập nhật trạng thái thành công!');
-      fetchFolders();
-    } catch (error) {
-      console.error('Error updating folder status:', error);
-      toast.error('Không thể cập nhật trạng thái');
-    }
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Đang tải danh sách thư mục...</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h4 className="text-md font-medium">Quản lý thư mục chi phí</h4>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-        >
-          Thêm thư mục
-        </button>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo tài chính</h3>
+        <p className="text-gray-600">Báo cáo doanh thu, chi phí và lợi nhuận sẽ được phát triển trong phiên bản tiếp theo</p>
       </div>
-
-      {/* Folders Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {folders.map((folder) => (
-          <div key={folder.id} className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div 
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: folder.color }}
-                ></div>
-                <div>
-                  <h5 className="font-medium text-gray-900">{folder.name}</h5>
-                  {folder.description && (
-                    <p className="text-sm text-gray-500 mt-1">{folder.description}</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  folder.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {folder.is_active ? 'Hoạt động' : 'Tạm dừng'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="mt-4 flex justify-end space-x-2">
-              <button
-                onClick={() => toggleStatus(folder)}
-                className={`text-xs px-3 py-1 rounded ${
-                  folder.is_active 
-                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-              >
-                {folder.is_active ? 'Tạm dừng' : 'Kích hoạt'}
-              </button>
-              <button
-                onClick={() => handleEdit(folder)}
-                className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-              >
-                Sửa
-              </button>
-              <button
-                onClick={() => handleDelete(folder.id)}
-                className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-              >
-                Xóa
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {folders.length === 0 && (
-        <div className="text-center py-10 text-gray-500">
-          Chưa có thư mục nào. Hãy thêm thư mục đầu tiên.
-        </div>
-      )}
-
-      {/* Modal for Add/Edit Folder */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
-                {isEditing ? 'Chỉnh sửa thư mục' : 'Thêm thư mục mới'}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên thư mục *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mô tả
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Màu sắc
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: color.value })}
-                      className={`p-2 rounded-md border-2 ${
-                        formData.color === color.value ? 'border-gray-400' : 'border-gray-200'
-                      } hover:border-gray-400 transition-colors`}
-                    >
-                      <div className={`w-6 h-6 rounded-full mx-auto ${color.class}`}></div>
-                      <div className="text-xs mt-1 text-center">{color.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="folder_is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="folder_is_active" className="ml-2 text-sm text-gray-700">
-                  Kích hoạt ngay
-                </label>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isEditing ? 'Cập nhật' : 'Thêm'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
+  </div>
+);
+
+const Opportunities = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý cơ hội</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý cơ hội bán hàng</h3>
+        <p className="text-gray-600">Tính năng quản lý leads và cơ hội sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const SalesReports = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Báo cáo bán hàng</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo bán hàng</h3>
+        <p className="text-gray-600">Thống kê hiệu suất bán hàng sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Task = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý nhiệm vụ</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý nhiệm vụ</h3>
+        <p className="text-gray-600">Hệ thống task management sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Contracts = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý hợp đồng</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý hợp đồng</h3>
+        <p className="text-gray-600">Tính năng quản lý hợp đồng sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
+
+const Invoices = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-gray-900">Quản lý hóa đơn</h1>
+    </div>
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý hóa đơn</h3>
+        <p className="text-gray-600">Hệ thống hóa đơn sẽ được phát triển trong phiên bản tiếp theo</p>
+      </div>
+    </div>
+  </div>
+);
 
 export default App;
