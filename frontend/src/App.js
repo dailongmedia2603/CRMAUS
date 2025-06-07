@@ -3329,9 +3329,6 @@ const ProjectDetail = () => {
     </div>
   );
 };
-const Task = () => <div>Task component placeholder</div>;
-const Contracts = () => <div>Contracts component placeholder</div>;
-const Invoices = () => <div>Invoices component placeholder</div>;
 // Component placeholders cho các trang chưa implement
 const Settings = () => (
   <div className="space-y-6">
