@@ -2153,7 +2153,7 @@ const Clients = () => {
     </div>
   );
 };
-// Component chi tiet khach hang
+// Component Client Detail
 function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
