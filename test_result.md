@@ -111,6 +111,21 @@
       - working: false
         agent: "testing"
         comment: "Retested the dashboard API endpoint. The GET /api/dashboard/statistics endpoint still returns a 404 error with the message 'Not Found'. This confirms that the dashboard statistics endpoint is not implemented correctly."
+        
+  - task: "Internal Task Management API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the internal task management API endpoints: POST /api/internal-tasks/, GET /api/internal-tasks/, GET /api/internal-tasks/statistics, GET /api/internal-tasks/{task_id}, PUT /api/internal-tasks/{task_id}, DELETE /api/internal-tasks/{task_id}, POST /api/internal-tasks/bulk-delete, PATCH /api/internal-tasks/{task_id}/status, POST /api/internal-tasks/{task_id}/feedback/, GET /api/internal-tasks/{task_id}/feedback/"
+      - working: false
+        agent: "testing"
+        comment: "Attempted to test the internal task management API endpoints, but encountered connectivity issues with the backend server. The server at https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com is not accessible or is returning 404 errors for all API endpoints. This suggests that either the server is down, the URL is incorrect, or the API endpoints are not implemented correctly."
 
 metadata:
   created_by: "testing_agent"
