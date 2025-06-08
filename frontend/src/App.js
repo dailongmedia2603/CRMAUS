@@ -3074,5 +3074,5 @@ const FinancialReports = () => <div className="modern-card p-6"><h2>Financial Re
 const Opportunities = () => <div className="modern-card p-6"><h2>Opportunities</h2></div>;
 const SalesReports = () => <div className="modern-card p-6"><h2>Sales Reports</h2></div>;
 
-export { AuthContext };
+export default App;
 
