@@ -18,7 +18,7 @@ def get_token():
     """Get authentication token"""
     global token
     response = requests.post(
-        f"{BACKEND_URL}/token",
+        f"{BACKEND_URL}/api/token",
         data={"username": EMAIL, "password": PASSWORD}
     )
     if response.status_code == 200:
