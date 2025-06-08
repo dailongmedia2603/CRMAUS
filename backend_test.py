@@ -1473,6 +1473,7 @@ def test_internal_tasks():
         task_id = response.json()["id"]
         created_internal_task_ids.append(task_id)
         print(f"Created internal task ID: {task_id}")
+        print(f"Task details: {response.json()}")
         
         # Create a second task with high priority
         high_priority_task = {
@@ -1495,6 +1496,28 @@ def test_internal_tasks():
             high_priority_task_id = response.json()["id"]
             created_internal_task_ids.append(high_priority_task_id)
             print(f"Created high priority task ID: {high_priority_task_id}")
+            
+        # Create a third task with low priority
+        low_priority_task = {
+            "name": f"Low Priority Task {uuid.uuid4().hex[:8]}",
+            "description": "This is a low priority task",
+            "document_links": ["https://example.com/low-priority-doc"],
+            "assigned_to": assigned_to,
+            "deadline": (datetime.utcnow() + timedelta(days=10)).isoformat(),
+            "priority": "low",
+            "status": "not_started"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/",
+            headers=get_headers(),
+            json=low_priority_task
+        )
+        
+        if response.status_code == 200:
+            low_priority_task_id = response.json()["id"]
+            created_internal_task_ids.append(low_priority_task_id)
+            print(f"Created low priority task ID: {low_priority_task_id}")
     
     # 2. Test GET /api/internal-tasks/ - Get list of tasks
     response = requests.get(
@@ -1506,6 +1529,13 @@ def test_internal_tasks():
     if success:
         tasks = response.json()
         print(f"Found {len(tasks)} internal tasks")
+        
+        # Verify enriched fields (user names)
+        for task in tasks:
+            if "assigned_to_name" not in task or not task["assigned_to_name"]:
+                print("❌ Missing enriched field: assigned_to_name")
+            if "assigned_by_name" not in task or not task["assigned_by_name"]:
+                print("❌ Missing enriched field: assigned_by_name")
     
     # 3. Test GET /api/internal-tasks/ with filters
     # Filter by status
@@ -1514,7 +1544,12 @@ def test_internal_tasks():
         headers=get_headers()
     )
     
-    print_test_result("Get Internal Tasks by Status", response)
+    status_filter_success = print_test_result("Get Internal Tasks by Status", response)
+    if status_filter_success:
+        tasks = response.json()
+        for task in tasks:
+            if task["status"] != "not_started":
+                print(f"❌ Task with incorrect status found: {task['status']}")
     
     # Filter by priority
     response = requests.get(
@@ -1522,7 +1557,12 @@ def test_internal_tasks():
         headers=get_headers()
     )
     
-    print_test_result("Get Internal Tasks by Priority", response)
+    priority_filter_success = print_test_result("Get Internal Tasks by Priority", response)
+    if priority_filter_success:
+        tasks = response.json()
+        for task in tasks:
+            if task["priority"] != "high":
+                print(f"❌ Task with incorrect priority found: {task['priority']}")
     
     # Filter by assigned_to
     response = requests.get(
@@ -1541,7 +1581,7 @@ def test_internal_tasks():
     print_test_result("Search Internal Tasks", response)
     
     # Date range filter
-    start_date = (datetime.utcnow() - timedelta(days=7)).isoformat()
+    start_date = (datetime.utcnow() - timedelta(days=1)).isoformat()
     end_date = (datetime.utcnow() + timedelta(days=14)).isoformat()
     
     response = requests.get(
@@ -1557,8 +1597,8 @@ def test_internal_tasks():
         headers=get_headers()
     )
     
-    success = print_test_result("Get Internal Tasks Statistics", response)
-    if success:
+    stats_success = print_test_result("Get Internal Tasks Statistics", response)
+    if stats_success:
         stats = response.json()
         print("Internal Tasks Statistics:")
         print(f"- Total tasks: {stats['total_tasks']}")
@@ -1568,6 +1608,12 @@ def test_internal_tasks():
         print(f"- High priority: {stats['high_priority']}")
         print(f"- Normal priority: {stats['normal_priority']}")
         print(f"- Low priority: {stats['low_priority']}")
+        
+        # Verify statistics calculation
+        if stats['total_tasks'] != stats['not_started'] + stats['in_progress'] + stats['completed']:
+            print("❌ Statistics calculation error: total_tasks != sum of status counts")
+        if stats['total_tasks'] != stats['high_priority'] + stats['normal_priority'] + stats['low_priority']:
+            print("❌ Statistics calculation error: total_tasks != sum of priority counts")
     
     # 5. Test GET /api/internal-tasks/{task_id} - Get task details
     if created_internal_task_ids:
@@ -1582,6 +1628,15 @@ def test_internal_tasks():
         if success:
             task = response.json()
             print(f"Task details: {task['name']} - Status: {task['status']}")
+            
+            # Verify all fields are present
+            required_fields = ["id", "name", "description", "document_links", "assigned_to", 
+                              "assigned_by", "deadline", "priority", "status", "created_at", 
+                              "updated_at", "assigned_to_name", "assigned_by_name"]
+            
+            for field in required_fields:
+                if field not in task:
+                    print(f"❌ Missing field in task details: {field}")
     
     # 6. Test PUT /api/internal-tasks/{task_id} - Update task
     if created_internal_task_ids:
@@ -1590,7 +1645,8 @@ def test_internal_tasks():
         update_data = {
             "name": f"Updated Task {uuid.uuid4().hex[:8]}",
             "description": "This task was updated by the API test",
-            "priority": "high"
+            "priority": "high",
+            "document_links": ["https://example.com/updated-doc1", "https://example.com/updated-doc2"]
         }
         
         response = requests.put(
@@ -1603,6 +1659,11 @@ def test_internal_tasks():
         if success:
             updated_task = response.json()
             print(f"Updated task: {updated_task['name']} - Priority: {updated_task['priority']}")
+            
+            # Verify update was applied correctly
+            for key, value in update_data.items():
+                if updated_task[key] != value:
+                    print(f"❌ Update failed for {key}: expected {value}, got {updated_task[key]}")
     
     # 7. Test PATCH /api/internal-tasks/{task_id}/status - Update task status
     if created_internal_task_ids:
@@ -1619,7 +1680,18 @@ def test_internal_tasks():
             json=status_data
         )
         
-        print_test_result("Update Task Status to In Progress", response)
+        in_progress_success = print_test_result("Update Task Status to In Progress", response)
+        if in_progress_success:
+            # Verify status was updated
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{task_id}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                task = response.json()
+                if task["status"] != "in_progress":
+                    print(f"❌ Status update failed: expected 'in_progress', got '{task['status']}'")
         
         # Test workflow: in_progress -> completed (with report_link)
         status_data = {
@@ -1633,20 +1705,45 @@ def test_internal_tasks():
             json=status_data
         )
         
-        print_test_result("Update Task Status to Completed", response)
+        completed_success = print_test_result("Update Task Status to Completed", response)
+        if completed_success:
+            # Verify status was updated and report_link was saved
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{task_id}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                task = response.json()
+                if task["status"] != "completed":
+                    print(f"❌ Status update failed: expected 'completed', got '{task['status']}'")
+                if task["report_link"] != "https://example.com/task-report":
+                    print(f"❌ Report link update failed: expected 'https://example.com/task-report', got '{task.get('report_link')}'")
         
         # Test invalid status update (should fail without report_link)
-        status_data = {
-            "status": "completed"
-        }
-        
-        response = requests.patch(
-            f"{BACKEND_URL}/internal-tasks/{task_id}/status",
-            headers=get_headers(),
-            json=status_data
-        )
-        
-        print_test_result("Update Task Status to Completed without Report Link (should fail)", response, expected_status=400)
+        if len(created_internal_task_ids) > 1:
+            # Use the second task for this test
+            task_id = created_internal_task_ids[1]
+            
+            # First set it to in_progress
+            requests.patch(
+                f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+                headers=get_headers(),
+                json={"status": "in_progress"}
+            )
+            
+            # Then try to complete without report_link
+            status_data = {
+                "status": "completed"
+            }
+            
+            response = requests.patch(
+                f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+                headers=get_headers(),
+                json=status_data
+            )
+            
+            print_test_result("Update Task Status to Completed without Report Link (should fail)", response, expected_status=400)
     
     # 8. Test POST /api/internal-tasks/{task_id}/feedback/ - Create feedback
     if created_internal_task_ids:
@@ -1666,6 +1763,19 @@ def test_internal_tasks():
         if success:
             feedback = response.json()
             print(f"Created feedback: {feedback['message']}")
+            
+            # Create a second feedback
+            feedback_data = {
+                "message": f"Second feedback for task {task_id}"
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+                headers=get_headers(),
+                json=feedback_data
+            )
+            
+            print_test_result("Create Second Task Feedback", response)
     
     # 9. Test GET /api/internal-tasks/{task_id}/feedback/ - Get feedback
     if created_internal_task_ids:
@@ -1680,11 +1790,18 @@ def test_internal_tasks():
         if success:
             feedbacks = response.json()
             print(f"Found {len(feedbacks)} feedback items for task {task_id}")
+            
+            # Verify feedback fields
+            for feedback in feedbacks:
+                required_fields = ["id", "task_id", "user_id", "message", "created_at", "user_name"]
+                for field in required_fields:
+                    if field not in feedback:
+                        print(f"❌ Missing field in feedback: {field}")
     
     # 10. Test DELETE /api/internal-tasks/{task_id} - Delete task
-    if len(created_internal_task_ids) > 1:
-        # Delete the second task
-        task_id = created_internal_task_ids[1]
+    if len(created_internal_task_ids) > 2:
+        # Delete the third task
+        task_id = created_internal_task_ids[2]
         
         response = requests.delete(
             f"{BACKEND_URL}/internal-tasks/{task_id}",
@@ -1693,40 +1810,63 @@ def test_internal_tasks():
         
         success = print_test_result("Delete Internal Task", response)
         if success:
-            created_internal_task_ids.remove(task_id)
-            print(f"Deleted task ID: {task_id}")
+            # Verify task was deleted
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{task_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Verify Task Deletion", response, expected_status=404)
+            
+            if task_id in created_internal_task_ids:
+                created_internal_task_ids.remove(task_id)
+                print(f"Deleted task ID: {task_id}")
     
     # 11. Test POST /api/internal-tasks/bulk-delete - Bulk delete tasks
-    if created_internal_task_ids:
-        # Create temporary tasks for bulk delete
-        temp_task_ids = []
-        for i in range(2):
-            temp_task = {
-                "name": f"Temp Task for Bulk Delete {i} {uuid.uuid4().hex[:6]}",
-                "description": "This task will be bulk deleted",
-                "assigned_to": assigned_to,
-                "deadline": (datetime.utcnow() + timedelta(days=5)).isoformat(),
-                "priority": "low",
-                "status": "not_started"
-            }
-            
-            response = requests.post(
-                f"{BACKEND_URL}/internal-tasks/",
-                headers=get_headers(),
-                json=temp_task
-            )
-            
-            if response.status_code == 200:
-                temp_task_ids.append(response.json()["id"])
+    # Create temporary tasks for bulk delete
+    temp_task_ids = []
+    for i in range(2):
+        temp_task = {
+            "name": f"Temp Task for Bulk Delete {i} {uuid.uuid4().hex[:6]}",
+            "description": "This task will be bulk deleted",
+            "assigned_to": assigned_to,
+            "deadline": (datetime.utcnow() + timedelta(days=5)).isoformat(),
+            "priority": "low",
+            "status": "not_started"
+        }
         
-        if temp_task_ids:
-            response = requests.post(
-                f"{BACKEND_URL}/internal-tasks/bulk-delete",
-                headers=get_headers(),
-                json=temp_task_ids
-            )
-            
-            print_test_result("Bulk Delete Internal Tasks", response)
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/",
+            headers=get_headers(),
+            json=temp_task
+        )
+        
+        if response.status_code == 200:
+            temp_task_ids.append(response.json()["id"])
+    
+    if temp_task_ids:
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/bulk-delete",
+            headers=get_headers(),
+            json=temp_task_ids
+        )
+        
+        bulk_delete_success = print_test_result("Bulk Delete Internal Tasks", response)
+        if bulk_delete_success:
+            # Verify tasks were deleted
+            for temp_id in temp_task_ids:
+                response = requests.get(
+                    f"{BACKEND_URL}/internal-tasks/{temp_id}",
+                    headers=get_headers()
+                )
+                
+                if response.status_code != 404:
+                    print(f"❌ Bulk delete failed for task ID: {temp_id}")
+    
+    print("\n=== Internal Tasks API Testing Summary ===")
+    print(f"Created {len(created_internal_task_ids)} tasks for testing")
+    print(f"Tested all required endpoints for Internal Task Management")
+    print(f"Verified data validation, status transitions, and enriched fields")
     
     return created_internal_task_ids
 
