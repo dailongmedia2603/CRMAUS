@@ -3,8 +3,8 @@ import json
 from datetime import datetime, timedelta
 import uuid
 
-# Backend URL from review request
-BACKEND_URL = "https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com/api"
+# Backend URL from review request - without /api suffix
+BACKEND_URL = "https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com"
 
 # Test user credentials
 EMAIL = "admin@example.com"
