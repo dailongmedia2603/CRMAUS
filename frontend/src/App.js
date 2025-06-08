@@ -657,6 +657,23 @@ const LoginComponent = ({ login }) => {
               Email: admin@example.com<br />
               Password: admin123
             </div>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={testConnection}
+                disabled={connectionTest === 'testing'}
+                className={`text-xs px-3 py-1 rounded border ${
+                  connectionTest === 'success' ? 'bg-green-100 text-green-700 border-green-300' :
+                  connectionTest === 'failed' ? 'bg-red-100 text-red-700 border-red-300' :
+                  'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                {connectionTest === 'testing' ? 'Đang kiểm tra...' :
+                 connectionTest === 'success' ? '✅ Kết nối OK' :
+                 connectionTest === 'failed' ? '❌ Lỗi kết nối' :
+                 'Test kết nối Backend'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
