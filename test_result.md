@@ -111,3 +111,24 @@
       - working: false
         agent: "testing"
         comment: "Retested the dashboard API endpoint. The GET /api/dashboard/statistics endpoint still returns a 404 error with the message 'Not Found'. This confirms that the dashboard statistics endpoint is not implemented correctly."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Expense Categories API"
+    - "Expense Folders API"
+    - "Expenses API"
+  stuck_tasks:
+    - "Documents API"
+    - "Dashboard API"
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "Completed testing of expense management APIs. All expense-related endpoints (categories, folders, expenses) are working correctly. The invoices API is also working correctly now. The document folders API and dashboard statistics API are still not working."
