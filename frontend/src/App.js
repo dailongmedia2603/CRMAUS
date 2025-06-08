@@ -17,6 +17,7 @@ import ClientDetail from './components/ClientDetail';
 // Auth context
 const AuthContext = createContext();
 export { AuthContext };
+export { AuthContext };
 
 const ExpenseManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
