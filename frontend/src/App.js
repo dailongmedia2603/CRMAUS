@@ -694,6 +694,637 @@ const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, 
     </div>
   );
 
+// Task Row Component
+const TaskRow = ({ 
+  task, 
+  selectedTasks, 
+  setSelectedTasks, 
+  onStatusChange, 
+  onEdit, 
+  onDelete, 
+  onView, 
+  onFeedback,
+  getStatusIcon,
+  getPriorityColor,
+  getPriorityLabel,
+  getStatusLabel
+}) => {
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLink, setReportLink] = useState('');
+
+  const handleStatusUpdate = (newStatus) => {
+    if (newStatus === 'completed') {
+      setShowReportModal(true);
+    } else {
+      onStatusChange(task.id, newStatus);
+    }
+  };
+
+  const submitCompletion = () => {
+    if (!reportLink.trim()) {
+      toast.error('Vui lòng nhập link báo cáo');
+      return;
+    }
+    onStatusChange(task.id, 'completed', reportLink);
+    setShowReportModal(false);
+    setReportLink('');
+  };
+
+  const toggleTaskSelection = (taskId) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const getActionButton = () => {
+    switch (task.status) {
+      case 'not_started':
+        return (
+          <button
+            onClick={() => handleStatusUpdate('in_progress')}
+            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+          >
+            Bắt đầu
+          </button>
+        );
+      case 'in_progress':
+        return (
+          <button
+            onClick={() => handleStatusUpdate('completed')}
+            className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+          >
+            Hoàn thành
+          </button>
+        );
+      case 'completed':
+        return (
+          <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-sm">
+            Đã hoàn thành
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <tr className="hover:bg-gray-50">
+        <td className="px-6 py-4">
+          <input
+            type="checkbox"
+            checked={selectedTasks.includes(task.id)}
+            onChange={() => toggleTaskSelection(task.id)}
+          />
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center">
+            {getStatusIcon(task.status)}
+            <span className="ml-3 text-sm font-medium text-gray-900 truncate max-w-xs">
+              {task.name}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <button
+            onClick={() => onView(task)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Chi tiết
+          </button>
+        </td>
+        <td className="px-6 py-4 text-sm text-gray-900">
+          {new Date(task.deadline).toLocaleString('vi-VN')}
+        </td>
+        <td className="px-6 py-4">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
+            {getPriorityLabel(task.priority)}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <button
+            onClick={() => onFeedback(task)}
+            className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Feedback
+          </button>
+        </td>
+        <td className="px-6 py-4">
+          <span className="text-sm text-gray-600">
+            {getStatusLabel(task.status)}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          {task.report_link ? (
+            <a
+              href={task.report_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Xem báo cáo
+            </a>
+          ) : (
+            <span className="text-sm text-gray-400">Chưa có</span>
+          )}
+        </td>
+        <td className="px-6 py-4">
+          {getActionButton()}
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => onView(task)}
+              className="text-gray-400 hover:text-gray-600"
+              title="Xem chi tiết"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onEdit(task)}
+              className="text-gray-400 hover:text-gray-600"
+              title="Sửa"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onDelete(task.id)}
+              className="text-red-400 hover:text-red-600"
+              title="Xóa"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      {/* Report Link Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Hoàn thành công việc</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Vui lòng nhập link báo cáo để hoàn thành công việc
+            </p>
+            <input
+              type="text"
+              placeholder="Nhập link báo cáo..."
+              value={reportLink}
+              onChange={(e) => setReportLink(e.target.value)}
+              className="modern-input w-full mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={submitCompletion}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Hoàn thành
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Task Modal Component
+const TaskModal = ({ task, users, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: task?.name || '',
+    description: task?.description || '',
+    document_links: task?.document_links || [],
+    assigned_to: task?.assigned_to || '',
+    deadline: task?.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : '',
+    priority: task?.priority || 'normal'
+  });
+  const [newLink, setNewLink] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập tên công việc');
+      return;
+    }
+    
+    if (!formData.assigned_to) {
+      toast.error('Vui lòng chọn người nhận');
+      return;
+    }
+    
+    if (!formData.deadline) {
+      toast.error('Vui lòng chọn deadline');
+      return;
+    }
+
+    const submitData = {
+      ...formData,
+      deadline: new Date(formData.deadline).toISOString()
+    };
+
+    onSubmit(submitData);
+  };
+
+  const addDocumentLink = () => {
+    if (newLink.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        document_links: [...prev.document_links, newLink.trim()]
+      }));
+      setNewLink('');
+    }
+  };
+
+  const removeDocumentLink = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      document_links: prev.document_links.filter((_, i) => i !== index)
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">
+            {task ? 'Sửa công việc' : 'Thêm công việc mới'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên công việc *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+              className="modern-input w-full"
+              placeholder="Nhập tên công việc..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+              rows={4}
+              className="modern-input w-full"
+              placeholder="Nhập mô tả công việc..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Link tài liệu
+            </label>
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="url"
+                value={newLink}
+                onChange={(e) => setNewLink(e.target.value)}
+                className="modern-input flex-1"
+                placeholder="Nhập link tài liệu..."
+              />
+              <button
+                type="button"
+                onClick={addDocumentLink}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Thêm
+              </button>
+            </div>
+            {formData.document_links.length > 0 && (
+              <div className="space-y-1">
+                {formData.document_links.map((link, index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 truncate"
+                    >
+                      {link}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => removeDocumentLink(index)}
+                      className="text-red-500 hover:text-red-700 ml-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Người nhận *
+              </label>
+              <select
+                value={formData.assigned_to}
+                onChange={(e) => setFormData(prev => ({...prev, assigned_to: e.target.value}))}
+                className="modern-input w-full"
+              >
+                <option value="">Chọn người nhận...</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name} ({user.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ưu tiên
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({...prev, priority: e.target.value}))}
+                className="modern-input w-full"
+              >
+                <option value="low">Thấp</option>
+                <option value="normal">Trung bình</option>
+                <option value="high">Cao</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Deadline *
+            </label>
+            <input
+              type="datetime-local"
+              value={formData.deadline}
+              onChange={(e) => setFormData(prev => ({...prev, deadline: e.target.value}))}
+              className="modern-input w-full"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {task ? 'Cập nhật' : 'Tạo công việc'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Task Detail Modal Component
+const TaskDetailModal = ({ task, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">Chi tiết công việc</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Tên công việc</h3>
+            <p className="text-gray-900">{task.name}</p>
+          </div>
+
+          {task.description && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Mô tả</h3>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-gray-900 whitespace-pre-wrap">{task.description}</p>
+              </div>
+            </div>
+          )}
+
+          {task.document_links && task.document_links.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Link tài liệu</h3>
+              <div className="space-y-2">
+                {task.document_links.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded"
+                  >
+                    {link}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Người giao</h3>
+              <p className="text-gray-900">{task.assigned_by_name}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Người nhận</h3>
+              <p className="text-gray-900">{task.assigned_to_name}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Deadline</h3>
+              <p className="text-gray-900">{new Date(task.deadline).toLocaleString('vi-VN')}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Ưu tiên</h3>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                task.priority === 'normal' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                {task.priority === 'high' ? 'Cao' : task.priority === 'normal' ? 'Trung bình' : 'Thấp'}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Trạng thái</h3>
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              task.status === 'completed' ? 'bg-green-100 text-green-800' :
+              task.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {task.status === 'completed' ? 'Hoàn thành' : 
+               task.status === 'in_progress' ? 'Đang làm' : 'Chưa làm'}
+            </span>
+          </div>
+
+          {task.report_link && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Link báo cáo</h3>
+              <a
+                href={task.report_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded block"
+              >
+                {task.report_link}
+              </a>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4 text-sm text-gray-500">
+            <div>
+              <span className="font-medium">Tạo lúc:</span><br/>
+              {new Date(task.created_at).toLocaleString('vi-VN')}
+            </div>
+            <div>
+              <span className="font-medium">Cập nhật:</span><br/>
+              {new Date(task.updated_at).toLocaleString('vi-VN')}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Feedback Modal Component
+const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, onAddFeedback }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">
+            Feedback - {task.name}
+            {feedbacks.length > 0 && (
+              <span className="ml-2 bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
+                {feedbacks.length}
+              </span>
+            )}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Feedback List */}
+        <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
+          {feedbacks.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">Chưa có feedback nào</p>
+          ) : (
+            feedbacks.map((feedback) => (
+              <div key={feedback.id} className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-medium text-sm text-gray-900">
+                    {feedback.user_name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(feedback.created_at).toLocaleString('vi-VN')}
+                  </span>
+                </div>
+                <p className="text-gray-700 text-sm">{feedback.message}</p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Add Feedback */}
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Thêm feedback</h3>
+          <div className="flex space-x-2">
+            <textarea
+              value={newFeedback}
+              onChange={(e) => setNewFeedback(e.target.value)}
+              placeholder="Nhập feedback..."
+              rows={3}
+              className="modern-input flex-1"
+            />
+            <button
+              onClick={onAddFeedback}
+              disabled={!newFeedback.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Gửi
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
 // Environment variables
 const API = process.env.REACT_APP_BACKEND_URL;
 
