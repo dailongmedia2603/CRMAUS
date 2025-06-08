@@ -114,9 +114,9 @@
         
   - task: "Internal Task Management API"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -126,6 +126,9 @@
       - working: false
         agent: "testing"
         comment: "Attempted to test the internal task management API endpoints, but encountered connectivity issues with the backend server. The server at https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com is accessible, but the API endpoints are returning 404 errors. This suggests that either the API endpoints are not implemented correctly or the API path is incorrect. The server appears to be hosting a static website rather than a FastAPI application."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all internal task management API endpoints. The POST /api/internal-tasks/ endpoint creates tasks correctly with all required fields. The GET /api/internal-tasks/ endpoint returns tasks with proper filtering by status, priority, assigned_to, search terms, and date ranges. The GET /api/internal-tasks/statistics endpoint returns accurate statistics. The GET /api/internal-tasks/{id} endpoint returns detailed task information with enriched user names. The PUT /api/internal-tasks/{id} endpoint updates tasks correctly. The PATCH /api/internal-tasks/{id}/status endpoint properly enforces the workflow (not_started -> in_progress -> completed) and validates that report_link is required for completed status. The DELETE /api/internal-tasks/{id} endpoint deletes tasks successfully. The POST /api/internal-tasks/bulk-delete endpoint deletes multiple tasks. The feedback system (POST and GET /api/internal-tasks/{id}/feedback/) works correctly. All endpoints properly validate input data and return appropriate error messages."
 
 metadata:
   created_by: "testing_agent"
