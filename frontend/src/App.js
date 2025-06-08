@@ -1230,8 +1230,581 @@ const LoginComponent = ({ login }) => {
   );
 };
 
-// Remaining component placeholders
-const Task = () => <div className="modern-card p-6"><h2>Task Management</h2></div>;
+// Task Management Component with full functionality
+const Task = () => {
+  const [tasks, setTasks] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statistics, setStatistics] = useState({});
+  const [selectedTasks, setSelectedTasks] = useState([]);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('today');
+  const [showCompleted, setShowCompleted] = useState(false);
+  
+  // Modals
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [viewingTask, setViewingTask] = useState(null);
+  const [feedbackTask, setFeedbackTask] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [newFeedback, setNewFeedback] = useState('');
+
+  useEffect(() => {
+    fetchTasks();
+    fetchUsers();
+    fetchStatistics();
+  }, [statusFilter, priorityFilter, dateFilter, showCompleted]);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'active') {
+          params.append('status', 'not_started');
+          // Will also include in_progress through multiple calls
+        } else {
+          params.append('status', statusFilter);
+        }
+      }
+      
+      if (priorityFilter !== 'all') {
+        params.append('priority', priorityFilter);
+      }
+      
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      
+      // Date filter
+      if (dateFilter === 'today') {
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        params.append('start_date', startOfDay.toISOString());
+        params.append('end_date', endOfDay.toISOString());
+      }
+      
+      const response = await axios.get(`${API}/api/internal-tasks/?${params}`);
+      
+      // Filter completed tasks based on showCompleted state
+      let filteredTasks = response.data;
+      if (showCompleted) {
+        filteredTasks = response.data.filter(task => task.status === 'completed');
+      } else {
+        filteredTasks = response.data.filter(task => task.status !== 'completed');
+      }
+      
+      setTasks(filteredTasks);
+    } catch (error) {
+      toast.error('Lỗi khi tải danh sách công việc');
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/api/users/`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      const params = new URLSearchParams();
+      
+      // Add date filter to statistics
+      if (dateFilter === 'today') {
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        params.append('start_date', startOfDay.toISOString());
+        params.append('end_date', endOfDay.toISOString());
+      }
+      
+      const response = await axios.get(`${API}/api/internal-tasks/statistics?${params}`);
+      setStatistics(response.data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+    }
+  };
+
+  const handleCreateTask = async (taskData) => {
+    try {
+      await axios.post(`${API}/api/internal-tasks/`, taskData);
+      toast.success('Tạo công việc thành công!');
+      setShowCreateModal(false);
+      fetchTasks();
+      fetchStatistics();
+    } catch (error) {
+      toast.error('Lỗi khi tạo công việc');
+      console.error('Error creating task:', error);
+    }
+  };
+
+  const handleUpdateTask = async (taskData) => {
+    try {
+      await axios.put(`${API}/api/internal-tasks/${editingTask.id}`, taskData);
+      toast.success('Cập nhật công việc thành công!');
+      setEditingTask(null);
+      fetchTasks();
+      fetchStatistics();
+    } catch (error) {
+      toast.error('Lỗi khi cập nhật công việc');
+      console.error('Error updating task:', error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
+      try {
+        await axios.delete(`${API}/api/internal-tasks/${taskId}`);
+        toast.success('Xóa công việc thành công!');
+        fetchTasks();
+        fetchStatistics();
+      } catch (error) {
+        toast.error('Lỗi khi xóa công việc');
+        console.error('Error deleting task:', error);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedTasks.length === 0) {
+      toast.warning('Vui lòng chọn công việc cần xóa');
+      return;
+    }
+    
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} công việc đã chọn?`)) {
+      try {
+        await axios.post(`${API}/api/internal-tasks/bulk-delete`, selectedTasks);
+        toast.success(`Xóa ${selectedTasks.length} công việc thành công!`);
+        setSelectedTasks([]);
+        fetchTasks();
+        fetchStatistics();
+      } catch (error) {
+        toast.error('Lỗi khi xóa công việc');
+        console.error('Error bulk deleting tasks:', error);
+      }
+    }
+  };
+
+  const handleStatusChange = async (taskId, newStatus, reportLink = null) => {
+    try {
+      const payload = { status: newStatus };
+      if (newStatus === 'completed' && reportLink) {
+        payload.report_link = reportLink;
+      }
+      
+      await axios.patch(`${API}/api/internal-tasks/${taskId}/status`, payload);
+      toast.success('Cập nhật trạng thái thành công!');
+      fetchTasks();
+      fetchStatistics();
+    } catch (error) {
+      toast.error('Lỗi khi cập nhật trạng thái');
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const handleAddFeedback = async () => {
+    if (!newFeedback.trim()) return;
+    
+    try {
+      await axios.post(`${API}/api/internal-tasks/${feedbackTask.id}/feedback/`, {
+        message: newFeedback
+      });
+      setNewFeedback('');
+      fetchTaskFeedbacks(feedbackTask.id);
+      toast.success('Thêm feedback thành công!');
+    } catch (error) {
+      toast.error('Lỗi khi thêm feedback');
+      console.error('Error adding feedback:', error);
+    }
+  };
+
+  const fetchTaskFeedbacks = async (taskId) => {
+    try {
+      const response = await axios.get(`${API}/api/internal-tasks/${taskId}/feedback/`);
+      setFeedbacks(response.data);
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error);
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'not_started':
+        return <div className="w-3 h-3 bg-gray-400 rounded-full"></div>;
+      case 'in_progress':
+        return <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>;
+      case 'completed':
+        return <div className="w-3 h-3 bg-green-500 rounded-full"></div>;
+      default:
+        return <div className="w-3 h-3 bg-gray-400 rounded-full"></div>;
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'normal':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityLabel = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'Cao';
+      case 'normal':
+        return 'Trung bình';
+      case 'low':
+        return 'Thấp';
+      default:
+        return 'Không xác định';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'not_started':
+        return 'Chưa làm';
+      case 'in_progress':
+        return 'Đang làm';
+      case 'completed':
+        return 'Hoàn thành';
+      default:
+        return 'Không xác định';
+    }
+  };
+
+  const StatCard = ({ title, count, color, onClick, isActive }) => (
+    <div 
+      className={`modern-card p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+        isActive ? 'ring-2 ring-blue-500' : ''
+      }`}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className={`text-2xl font-bold ${color}`}>{count}</p>
+        </div>
+        <div className={`w-12 h-12 rounded-full ${color.replace('text', 'bg').replace('-600', '-100')} flex items-center justify-center`}>
+          <svg className={`w-6 h-6 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý Công việc</h1>
+          <p className="text-gray-600 mt-1">Quản lý công việc nội bộ giữa các bộ phận</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="modern-input w-auto"
+          >
+            <option value="all">Tất cả thời gian</option>
+            <option value="today">Hôm nay</option>
+            <option value="week">Tuần này</option>
+            <option value="month">Tháng này</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
+        <StatCard
+          title="Tổng Task"
+          count={statistics.total_tasks || 0}
+          color="text-blue-600"
+          onClick={() => {
+            setStatusFilter('all');
+            setPriorityFilter('all');
+          }}
+          isActive={statusFilter === 'all' && priorityFilter === 'all'}
+        />
+        <StatCard
+          title="Chưa làm"
+          count={statistics.not_started || 0}
+          color="text-gray-600"
+          onClick={() => {
+            setStatusFilter('not_started');
+            setPriorityFilter('all');
+          }}
+          isActive={statusFilter === 'not_started'}
+        />
+        <StatCard
+          title="Hoàn thành"
+          count={statistics.completed || 0}
+          color="text-green-600"
+          onClick={() => {
+            setStatusFilter('completed');
+            setPriorityFilter('all');
+          }}
+          isActive={statusFilter === 'completed'}
+        />
+        <StatCard
+          title="Cao"
+          count={statistics.high_priority || 0}
+          color="text-red-600"
+          onClick={() => {
+            setPriorityFilter('high');
+            setStatusFilter('all');
+          }}
+          isActive={priorityFilter === 'high'}
+        />
+        <StatCard
+          title="Trung bình"
+          count={statistics.normal_priority || 0}
+          color="text-yellow-600"
+          onClick={() => {
+            setPriorityFilter('normal');
+            setStatusFilter('all');
+          }}
+          isActive={priorityFilter === 'normal'}
+        />
+        <StatCard
+          title="Thấp"
+          count={statistics.low_priority || 0}
+          color="text-green-600"
+          onClick={() => {
+            setPriorityFilter('low');
+            setStatusFilter('all');
+          }}
+          isActive={priorityFilter === 'low'}
+        />
+      </div>
+
+      {/* Toolbar */}
+      <div className="modern-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Search and Filters */}
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="relative flex-1 max-w-md">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Tìm kiếm công việc..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="modern-input pl-10"
+              />
+            </div>
+            
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="modern-input w-auto"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="not_started">Chưa làm</option>
+              <option value="in_progress">Đang làm</option>
+              <option value="completed">Hoàn thành</option>
+            </select>
+            
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="modern-input w-auto"
+            >
+              <option value="all">Tất cả ưu tiên</option>
+              <option value="high">Cao</option>
+              <option value="normal">Trung bình</option>
+              <option value="low">Thấp</option>
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            {selectedTasks.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Xóa ({selectedTasks.length})
+              </button>
+            )}
+            
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                showCompleted 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {showCompleted ? 'Trở về' : 'Hoàn thành'}
+            </button>
+            
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Thêm công việc
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tasks List */}
+      <div className="modern-card">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedTasks(tasks.map(task => task.id));
+                      } else {
+                        setSelectedTasks([]);
+                      }
+                    }}
+                    checked={selectedTasks.length === tasks.length && tasks.length > 0}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tên công việc
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Mô tả
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Deadline
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ưu tiên
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Feedback
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Report
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Action
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {tasks.map((task) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  selectedTasks={selectedTasks}
+                  setSelectedTasks={setSelectedTasks}
+                  onStatusChange={handleStatusChange}
+                  onEdit={setEditingTask}
+                  onDelete={handleDeleteTask}
+                  onView={setViewingTask}
+                  onFeedback={(task) => {
+                    setFeedbackTask(task);
+                    fetchTaskFeedbacks(task.id);
+                  }}
+                  getStatusIcon={getStatusIcon}
+                  getPriorityColor={getPriorityColor}
+                  getPriorityLabel={getPriorityLabel}
+                  getStatusLabel={getStatusLabel}
+                />
+              ))}
+            </tbody>
+          </table>
+          
+          {tasks.length === 0 && (
+            <div className="text-center py-8">
+              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có công việc</h3>
+              <p className="text-gray-600">Bắt đầu bằng cách thêm công việc đầu tiên</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showCreateModal && (
+        <TaskModal
+          users={users}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateTask}
+        />
+      )}
+      
+      {editingTask && (
+        <TaskModal
+          task={editingTask}
+          users={users}
+          onClose={() => setEditingTask(null)}
+          onSubmit={handleUpdateTask}
+        />
+      )}
+      
+      {viewingTask && (
+        <TaskDetailModal
+          task={viewingTask}
+          onClose={() => setViewingTask(null)}
+        />
+      )}
+      
+      {feedbackTask && (
+        <FeedbackModal
+          task={feedbackTask}
+          feedbacks={feedbacks}
+          newFeedback={newFeedback}
+          setNewFeedback={setNewFeedback}
+          onClose={() => setFeedbackTask(null)}
+          onAddFeedback={handleAddFeedback}
+        />
+      )}
+    </div>
+  );
+};
 const Contracts = () => <div className="modern-card p-6"><h2>Contracts</h2></div>;
 const Invoices = () => <div className="modern-card p-6"><h2>Invoices</h2></div>;
 const Settings = () => <div className="modern-card p-6"><h2>Settings</h2></div>;
