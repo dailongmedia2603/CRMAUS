@@ -10,22 +10,8 @@ import "./App.css";
 const AuthContext = createContext();
 export { AuthContext };
 
-// Environment variables - Dynamic backend URL detection
-const getBackendURL = () => {
-  // Check if we're in production (external domain)
-  if (window.location.hostname.includes('preview.emergentagent.com')) {
-    // In production, backend should be accessible through the same domain
-    return window.location.origin + '/api/backend';
-  }
-  // If in development (localhost), use localhost backend
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:8001';
-  }
-  // Fallback
-  return 'http://localhost:8001';
-};
-
-const API = getBackendURL();
+// Environment variables - Use relative path for API calls (will be proxied)
+const API = '';
 
 function App() {
   const [user, setUser] = useState(null);
