@@ -10,8 +10,17 @@ import "./App.css";
 const AuthContext = createContext();
 export { AuthContext };
 
-// Environment variables
-const API = process.env.REACT_APP_BACKEND_URL;
+// Environment variables - Dynamic backend URL detection
+const getBackendURL = () => {
+  // If in development (localhost), use localhost backend
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8001';
+  }
+  // If in production, use current origin
+  return window.location.origin;
+};
+
+const API = getBackendURL();
 
 function App() {
   const [user, setUser] = useState(null);
