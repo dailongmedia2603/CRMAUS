@@ -531,18 +531,20 @@ const LoginComponent = ({ login }) => {
       formData.append('username', credentials.email);
       formData.append('password', credentials.password);
 
-      console.log('📤 Sending login request...');
+      console.log('📤 Sending login request to:', `${API}/api/token`);
       const response = await axios.post(`${API}/api/token`, formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        },
+        timeout: 10000
       });
 
       console.log('✅ Login response:', response.data);
       
       console.log('👤 Fetching user info...');
       const userResponse = await axios.get(`${API}/api/users/me/`, {
-        headers: { Authorization: `Bearer ${response.data.access_token}` }
+        headers: { Authorization: `Bearer ${response.data.access_token}` },
+        timeout: 10000
       });
 
       console.log('👤 User data:', userResponse.data);
@@ -552,7 +554,9 @@ const LoginComponent = ({ login }) => {
     } catch (error) {
       console.error('❌ Login error:', error);
       console.error('❌ Error response:', error.response?.data);
-      toast.error(`Đăng nhập thất bại! ${error.response?.data?.detail || 'Vui lòng kiểm tra thông tin.'}`);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Network Error?', error.code === 'NETWORK_ERROR');
+      toast.error(`Đăng nhập thất bại! ${error.response?.data?.detail || error.message || 'Vui lòng kiểm tra thông tin.'}`);
     } finally {
       setLoading(false);
     }
