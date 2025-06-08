@@ -350,6 +350,56 @@ class Template(TemplateBase):
     created_by: Optional[str] = None
     creator_name: Optional[str] = None
 
+# ================= INTERNAL TASK MANAGEMENT MODELS =================
+
+# Internal Task Models (for agency internal work management)
+class InternalTaskBase(BaseModel):
+    name: str
+    description: Optional[str] = None  # Rich text content
+    document_links: Optional[List[str]] = []  # Multiple document links
+    assigned_to: str  # User ID - required
+    deadline: datetime
+    priority: str = "normal"  # high, normal, low
+    status: str = "not_started"  # not_started, in_progress, completed
+    report_link: Optional[str] = None  # Report link when completed
+
+class InternalTaskCreate(InternalTaskBase):
+    pass
+
+class InternalTaskUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    document_links: Optional[List[str]] = None
+    assigned_to: Optional[str] = None
+    deadline: Optional[datetime] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None
+    report_link: Optional[str] = None
+
+class InternalTask(InternalTaskBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    assigned_by: str  # Will be set by endpoint (current user)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    # Enriched fields
+    assigned_to_name: Optional[str] = None
+    assigned_by_name: Optional[str] = None
+
+# Internal Task Feedback Models
+class InternalTaskFeedbackBase(BaseModel):
+    task_id: str
+    user_id: str
+    message: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class InternalTaskFeedbackCreate(BaseModel):
+    message: str
+
+class InternalTaskFeedback(InternalTaskFeedbackBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_name: Optional[str] = None  # Enriched field
+
 # ================= EXPENSE MANAGEMENT MODELS =================
 
 # Expense Category Models
