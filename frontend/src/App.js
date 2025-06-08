@@ -1518,8 +1518,6 @@ function App() {
   );
 }
 
-export default App;
-
 // Simple components placeholders (will be completed)
 const Dashboard = () => {
   const [stats, setStats] = useState({
