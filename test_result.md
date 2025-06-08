@@ -125,7 +125,7 @@
         comment: "Need to test the internal task management API endpoints: POST /api/internal-tasks/, GET /api/internal-tasks/, GET /api/internal-tasks/statistics, GET /api/internal-tasks/{task_id}, PUT /api/internal-tasks/{task_id}, DELETE /api/internal-tasks/{task_id}, POST /api/internal-tasks/bulk-delete, PATCH /api/internal-tasks/{task_id}/status, POST /api/internal-tasks/{task_id}/feedback/, GET /api/internal-tasks/{task_id}/feedback/"
       - working: false
         agent: "testing"
-        comment: "Attempted to test the internal task management API endpoints, but encountered connectivity issues with the backend server. The server at https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com is not accessible or is returning 404 errors for all API endpoints. This suggests that either the server is down, the URL is incorrect, or the API endpoints are not implemented correctly."
+        comment: "Attempted to test the internal task management API endpoints, but encountered connectivity issues with the backend server. The server at https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com is accessible, but the API endpoints are returning 404 errors. This suggests that either the API endpoints are not implemented correctly or the API path is incorrect. The server appears to be hosting a static website rather than a FastAPI application."
 
 metadata:
   created_by: "testing_agent"
