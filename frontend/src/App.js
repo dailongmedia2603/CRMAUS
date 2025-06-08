@@ -693,7 +693,6 @@ const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, 
       </div>
     </div>
   );
-import ClientDetail from './components/ClientDetail';
 
 // Environment variables
 const API = process.env.REACT_APP_BACKEND_URL;
