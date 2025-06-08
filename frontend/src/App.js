@@ -13,6 +13,10 @@ import TemplatesComponent from "./components/Templates";
 import { ExpenseOverview, ExpenseList, ExpenseConfig } from "./components/ExpenseComponents";
 import ClientDetail from './components/ClientDetail';
 
+// Auth context
+const AuthContext = createContext();
+export { AuthContext };
+
 const ExpenseManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
