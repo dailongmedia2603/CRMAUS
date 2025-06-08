@@ -1237,6 +1237,308 @@ async def get_work_item_feedback(
     
     return feedbacks
 
+# ================= INTERNAL TASK MANAGEMENT ENDPOINTS =================
+
+@api_router.post("/internal-tasks/", response_model=InternalTask)
+async def create_internal_task(
+    task: InternalTaskCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo công việc nội bộ mới"""
+    # Kiểm tra người được giao việc tồn tại
+    assigned_user = await db.users.find_one({"id": task.assigned_to})
+    if not assigned_user:
+        raise HTTPException(status_code=404, detail="Assigned user not found")
+    
+    task_data = task.dict()
+    task_obj = InternalTask(**task_data, assigned_by=current_user.id, created_by=current_user.id)
+    
+    await db.internal_tasks.insert_one(task_obj.dict())
+    
+    # Enrich với tên người dùng
+    task_dict = task_obj.dict()
+    task_dict["assigned_to_name"] = assigned_user["full_name"]
+    task_dict["assigned_by_name"] = current_user.full_name
+    
+    return task_dict
+
+@api_router.get("/internal-tasks/", response_model=List[InternalTask])
+async def get_internal_tasks(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    assigned_to: Optional[str] = None,
+    search: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách công việc nội bộ với bộ lọc"""
+    query_filter = {}
+    
+    # Filter by status
+    if status:
+        query_filter["status"] = status
+    
+    # Filter by priority
+    if priority:
+        query_filter["priority"] = priority
+    
+    # Filter by assigned user
+    if assigned_to:
+        query_filter["assigned_to"] = assigned_to
+    
+    # Date range filter
+    if start_date or end_date:
+        date_filter = {}
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                date_filter["$gte"] = start_dt
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid start_date format")
+        
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                date_filter["$lte"] = end_dt
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid end_date format")
+        
+        query_filter["created_at"] = date_filter
+    
+    # Search filter
+    if search:
+        query_filter["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    
+    tasks = await db.internal_tasks.find(query_filter).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich với thông tin user
+    for task in tasks:
+        if task.get("assigned_to"):
+            assigned_user = await db.users.find_one({"id": task["assigned_to"]})
+            task["assigned_to_name"] = assigned_user["full_name"] if assigned_user else "Unknown"
+        
+        if task.get("assigned_by"):
+            assigned_by_user = await db.users.find_one({"id": task["assigned_by"]})
+            task["assigned_by_name"] = assigned_by_user["full_name"] if assigned_by_user else "Unknown"
+    
+    return tasks
+
+@api_router.get("/internal-tasks/statistics")
+async def get_internal_tasks_statistics(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy thống kê công việc nội bộ"""
+    query_filter = {}
+    
+    # Date range filter
+    if start_date or end_date:
+        date_filter = {}
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                date_filter["$gte"] = start_dt
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid start_date format")
+        
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                date_filter["$lte"] = end_dt
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid end_date format")
+        
+        query_filter["created_at"] = date_filter
+    
+    # Count statistics
+    total_tasks = await db.internal_tasks.count_documents(query_filter)
+    not_started = await db.internal_tasks.count_documents({**query_filter, "status": "not_started"})
+    in_progress = await db.internal_tasks.count_documents({**query_filter, "status": "in_progress"})
+    completed = await db.internal_tasks.count_documents({**query_filter, "status": "completed"})
+    
+    # Priority statistics
+    high_priority = await db.internal_tasks.count_documents({**query_filter, "priority": "high"})
+    normal_priority = await db.internal_tasks.count_documents({**query_filter, "priority": "normal"})
+    low_priority = await db.internal_tasks.count_documents({**query_filter, "priority": "low"})
+    
+    return {
+        "total_tasks": total_tasks,
+        "not_started": not_started,
+        "in_progress": in_progress,
+        "completed": completed,
+        "high_priority": high_priority,
+        "normal_priority": normal_priority,
+        "low_priority": low_priority
+    }
+
+@api_router.get("/internal-tasks/{task_id}", response_model=InternalTask)
+async def get_internal_task(
+    task_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy chi tiết công việc nội bộ"""
+    task = await db.internal_tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Enrich với thông tin user
+    if task.get("assigned_to"):
+        assigned_user = await db.users.find_one({"id": task["assigned_to"]})
+        task["assigned_to_name"] = assigned_user["full_name"] if assigned_user else "Unknown"
+    
+    if task.get("assigned_by"):
+        assigned_by_user = await db.users.find_one({"id": task["assigned_by"]})
+        task["assigned_by_name"] = assigned_by_user["full_name"] if assigned_by_user else "Unknown"
+    
+    return task
+
+@api_router.put("/internal-tasks/{task_id}", response_model=InternalTask)
+async def update_internal_task(
+    task_id: str,
+    task_update: InternalTaskUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật công việc nội bộ"""
+    task = await db.internal_tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    update_data = task_update.dict(exclude_unset=True)
+    
+    # Kiểm tra người được giao việc mới nếu có
+    if "assigned_to" in update_data:
+        assigned_user = await db.users.find_one({"id": update_data["assigned_to"]})
+        if not assigned_user:
+            raise HTTPException(status_code=404, detail="Assigned user not found")
+    
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.internal_tasks.update_one({"id": task_id}, {"$set": update_data})
+    
+    # Get updated task
+    updated_task = await db.internal_tasks.find_one({"id": task_id})
+    
+    # Enrich với thông tin user
+    if updated_task.get("assigned_to"):
+        assigned_user = await db.users.find_one({"id": updated_task["assigned_to"]})
+        updated_task["assigned_to_name"] = assigned_user["full_name"] if assigned_user else "Unknown"
+    
+    if updated_task.get("assigned_by"):
+        assigned_by_user = await db.users.find_one({"id": updated_task["assigned_by"]})
+        updated_task["assigned_by_name"] = assigned_by_user["full_name"] if assigned_by_user else "Unknown"
+    
+    return updated_task
+
+@api_router.delete("/internal-tasks/{task_id}")
+async def delete_internal_task(
+    task_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa công việc nội bộ"""
+    result = await db.internal_tasks.delete_one({"id": task_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Xóa feedback liên quan
+    await db.internal_task_feedbacks.delete_many({"task_id": task_id})
+    
+    return {"detail": "Task deleted successfully"}
+
+@api_router.post("/internal-tasks/bulk-delete")
+async def bulk_delete_internal_tasks(
+    task_ids: List[str],
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa nhiều công việc nội bộ"""
+    result = await db.internal_tasks.delete_many({"id": {"$in": task_ids}})
+    
+    # Xóa feedback liên quan
+    await db.internal_task_feedbacks.delete_many({"task_id": {"$in": task_ids}})
+    
+    return {"detail": f"{result.deleted_count} tasks deleted successfully"}
+
+@api_router.patch("/internal-tasks/{task_id}/status")
+async def update_internal_task_status(
+    task_id: str,
+    status_data: Dict[str, str],
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật trạng thái công việc nội bộ"""
+    status = status_data.get("status")
+    report_link = status_data.get("report_link")
+    
+    if status not in ["not_started", "in_progress", "completed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    update_data = {"status": status, "updated_at": datetime.utcnow()}
+    
+    # Nếu hoàn thành thì cần report_link
+    if status == "completed":
+        if not report_link:
+            raise HTTPException(status_code=400, detail="Report link is required for completed tasks")
+        update_data["report_link"] = report_link
+    
+    result = await db.internal_tasks.update_one(
+        {"id": task_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    return {"detail": "Task status updated successfully", "status": status}
+
+# Feedback for Internal Tasks
+@api_router.post("/internal-tasks/{task_id}/feedback/", response_model=InternalTaskFeedback)
+async def create_internal_task_feedback(
+    task_id: str,
+    feedback: InternalTaskFeedbackCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo feedback cho công việc nội bộ"""
+    # Kiểm tra task tồn tại
+    task = await db.internal_tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    feedback_data = feedback.dict()
+    feedback_obj = InternalTaskFeedback(
+        **feedback_data,
+        task_id=task_id,
+        user_id=current_user.id,
+        user_name=current_user.full_name
+    )
+    await db.internal_task_feedbacks.insert_one(feedback_obj.dict())
+    return feedback_obj
+
+@api_router.get("/internal-tasks/{task_id}/feedback/", response_model=List[InternalTaskFeedback])
+async def get_internal_task_feedback(
+    task_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy feedback của công việc nội bộ"""
+    # Kiểm tra task tồn tại
+    task = await db.internal_tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    feedbacks = await db.internal_task_feedbacks.find({"task_id": task_id}).sort("created_at", 1).to_list(length=100)
+    
+    # Enrich với user names
+    for feedback in feedbacks:
+        if feedback.get("user_id"):
+            user = await db.users.find_one({"id": feedback["user_id"]})
+            feedback["user_name"] = user["full_name"] if user else "Unknown User"
+    
+    return feedbacks
+
 # Dashboard Data
 @api_router.get("/dashboard", response_model=Dict[str, Any])
 async def get_dashboard_data(current_user: User = Depends(get_current_active_user)):
