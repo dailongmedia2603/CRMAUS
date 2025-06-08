@@ -77,7 +77,7 @@ def test_create_task():
     }
     
     response = requests.post(
-        f"{BACKEND_URL}/internal-tasks/",
+        f"{BACKEND_URL}/api/internal-tasks/",
         headers=get_headers(),
         json=task_data
     )
@@ -111,7 +111,7 @@ def test_get_tasks():
     
     # Get all tasks
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/",
+        f"{BACKEND_URL}/api/internal-tasks/",
         headers=get_headers()
     )
     
@@ -124,7 +124,7 @@ def test_get_tasks():
     if len(created_task_ids) > 0:
         # Get the assigned_to from the first task
         response = requests.get(
-            f"{BACKEND_URL}/internal-tasks/{created_task_ids[0]}",
+            f"{BACKEND_URL}/api/internal-tasks/{created_task_ids[0]}",
             headers=get_headers()
         )
         
@@ -143,7 +143,7 @@ def test_get_tasks():
             }
             
             response = requests.post(
-                f"{BACKEND_URL}/internal-tasks/",
+                f"{BACKEND_URL}/api/internal-tasks/",
                 headers=get_headers(),
                 json=high_priority_task
             )
@@ -156,7 +156,7 @@ def test_get_tasks():
     # Test filters
     # Filter by status
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/?status=not_started",
+        f"{BACKEND_URL}/api/internal-tasks/?status=not_started",
         headers=get_headers()
     )
     
@@ -171,7 +171,7 @@ def test_get_tasks():
     
     # Filter by priority
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/?priority=high",
+        f"{BACKEND_URL}/api/internal-tasks/?priority=high",
         headers=get_headers()
     )
     
@@ -187,7 +187,7 @@ def test_get_tasks():
     # Filter by assigned_to
     if len(created_task_ids) > 0:
         response = requests.get(
-            f"{BACKEND_URL}/internal-tasks/{created_task_ids[0]}",
+            f"{BACKEND_URL}/api/internal-tasks/{created_task_ids[0]}",
             headers=get_headers()
         )
         
@@ -195,7 +195,7 @@ def test_get_tasks():
             assigned_to = response.json()["assigned_to"]
             
             response = requests.get(
-                f"{BACKEND_URL}/internal-tasks/?assigned_to={assigned_to}",
+                f"{BACKEND_URL}/api/internal-tasks/?assigned_to={assigned_to}",
                 headers=get_headers()
             )
             
@@ -210,7 +210,7 @@ def test_get_tasks():
     
     # Search filter
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/?search=Test",
+        f"{BACKEND_URL}/api/internal-tasks/?search=Test",
         headers=get_headers()
     )
     
@@ -224,7 +224,7 @@ def test_get_tasks():
     end_date = (datetime.utcnow() + timedelta(days=14)).isoformat()
     
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/?start_date={start_date}&end_date={end_date}",
+        f"{BACKEND_URL}/api/internal-tasks/?start_date={start_date}&end_date={end_date}",
         headers=get_headers()
     )
     
@@ -240,7 +240,7 @@ def test_get_task_statistics():
     print("\n=== Testing GET /api/internal-tasks/statistics ===")
     
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/statistics",
+        f"{BACKEND_URL}/api/internal-tasks/statistics",
         headers=get_headers()
     )
     
@@ -276,7 +276,7 @@ def test_get_task_details():
     task_id = created_task_ids[0]
     
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/{task_id}",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}",
         headers=get_headers()
     )
     
@@ -294,7 +294,7 @@ def test_get_task_details():
     # Test with invalid task ID
     invalid_id = str(uuid.uuid4())
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/{invalid_id}",
+        f"{BACKEND_URL}/api/internal-tasks/{invalid_id}",
         headers=get_headers()
     )
     
@@ -320,7 +320,7 @@ def test_update_task():
     }
     
     response = requests.put(
-        f"{BACKEND_URL}/internal-tasks/{task_id}",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}",
         headers=get_headers(),
         json=update_data
     )
@@ -363,7 +363,7 @@ def test_delete_task():
     }
     
     response = requests.post(
-        f"{BACKEND_URL}/internal-tasks/",
+        f"{BACKEND_URL}/api/internal-tasks/",
         headers=get_headers(),
         json=temp_task
     )
@@ -377,7 +377,7 @@ def test_delete_task():
     
     # Delete the task
     response = requests.delete(
-        f"{BACKEND_URL}/internal-tasks/{temp_task_id}",
+        f"{BACKEND_URL}/api/internal-tasks/{temp_task_id}",
         headers=get_headers()
     )
     
@@ -386,7 +386,7 @@ def test_delete_task():
     # Verify task was deleted
     if success:
         response = requests.get(
-            f"{BACKEND_URL}/internal-tasks/{temp_task_id}",
+            f"{BACKEND_URL}/api/internal-tasks/{temp_task_id}",
             headers=get_headers()
         )
         
@@ -426,7 +426,7 @@ def test_bulk_delete_tasks():
         }
         
         response = requests.post(
-            f"{BACKEND_URL}/internal-tasks/",
+            f"{BACKEND_URL}/api/internal-tasks/",
             headers=get_headers(),
             json=temp_task
         )
@@ -442,7 +442,7 @@ def test_bulk_delete_tasks():
     
     # Bulk delete the tasks
     response = requests.post(
-        f"{BACKEND_URL}/internal-tasks/bulk-delete",
+        f"{BACKEND_URL}/api/internal-tasks/bulk-delete",
         headers=get_headers(),
         json=temp_task_ids
     )
@@ -454,7 +454,7 @@ def test_bulk_delete_tasks():
         all_deleted = True
         for task_id in temp_task_ids:
             response = requests.get(
-                f"{BACKEND_URL}/internal-tasks/{task_id}",
+                f"{BACKEND_URL}/api/internal-tasks/{task_id}",
                 headers=get_headers()
             )
             
@@ -485,7 +485,7 @@ def test_update_task_status():
     }
     
     response = requests.patch(
-        f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}/status",
         headers=get_headers(),
         json=status_data
     )
@@ -495,7 +495,7 @@ def test_update_task_status():
     # Verify status was updated
     if success_in_progress:
         response = requests.get(
-            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            f"{BACKEND_URL}/api/internal-tasks/{task_id}",
             headers=get_headers()
         )
         
@@ -512,7 +512,7 @@ def test_update_task_status():
     }
     
     response = requests.patch(
-        f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}/status",
         headers=get_headers(),
         json=status_data
     )
@@ -522,7 +522,7 @@ def test_update_task_status():
     # Verify status and report_link were updated
     if success_completed:
         response = requests.get(
-            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            f"{BACKEND_URL}/api/internal-tasks/{task_id}",
             headers=get_headers()
         )
         
@@ -541,7 +541,7 @@ def test_update_task_status():
         
         # First set to in_progress
         requests.patch(
-            f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+            f"{BACKEND_URL}/api/internal-tasks/{task_id}/status",
             headers=get_headers(),
             json={"status": "in_progress"}
         )
@@ -552,7 +552,7 @@ def test_update_task_status():
         }
         
         response = requests.patch(
-            f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+            f"{BACKEND_URL}/api/internal-tasks/{task_id}/status",
             headers=get_headers(),
             json=status_data
         )
@@ -579,7 +579,7 @@ def test_task_feedback():
     }
     
     response = requests.post(
-        f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}/feedback/",
         headers=get_headers(),
         json=feedback_data
     )
@@ -604,7 +604,7 @@ def test_task_feedback():
     }
     
     response = requests.post(
-        f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}/feedback/",
         headers=get_headers(),
         json=feedback_data2
     )
@@ -614,7 +614,7 @@ def test_task_feedback():
     
     # Test GET /api/internal-tasks/{task_id}/feedback/
     response = requests.get(
-        f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+        f"{BACKEND_URL}/api/internal-tasks/{task_id}/feedback/",
         headers=get_headers()
     )
     
@@ -648,7 +648,7 @@ def cleanup():
     
     for task_id in created_task_ids:
         response = requests.delete(
-            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            f"{BACKEND_URL}/api/internal-tasks/{task_id}",
             headers=get_headers()
         )
         
