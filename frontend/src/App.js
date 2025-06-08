@@ -2146,15 +2146,346 @@ const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, 
   );
 };
 
-// Component placeholders
-const Clients = () => <div className="modern-card p-6"><h2>Clients Component</h2><p>This component will be implemented separately.</p></div>;
-const Projects = () => <div className="modern-card p-6"><h2>Projects Component</h2><p>This component will be implemented separately.</p></div>;
-const Contracts = () => <div className="modern-card p-6"><h2>Contracts</h2></div>;
-const Invoices = () => <div className="modern-card p-6"><h2>Invoices</h2></div>;
-const Campaigns = () => <div className="modern-card p-6"><h2>Campaigns</h2></div>;
-const Documents = () => <div className="modern-card p-6"><h2>Documents</h2></div>;
-const Settings = () => <div className="modern-card p-6"><h2>Settings</h2></div>;
-const Account = () => <div className="modern-card p-6"><h2>Account</h2></div>;
-const Reports = () => <div className="modern-card p-6"><h2>Reports</h2></div>;
+// ExpenseManagement Component (placeholder for future implementation)
+const ExpenseManagement = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý chi phí</h1>
+        <p className="text-gray-600 mt-1">Theo dõi và quản lý chi phí dự án</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Thêm chi phí
+      </button>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="modern-card p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Tổng chi phí</dt>
+              <dd className="text-lg font-semibold text-gray-900">0 VND</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      
+      <div className="modern-card p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Chi phí tháng này</dt>
+              <dd className="text-lg font-semibold text-gray-900">0 VND</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      
+      <div className="modern-card p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Số giao dịch</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      
+      <div className="modern-card p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Danh mục</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div className="modern-card p-6">
+      <div className="text-center py-12">
+        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Module Expense Management</h3>
+        <p className="text-gray-600 mb-4">Backend đã hoàn thiện, frontend đang được phát triển</p>
+        <div className="text-sm text-gray-500">
+          <p>✅ Expense Categories API</p>
+          <p>✅ Expense Folders API</p>
+          <p>✅ Expenses CRUD API</p>
+          <p>🔄 Frontend Interface (Coming Soon)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Component placeholders with proper Vietnamese interface
+const Clients = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý khách hàng</h1>
+        <p className="text-gray-600 mt-1">Quản lý thông tin và quan hệ khách hàng</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Thêm khách hàng
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Danh sách khách hàng</h2>
+      <p className="text-gray-600">Module khách hàng sẽ được triển khai từ codebase hiện có.</p>
+    </div>
+  </div>
+);
+
+const Projects = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý dự án</h1>
+        <p className="text-gray-600 mt-1">Theo dõi tiến độ và quản lý dự án khách hàng</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo dự án mới
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Danh sách dự án</h2>
+      <p className="text-gray-600">Module quản lý dự án với tính năng advanced filtering.</p>
+    </div>
+  </div>
+);
+
+const Campaigns = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý chiến dịch</h1>
+        <p className="text-gray-600 mt-1">Tạo và quản lý chiến dịch marketing</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo chiến dịch
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Chiến dịch hiện tại</h2>
+      <p className="text-gray-600">Hierarchy: Campaign → Service → Task</p>
+    </div>
+  </div>
+);
+
+const TaskTemplates = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Template dịch vụ</h1>
+        <p className="text-gray-600 mt-1">Tạo và quản lý template cho các dịch vụ</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo template
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Template Designer</h2>
+      <p className="text-gray-600">Drag-drop template designer với các component types.</p>
+    </div>
+  </div>
+);
+
+const Contracts = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý hợp đồng</h1>
+        <p className="text-gray-600 mt-1">Theo dõi hợp đồng và thỏa thuận</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo hợp đồng
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Danh sách hợp đồng</h2>
+      <p className="text-gray-600">Quản lý lifecycle hợp đồng với khách hàng.</p>
+    </div>
+  </div>
+);
+
+const Invoices = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý hóa đơn</h1>
+        <p className="text-gray-600 mt-1">Tạo và theo dõi hóa đơn thanh toán</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo hóa đơn
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Danh sách hóa đơn</h2>
+      <p className="text-gray-600">Auto-numbering system và tracking thanh toán.</p>
+    </div>
+  </div>
+);
+
+const FinancialReports = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tài chính</h1>
+      <p className="text-gray-600 mt-1">Thống kê và phân tích tài chính</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Dashboard tài chính</h2>
+      <p className="text-gray-600">Biểu đồ doanh thu, chi phí và lợi nhuận.</p>
+    </div>
+  </div>
+);
+
+const Opportunities = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Cơ hội bán hàng</h1>
+        <p className="text-gray-600 mt-1">Theo dõi và quản lý cơ hội kinh doanh</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Thêm cơ hội
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Pipeline bán hàng</h2>
+      <p className="text-gray-600">Theo dõi leads và conversion rates.</p>
+    </div>
+  </div>
+);
+
+const SalesReports = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Báo cáo bán hàng</h1>
+      <p className="text-gray-600 mt-1">Phân tích hiệu suất bán hàng</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Thống kê bán hàng</h2>
+      <p className="text-gray-600">Revenue, conversion rates và performance metrics.</p>
+    </div>
+  </div>
+);
+
+const Documents = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý tài liệu</h1>
+        <p className="text-gray-600 mt-1">Lưu trữ và quản lý tài liệu dự án</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Thêm tài liệu
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Thư mục tài liệu</h2>
+      <p className="text-gray-600">Folder structure với permission-based access.</p>
+    </div>
+  </div>
+);
+
+const Reports = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
+      <p className="text-gray-600 mt-1">Dashboard và analytics tổng hợp</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Dashboard analytics</h2>
+      <p className="text-gray-600">Real-time charts và KPI tracking.</p>
+    </div>
+  </div>
+);
+
+const Account = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Tài khoản của tôi</h1>
+      <p className="text-gray-600 mt-1">Quản lý thông tin cá nhân và cài đặt</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Thông tin cá nhân</h2>
+      <p className="text-gray-600">Profile management và password changes.</p>
+    </div>
+  </div>
+);
+
+const Settings = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+      <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">User Management</h2>
+      <p className="text-gray-600">Quản lý người dùng và phân quyền.</p>
+    </div>
+  </div>
+);
 
 export default App;
