@@ -186,7 +186,7 @@ function App() {
                   <Route path="/task-templates" element={<TemplatesComponent />} />
                   <Route path="/contracts" element={<Contracts />} />
                   <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/expenses" element={<ExpenseOverview />} />
+                  <Route path="/expenses" element={<ExpenseManagement />} />
                   <Route path="/campaigns" element={<CampaignsComponent />} />
                   <Route path="/campaigns/:id" element={<CampaignDetailComponent />} />
                   <Route path="/documents" element={<DocumentsComponent />} />
