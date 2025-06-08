@@ -1332,12 +1332,6 @@ const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, 
 // Environment variables
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// Auth context
-const AuthContext = createContext();
-
-// Export AuthContext for use in other components
-export { AuthContext };
-
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
