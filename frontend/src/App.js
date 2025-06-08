@@ -12,12 +12,17 @@ export { AuthContext };
 
 // Environment variables - Dynamic backend URL detection
 const getBackendURL = () => {
+  // Check if we're in production (external domain)
+  if (window.location.hostname.includes('preview.emergentagent.com')) {
+    // In production, backend should be accessible through the same domain
+    return window.location.origin + '/api/backend';
+  }
   // If in development (localhost), use localhost backend
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8001';
   }
-  // If in production, use current origin
-  return window.location.origin;
+  // Fallback
+  return 'http://localhost:8001';
 };
 
 const API = getBackendURL();
