@@ -158,13 +158,18 @@ function App() {
               <Route path="/clients" element={<Clients />} />
               <Route path="/task" element={<Task />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/campaigns" element={<Campaigns />} />
+              <Route path="/task-templates" element={<TaskTemplates />} />
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/invoices" element={<Invoices />} />
-              <Route path="/campaigns" element={<Campaigns />} />
+              <Route path="/expenses" element={<ExpenseManagement />} />
+              <Route path="/financial-reports" element={<FinancialReports />} />
+              <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/sales-reports" element={<SalesReports />} />
               <Route path="/documents" element={<Documents />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/account" element={<Account />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>
