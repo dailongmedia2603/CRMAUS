@@ -518,6 +518,24 @@ const SidebarContent = ({ user, logout }) => {
 const LoginComponent = ({ login }) => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [connectionTest, setConnectionTest] = useState(null);
+
+  const testConnection = async () => {
+    try {
+      setConnectionTest('testing');
+      console.log('🔗 Testing connection to:', API);
+      
+      // Test basic connectivity
+      const response = await axios.get(`${API}/api/`, { timeout: 5000 });
+      console.log('✅ Connection test response:', response.data);
+      setConnectionTest('success');
+      toast.success('Kết nối backend thành công!');
+    } catch (error) {
+      console.error('❌ Connection test failed:', error);
+      setConnectionTest('failed');
+      toast.error(`Lỗi kết nối: ${error.message}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
