@@ -2997,6 +2997,7 @@ const Reports = () => <div className="modern-card p-6"><h2>Reports</h2></div>;
 const FinancialReports = () => <div className="modern-card p-6"><h2>Financial Reports</h2></div>;
 const Opportunities = () => <div className="modern-card p-6"><h2>Opportunities</h2></div>;
 const SalesReports = () => <div className="modern-card p-6"><h2>Sales Reports</h2></div>;
+}
 
 export default App;
 
