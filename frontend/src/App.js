@@ -3066,7 +3066,7 @@ const Task = () => {
   );
 };
 
-// Remaining component placeholders
+// Component placeholders
 const Contracts = () => <div className="modern-card p-6"><h2>Contracts</h2></div>;
 const Invoices = () => <div className="modern-card p-6"><h2>Invoices</h2></div>;
 const Settings = () => <div className="modern-card p-6"><h2>Settings</h2></div>;
