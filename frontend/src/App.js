@@ -1251,6 +1251,84 @@ const TaskDetailModal = ({ task, onClose }) => {
   );
 };
 
+// Feedback Modal Component
+const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, onAddFeedback }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">
+            Feedback - {task.name}
+            {feedbacks.length > 0 && (
+              <span className="ml-2 bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
+                {feedbacks.length}
+              </span>
+            )}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Feedback List */}
+        <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
+          {feedbacks.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">Chưa có feedback nào</p>
+          ) : (
+            feedbacks.map((feedback) => (
+              <div key={feedback.id} className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-medium text-sm text-gray-900">
+                    {feedback.user_name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(feedback.created_at).toLocaleString('vi-VN')}
+                  </span>
+                </div>
+                <p className="text-gray-700 text-sm">{feedback.message}</p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Add Feedback */}
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Thêm feedback</h3>
+          <div className="flex space-x-2">
+            <textarea
+              value={newFeedback}
+              onChange={(e) => setNewFeedback(e.target.value)}
+              placeholder="Nhập feedback..."
+              rows={3}
+              className="modern-input flex-1"
+            />
+            <button
+              onClick={onAddFeedback}
+              disabled={!newFeedback.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Gửi
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
 // Environment variables
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -2987,8 +3065,6 @@ const Task = () => {
     </div>
   );
 };
-
-// Component placeholders
 const Contracts = () => <div className="modern-card p-6"><h2>Contracts</h2></div>;
 const Invoices = () => <div className="modern-card p-6"><h2>Invoices</h2></div>;
 const Settings = () => <div className="modern-card p-6"><h2>Settings</h2></div>;
@@ -2997,7 +3073,6 @@ const Reports = () => <div className="modern-card p-6"><h2>Reports</h2></div>;
 const FinancialReports = () => <div className="modern-card p-6"><h2>Financial Reports</h2></div>;
 const Opportunities = () => <div className="modern-card p-6"><h2>Opportunities</h2></div>;
 const SalesReports = () => <div className="modern-card p-6"><h2>Sales Reports</h2></div>;
-}
 
 export default App;
 
