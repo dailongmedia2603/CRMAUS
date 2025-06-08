@@ -11,6 +11,7 @@ import CampaignsComponent from "./components/Campaigns";
 import CampaignDetailComponent from "./components/CampaignDetail";
 import TemplatesComponent from "./components/Templates";
 import { ExpenseOverview, ExpenseList, ExpenseConfig } from "./components/ExpenseComponents";
+import ClientDetail from './components/ClientDetail';
 
 const ExpenseManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
