@@ -1973,4 +1973,17 @@ def main_auth_test():
     print("\n=== All tests completed ===")
 
 if __name__ == "__main__":
-    main_auth_test()
+    print("=== Starting Internal Task Management API Tests ===")
+    print(f"Backend URL: {BACKEND_URL}")
+    
+    # Get authentication token
+    if not get_token():
+        print("Failed to authenticate. Exiting tests.")
+    else:
+        # Test internal tasks
+        internal_tasks_ids = test_internal_tasks()
+        
+        # Clean up internal tasks
+        cleanup_internal_tasks()
+        
+        print("\n=== All tests completed ===")
