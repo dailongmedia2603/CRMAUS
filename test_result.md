@@ -141,11 +141,9 @@ test_plan:
     - "Expense Categories API"
     - "Expense Folders API"
     - "Expenses API"
-    - "Internal Task Management API"
   stuck_tasks:
     - "Documents API"
     - "Dashboard API"
-    - "Internal Task Management API"
   test_all: false
   test_priority: "high_first"
 
