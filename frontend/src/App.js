@@ -11,6 +11,54 @@ import CampaignsComponent from "./components/Campaigns";
 import CampaignDetailComponent from "./components/CampaignDetail";
 import TemplatesComponent from "./components/Templates";
 import { ExpenseOverview, ExpenseList, ExpenseConfig } from "./components/ExpenseComponents";
+
+const ExpenseManagement = () => {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`${
+              activeTab === 'overview'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Tổng quan
+          </button>
+          <button
+            onClick={() => setActiveTab('list')}
+            className={`${
+              activeTab === 'list'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Danh sách chi phí
+          </button>
+          <button
+            onClick={() => setActiveTab('config')}
+            className={`${
+              activeTab === 'config'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
+          >
+            Cấu hình
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && <ExpenseOverview />}
+      {activeTab === 'list' && <ExpenseList />}
+      {activeTab === 'config' && <ExpenseConfig />}
+    </div>
+  );
+};
 import ClientDetail from './components/ClientDetail';
 
 // Environment variables
