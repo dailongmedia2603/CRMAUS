@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import time
 import uuid
 
-# Backend URL
-BACKEND_URL = "https://061ff524-a028-4b9e-b0ac-3a1cd098f8bb.preview.emergentagent.com/api"
+# Backend URL - Updated from review request
+BACKEND_URL = "https://ff669921-0348-4c5c-8297-32b5df32c0fc.preview.emergentagent.com/api"
 
 # Test user credentials
 EMAIL = "admin@example.com"
@@ -17,6 +17,7 @@ created_category_ids = []
 created_folder_ids = []
 created_expense_ids = []
 created_client_ids = []
+created_internal_task_ids = []
 
 def get_token():
     """Get authentication token"""
