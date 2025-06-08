@@ -53,7 +53,7 @@ def test_create_task():
     
     # First, get a user ID to assign tasks to
     response = requests.get(
-        f"{BACKEND_URL}/users/",
+        f"{BACKEND_URL}/api/users/",
         headers=get_headers()
     )
     
