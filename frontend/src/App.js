@@ -16,6 +16,7 @@ import { ExpenseOverview } from "./components/ExpenseComponents.js";
 import ClientsComponent from "./components/Clients.js";
 import ClientDetailComponent from "./components/ClientDetail.js";
 import ProjectDetailComponent from "./components/ProjectDetail.js";
+import HumanResources from "./components/HumanResources.js";
 
 // Auth context
 const AuthContext = createContext();
