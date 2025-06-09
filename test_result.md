@@ -181,6 +181,7 @@ metadata:
 test_plan:
   current_focus:
     - "User Management API"
+    - "Task Completion Popup"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -208,3 +209,5 @@ agent_communication:
     message: "Tested creating an internal task with the specified parameters: name='Test task', description='Test description', assigned_to=a valid user ID, deadline=future date, priority='normal', document_links=['https://example.com']. The task was successfully created with all parameters correctly stored. Verified that the task appears in the task list and can be retrieved by its ID. All task details matched the input parameters. The task was also successfully deleted. No errors were encountered during the testing process. The internal task management API is working correctly."
   - agent: "testing"
     message: "Successfully tested the internal task feedback API. Created a new internal task, added feedback with message 'Test feedback message', and verified that the feedback was correctly stored and retrieved. The GET /api/internal-tasks/{task_id}/feedback/ endpoint returns the feedback with the correct user_name and message. When the task is deleted, the associated feedback is also deleted. The feedback system works correctly and stores the user information properly."
+  - agent: "testing"
+    message: "Attempted to test the task completion popup in the task management page. We were able to successfully log in and access the task management page. We found a task with the 'Hoàn thành' (Complete) button, but when we tried to click it, the popup did not appear as expected. We tried multiple approaches including direct clicks and using mouse coordinates, but the popup still did not appear. This suggests there might be an issue with the event handling for the 'Hoàn thành' button or with the popup implementation itself. The preview environment was also unavailable at times during testing, which made it difficult to thoroughly test this feature."
