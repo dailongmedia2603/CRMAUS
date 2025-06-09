@@ -72,7 +72,7 @@ const Campaigns = () => {
         return;
       }
 
-      await axios.put(`${API_BASE_URL}/api/campaigns/${editingCampaign.id}`, formData);
+      await axios.put(`/api/campaigns/${editingCampaign.id}`, formData);
       toast.success('Cập nhật chiến dịch thành công');
       setShowModal(false);
       setEditingCampaign(null);
