@@ -1798,9 +1798,13 @@ const TaskRow = React.memo(({
         <td className="px-6 py-4 whitespace-nowrap">
           <button
             onClick={() => onFeedback(task)}
-            className="text-sm bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+            className={`text-sm px-3 py-1 rounded hover:bg-gray-200 transition-colors ${
+              feedbackCounts[task.id] > 0 
+                ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                : 'bg-gray-100 text-gray-700'
+            }`}
           >
-            Feedback (0)
+            Feedback ({feedbackCounts[task.id] || 0})
           </button>
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
