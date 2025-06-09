@@ -1832,23 +1832,16 @@ const TaskRow = ({
       {/* Report Link Modal */}
       {showReportModal && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+          className="modal-overlay"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSubmitting) {
               handleCloseModal();
             }
           }}
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <div 
-            className="bg-white rounded-xl p-8 w-full max-w-lg shadow-2xl transform transition-all"
+            className="modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{ 
-              maxHeight: '90vh',
-              minHeight: '300px',
-              position: 'relative',
-              zIndex: 10000
-            }}
           >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-gray-900">Hoàn thành công việc</h3>
