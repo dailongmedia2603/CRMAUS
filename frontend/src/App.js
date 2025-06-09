@@ -1009,13 +1009,7 @@ const Task = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportTask, setReportTask] = useState(null);
   const [reportLink, setReportLink] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Report modal state
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportTask, setReportTask] = useState(null);
-  const [reportLink, setReportLink] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
     fetchTasks();
