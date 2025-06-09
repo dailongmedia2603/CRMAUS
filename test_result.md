@@ -133,6 +133,21 @@
         agent: "testing"
         comment: "Retested all the requested internal task management API endpoints with the local backend URL (http://localhost:8001). All endpoints are working correctly: GET /api/internal-tasks/ successfully retrieves the task list, POST /api/internal-tasks/ creates new tasks with all required fields, GET /api/internal-tasks/statistics returns accurate statistics including counts by status and priority, PUT /api/internal-tasks/{id} updates tasks correctly, DELETE /api/internal-tasks/{id} deletes tasks successfully, PATCH /api/internal-tasks/{id}/status properly updates task status (verified not_started -> in_progress transition), and POST /api/internal-tasks/bulk-delete successfully deletes multiple tasks. All tests passed with proper authentication."
 
+  - task: "User Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the user management API endpoints: PUT /api/users/me/, PUT /api/users/me/password, PUT /api/users/{user_id}/password, DELETE /api/users/{user_id}, PUT /api/users/{user_id}/status"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all user management API endpoints. The PUT /api/users/me/ endpoint correctly updates the current user's information. The PUT /api/users/me/password endpoint successfully changes the current user's password and requires the current password for verification. The PUT /api/users/{user_id}/password endpoint allows admins to reset other users' passwords. The DELETE /api/users/{user_id} endpoint correctly deletes users when called by an admin. The PUT /api/users/{user_id}/status endpoint allows admins to activate/deactivate users. All endpoints properly enforce permissions, with admin-only operations correctly rejecting requests from non-admin users."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
@@ -159,3 +174,5 @@ agent_communication:
     message: "Successfully tested all internal task management API endpoints using the local backend URL (http://localhost:8001/api). All endpoints are working correctly including task creation, listing, filtering, updating, status transitions, feedback system, and bulk operations. The API properly validates input data, enforces required fields (like report_link for completed tasks), and returns enriched data with user names. All tests passed successfully."
   - agent: "testing"
     message: "Retested all the requested internal task management API endpoints with the local backend URL (http://localhost:8001). All endpoints are working correctly: GET /api/internal-tasks/ successfully retrieves the task list, POST /api/internal-tasks/ creates new tasks with all required fields, GET /api/internal-tasks/statistics returns accurate statistics, PUT /api/internal-tasks/{id} updates tasks correctly, DELETE /api/internal-tasks/{id} deletes tasks successfully, PATCH /api/internal-tasks/{id}/status properly updates task status, and POST /api/internal-tasks/bulk-delete successfully deletes multiple tasks. All tests passed with proper authentication."
+  - agent: "testing"
+    message: "Successfully tested all user management API endpoints. The PUT /api/users/me/ endpoint correctly updates the current user's information. The PUT /api/users/me/password endpoint successfully changes the current user's password and requires the current password for verification. The PUT /api/users/{user_id}/password endpoint allows admins to reset other users' passwords. The DELETE /api/users/{user_id} endpoint correctly deletes users when called by an admin. The PUT /api/users/{user_id}/status endpoint allows admins to activate/deactivate users. All endpoints properly enforce permissions, with admin-only operations correctly rejecting requests from non-admin users."
