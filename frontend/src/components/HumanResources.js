@@ -219,7 +219,7 @@ const HumanResources = ({ user }) => {
       // Note: This would need a bulk update API endpoint
       // For now, we'll update one by one
       for (const employeeId of selectedEmployees) {
-        await axios.put(`${API}/users/${employeeId}/status`, 
+        await axios.put(`${API}/api/users/${employeeId}/status`, 
           { is_active: isActive }
         );
       }
