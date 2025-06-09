@@ -66,6 +66,9 @@ class User(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
+    # Enriched team information
+    team_ids: List[str] = []  # Computed field from team_members collection
+    team_names: List[str] = []  # Computed field for display
 
 class UserInDB(User):
     hashed_password: str
