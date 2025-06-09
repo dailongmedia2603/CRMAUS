@@ -13,6 +13,8 @@ import CampaignDetailComponent from "./components/CampaignDetail.js";
 import DocumentsComponent from "./components/Documents.js";
 import TemplatesComponent from "./components/Templates.js";
 import { ExpenseOverview } from "./components/ExpenseComponents.js";
+import ClientsComponent from "./components/Clients.js";
+import ClientDetailComponent from "./components/ClientDetail.js";
 
 // Auth context
 const AuthContext = createContext();
