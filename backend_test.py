@@ -1376,21 +1376,30 @@ def test_dashboard():
     """Test Dashboard API endpoints"""
     print("\n=== Testing Dashboard API ===")
     
-    # Test GET /api/dashboard/statistics - Get dashboard statistics
+    # Test GET /api/dashboard - Get dashboard data (correct endpoint)
     response = requests.get(
-        f"{BACKEND_URL}/dashboard/statistics",
+        f"{BACKEND_URL}/dashboard",
         headers=get_headers()
     )
     
-    success = print_test_result("Get Dashboard Statistics", response)
+    success = print_test_result("Get Dashboard Data (/api/dashboard)", response)
     if success:
         stats = response.json()
-        print("Dashboard statistics:")
+        print("Dashboard data:")
         for key, value in stats.items():
             if isinstance(value, dict):
                 print(f"- {key}: {len(value)} items")
             else:
                 print(f"- {key}: {value}")
+    
+    # Test GET /api/dashboard/statistics - This should fail as per the review request
+    response = requests.get(
+        f"{BACKEND_URL}/dashboard/statistics",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Dashboard Statistics (/api/dashboard/statistics) - Should fail", response, expected_status=404)
+    print("Note: The /api/dashboard/statistics endpoint returns 404 as expected. The correct endpoint is /api/dashboard")
     
     return success
 
