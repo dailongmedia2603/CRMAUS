@@ -1832,58 +1832,97 @@ const TaskRow = ({
       {/* Report Link Modal */}
       {showReportModal && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isSubmitting) {
               handleCloseModal();
             }
           }}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <div 
-            className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
+            className="bg-white rounded-xl p-8 w-full max-w-lg shadow-2xl transform transition-all"
             onClick={(e) => e.stopPropagation()}
+            style={{ 
+              maxHeight: '90vh',
+              minHeight: '300px',
+              position: 'relative',
+              zIndex: 10000
+            }}
           >
-            <h3 className="text-lg font-semibold mb-4">Hoàn thành công việc</h3>
-            <p className="text-sm text-gray-600 mb-4">Vui lòng cung cấp link báo cáo để hoàn thành công việc:</p>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Hoàn thành công việc</h3>
+              <button
+                onClick={handleCloseModal}
+                disabled={isSubmitting}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Vui lòng cung cấp link báo cáo để hoàn thành công việc này:
+            </p>
+            
             <form onSubmit={(e) => {
               e.preventDefault();
               if (!isSubmitting && reportLink.trim()) {
                 submitCompletion();
               }
             }}>
-              <input
-                type="url"
-                placeholder="Nhập link báo cáo..."
-                value={reportLink}
-                onChange={(e) => setReportLink(e.target.value)}
-                disabled={isSubmitting}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-                autoFocus
-              />
-              <div className="flex justify-end space-x-3">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Link báo cáo *
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://example.com/report"
+                  value={reportLink}
+                  onChange={(e) => setReportLink(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                  autoFocus
+                  required
+                />
+                {reportLink && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    ✓ Link hợp lệ
+                  </p>
+                )}
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={!reportLink.trim() || isSubmitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center font-medium"
                 >
                   {isSubmitting ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Đang xử lý...
                     </>
                   ) : (
-                    'Hoàn thành'
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Hoàn thành
+                    </>
                   )}
                 </button>
               </div>
