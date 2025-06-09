@@ -3174,6 +3174,504 @@ async def duplicate_template(
     
     return Template(**new_template)
 
+# =================== TEAM MANAGEMENT ENDPOINTS ===================
+
+@api_router.post("/teams/", response_model=Team)
+async def create_team(team: TeamCreate, current_user: User = Depends(get_current_active_user)):
+    """Tạo team mới"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    team_data = team.dict()
+    team_obj = Team(**team_data, created_by=current_user.id)
+    await db.teams.insert_one(team_obj.dict())
+    return team_obj
+
+@api_router.get("/teams/", response_model=List[Team])
+async def get_teams(
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách teams"""
+    query = {}
+    
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    
+    if is_active is not None:
+        query["is_active"] = is_active
+    
+    teams = await db.teams.find(query).sort("created_at", -1).to_list(length=100)
+    
+    # Enrich with member count
+    for team in teams:
+        member_count = await db.team_members.count_documents({"team_id": team["id"]})
+        team["member_count"] = member_count
+    
+    return teams
+
+@api_router.get("/teams/{team_id}", response_model=Team)
+async def get_team(team_id: str, current_user: User = Depends(get_current_active_user)):
+    """Lấy chi tiết team"""
+    team = await db.teams.find_one({"id": team_id})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # Enrich with member count
+    member_count = await db.team_members.count_documents({"team_id": team_id})
+    team["member_count"] = member_count
+    
+    return team
+
+@api_router.put("/teams/{team_id}", response_model=Team)
+async def update_team(
+    team_id: str, 
+    team_update: TeamUpdate, 
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    team = await db.teams.find_one({"id": team_id})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    update_data = team_update.dict(exclude_unset=True)
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.teams.update_one({"id": team_id}, {"$set": update_data})
+    
+    # Return updated team
+    updated_team = await db.teams.find_one({"id": team_id})
+    member_count = await db.team_members.count_documents({"team_id": team_id})
+    updated_team["member_count"] = member_count
+    
+    return updated_team
+
+@api_router.delete("/teams/{team_id}")
+async def delete_team(team_id: str, current_user: User = Depends(get_current_active_user)):
+    """Xóa team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Xóa team members trước
+    await db.team_members.delete_many({"team_id": team_id})
+    
+    result = await db.teams.delete_one({"id": team_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    return {"detail": "Team deleted successfully"}
+
+# =================== TEAM MEMBERSHIP ENDPOINTS ===================
+
+@api_router.post("/teams/{team_id}/members/", response_model=TeamMember)
+async def add_team_member(
+    team_id: str,
+    user_id: str = Body(embed=True),
+    role: str = Body(default="member", embed=True),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Thêm thành viên vào team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Kiểm tra team tồn tại
+    team = await db.teams.find_one({"id": team_id})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # Kiểm tra user tồn tại
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Kiểm tra đã là thành viên chưa
+    existing_member = await db.team_members.find_one({"team_id": team_id, "user_id": user_id})
+    if existing_member:
+        raise HTTPException(status_code=400, detail="User is already a team member")
+    
+    member_data = TeamMember(
+        team_id=team_id,
+        user_id=user_id,
+        role=role,
+        created_by=current_user.id,
+        user_name=user["full_name"],
+        user_email=user["email"],
+        user_role=user["role"]
+    )
+    
+    await db.team_members.insert_one(member_data.dict())
+    return member_data
+
+@api_router.get("/teams/{team_id}/members/", response_model=List[TeamMember])
+async def get_team_members(team_id: str, current_user: User = Depends(get_current_active_user)):
+    """Lấy danh sách thành viên của team"""
+    members = await db.team_members.find({"team_id": team_id}).to_list(length=100)
+    
+    # Enrich with user information
+    for member in members:
+        user = await db.users.find_one({"id": member["user_id"]})
+        if user:
+            member["user_name"] = user["full_name"]
+            member["user_email"] = user["email"]
+            member["user_role"] = user["role"]
+    
+    return members
+
+@api_router.delete("/teams/{team_id}/members/{user_id}")
+async def remove_team_member(
+    team_id: str, 
+    user_id: str, 
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa thành viên khỏi team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.team_members.delete_one({"team_id": team_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Team member not found")
+    
+    return {"detail": "Team member removed successfully"}
+
+@api_router.put("/teams/{team_id}/members/{user_id}")
+async def update_team_member_role(
+    team_id: str,
+    user_id: str,
+    new_role: str = Body(embed=True),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật role của thành viên trong team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    if new_role not in ["leader", "member"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    result = await db.team_members.update_one(
+        {"team_id": team_id, "user_id": user_id},
+        {"$set": {"role": new_role}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Team member not found")
+    
+    return {"detail": "Team member role updated successfully"}
+
+# =================== PERFORMANCE TRACKING ENDPOINTS ===================
+
+@api_router.get("/performance/users/{user_id}")
+async def get_user_performance(
+    user_id: str,
+    period_type: str = "monthly",  # daily, weekly, monthly, quarterly, yearly
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy performance metrics của user"""
+    # Kiểm tra quyền truy cập
+    if current_user.role not in ["admin", "manager"] and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Validate period_type
+    if period_type not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
+        raise HTTPException(status_code=400, detail="Invalid period_type")
+    
+    # Calculate date range
+    if not start_date or not end_date:
+        end_dt = datetime.utcnow()
+        if period_type == "daily":
+            start_dt = end_dt - timedelta(days=1)
+        elif period_type == "weekly":
+            start_dt = end_dt - timedelta(weeks=1)
+        elif period_type == "monthly":
+            start_dt = end_dt - timedelta(days=30)
+        elif period_type == "quarterly":
+            start_dt = end_dt - timedelta(days=90)
+        elif period_type == "yearly":
+            start_dt = end_dt - timedelta(days=365)
+    else:
+        start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+    
+    # Calculate performance metrics
+    performance = await calculate_user_performance(user_id, start_dt, end_dt, period_type)
+    return performance
+
+@api_router.get("/performance/teams/{team_id}")
+async def get_team_performance(
+    team_id: str,
+    period_type: str = "monthly",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy performance metrics của team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Validate period_type
+    if period_type not in ["daily", "weekly", "monthly", "quarterly", "yearly"]:
+        raise HTTPException(status_code=400, detail="Invalid period_type")
+    
+    # Get team members
+    team_members = await db.team_members.find({"team_id": team_id}).to_list(length=100)
+    user_ids = [tm["user_id"] for tm in team_members]
+    
+    if not user_ids:
+        return {"team_id": team_id, "members": [], "aggregate_metrics": {}}
+    
+    # Calculate date range
+    if not start_date or not end_date:
+        end_dt = datetime.utcnow()
+        if period_type == "daily":
+            start_dt = end_dt - timedelta(days=1)
+        elif period_type == "weekly":
+            start_dt = end_dt - timedelta(weeks=1)
+        elif period_type == "monthly":
+            start_dt = end_dt - timedelta(days=30)
+        elif period_type == "quarterly":
+            start_dt = end_dt - timedelta(days=90)
+        elif period_type == "yearly":
+            start_dt = end_dt - timedelta(days=365)
+    else:
+        start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+    
+    # Calculate performance for each member
+    member_performances = []
+    total_metrics = {
+        "total_tasks": 0,
+        "completed_tasks": 0,
+        "total_projects": 0,
+        "completed_projects": 0,
+        "revenue_contribution": 0.0,
+        "avg_performance_score": 0.0
+    }
+    
+    for user_id in user_ids:
+        performance = await calculate_user_performance(user_id, start_dt, end_dt, period_type)
+        member_performances.append(performance)
+        
+        # Aggregate metrics
+        total_metrics["total_tasks"] += performance["total_tasks"]
+        total_metrics["completed_tasks"] += performance["completed_tasks"]
+        total_metrics["total_projects"] += performance["total_projects"]
+        total_metrics["completed_projects"] += performance["completed_projects"]
+        total_metrics["revenue_contribution"] += performance["revenue_contribution"]
+    
+    # Calculate average performance score
+    if member_performances:
+        total_metrics["avg_performance_score"] = sum(p["overall_performance_score"] for p in member_performances) / len(member_performances)
+    
+    return {
+        "team_id": team_id,
+        "period_type": period_type,
+        "start_date": start_dt,
+        "end_date": end_dt,
+        "members": member_performances,
+        "aggregate_metrics": total_metrics
+    }
+
+@api_router.get("/performance/summary", response_model=List[PerformanceSummary])
+async def get_performance_summary(
+    period_type: str = "monthly",
+    team_id: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy tổng quan performance của tất cả users hoặc theo team"""
+    if current_user.role not in ["admin", "manager"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Get users (filtered by team if specified)
+    if team_id:
+        team_members = await db.team_members.find({"team_id": team_id}).to_list(length=100)
+        user_ids = [tm["user_id"] for tm in team_members]
+        users = await db.users.find({"id": {"$in": user_ids}}).to_list(length=100)
+    else:
+        users = await db.users.find({"is_active": True}).to_list(length=100)
+    
+    # Calculate performance summary for each user
+    summaries = []
+    end_dt = datetime.utcnow()
+    
+    if period_type == "daily":
+        start_dt = end_dt - timedelta(days=1)
+        prev_start = start_dt - timedelta(days=1)
+        prev_end = start_dt
+    elif period_type == "weekly":
+        start_dt = end_dt - timedelta(weeks=1)
+        prev_start = start_dt - timedelta(weeks=1)
+        prev_end = start_dt
+    elif period_type == "monthly":
+        start_dt = end_dt - timedelta(days=30)
+        prev_start = start_dt - timedelta(days=30)
+        prev_end = start_dt
+    elif period_type == "quarterly":
+        start_dt = end_dt - timedelta(days=90)
+        prev_start = start_dt - timedelta(days=90)
+        prev_end = start_dt
+    elif period_type == "yearly":
+        start_dt = end_dt - timedelta(days=365)
+        prev_start = start_dt - timedelta(days=365)
+        prev_end = start_dt
+    
+    for user in users:
+        # Current period performance
+        current_perf = await calculate_user_performance(user["id"], start_dt, end_dt, period_type)
+        
+        # Previous period performance for trend calculation
+        prev_perf = await calculate_user_performance(user["id"], prev_start, prev_end, period_type)
+        
+        # Calculate trends
+        task_completion_trend = 0.0
+        performance_trend = 0.0
+        
+        if prev_perf["task_completion_rate"] > 0:
+            task_completion_trend = ((current_perf["task_completion_rate"] - prev_perf["task_completion_rate"]) / prev_perf["task_completion_rate"]) * 100
+        
+        if prev_perf["overall_performance_score"] > 0:
+            performance_trend = ((current_perf["overall_performance_score"] - prev_perf["overall_performance_score"]) / prev_perf["overall_performance_score"]) * 100
+        
+        # Get team names
+        team_memberships = await db.team_members.find({"user_id": user["id"]}).to_list(length=100)
+        team_ids = [tm["team_id"] for tm in team_memberships]
+        team_names = []
+        if team_ids:
+            teams = await db.teams.find({"id": {"$in": team_ids}}).to_list(length=100)
+            team_names = [team["name"] for team in teams]
+        
+        summary = PerformanceSummary(
+            user_id=user["id"],
+            user_name=user["full_name"],
+            user_email=user["email"],
+            user_role=user["role"],
+            team_names=team_names,
+            current_performance=PerformanceMetric(
+                user_id=user["id"],
+                period_type=period_type,
+                period_start=start_dt,
+                period_end=end_dt,
+                **current_perf
+            ),
+            task_completion_trend=task_completion_trend,
+            performance_trend=performance_trend,
+            rank_change=0  # Would need more complex ranking logic
+        )
+        
+        summaries.append(summary)
+    
+    # Sort by performance score
+    summaries.sort(key=lambda x: x.current_performance.overall_performance_score, reverse=True)
+    
+    # Add rank information
+    for i, summary in enumerate(summaries):
+        summary.current_performance.productivity_rank = i + 1
+    
+    return summaries
+
+# Performance calculation helper function
+async def calculate_user_performance(user_id: str, start_date: datetime, end_date: datetime, period_type: str) -> dict:
+    """Calculate comprehensive performance metrics for a user"""
+    
+    # Task metrics from internal_tasks
+    task_query = {
+        "assigned_to": user_id,
+        "created_at": {"$gte": start_date, "$lte": end_date}
+    }
+    
+    total_tasks = await db.internal_tasks.count_documents(task_query)
+    completed_tasks = await db.internal_tasks.count_documents({**task_query, "status": "completed"})
+    overdue_tasks = await db.internal_tasks.count_documents({
+        **task_query, 
+        "deadline": {"$lt": datetime.utcnow()},
+        "status": {"$ne": "completed"}
+    })
+    
+    task_completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
+    
+    # Calculate average task completion time
+    completed_task_cursor = db.internal_tasks.find({
+        **task_query,
+        "status": "completed",
+        "updated_at": {"$exists": True}
+    })
+    
+    avg_completion_time = None
+    completion_times = []
+    async for task in completed_task_cursor:
+        if task.get("created_at") and task.get("updated_at"):
+            completion_time = (task["updated_at"] - task["created_at"]).total_seconds() / 3600  # hours
+            completion_times.append(completion_time)
+    
+    if completion_times:
+        avg_completion_time = sum(completion_times) / len(completion_times)
+    
+    # Project metrics
+    project_query = {
+        "$or": [
+            {"manager_ids": user_id},
+            {"account_ids": user_id},
+            {"content_ids": user_id},
+            {"design_ids": user_id},
+            {"editor_ids": user_id},
+            {"sale_ids": user_id}
+        ],
+        "created_at": {"$gte": start_date, "$lte": end_date}
+    }
+    
+    total_projects = await db.projects.count_documents(project_query)
+    active_projects = await db.projects.count_documents({**project_query, "status": "in_progress"})
+    completed_projects = await db.projects.count_documents({**project_query, "status": "completed"})
+    
+    # Project involvement score (simple calculation)
+    project_involvement_score = (completed_projects * 10 + active_projects * 5) if total_projects > 0 else 0.0
+    
+    # Quality metrics from feedback
+    feedback_query = {
+        "user_id": user_id,
+        "created_at": {"$gte": start_date, "$lte": end_date}
+    }
+    
+    total_feedbacks = await db.internal_task_feedbacks.count_documents(feedback_query)
+    
+    # Revenue contribution from projects
+    revenue_projects = await db.projects.find(project_query).to_list(length=100)
+    revenue_contribution = sum(p.get("contract_value", 0) for p in revenue_projects) / len(revenue_projects) if revenue_projects else 0.0
+    
+    # Calculate overall performance score
+    score_components = {
+        "task_completion": task_completion_rate * 0.3,  # 30%
+        "project_involvement": min(project_involvement_score, 100) * 0.25,  # 25%
+        "quality": min(total_feedbacks * 5, 100) * 0.2,  # 20%
+        "timeliness": max(0, 100 - (overdue_tasks / max(total_tasks, 1) * 100)) * 0.25  # 25%
+    }
+    
+    overall_performance_score = sum(score_components.values())
+    
+    return {
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks,
+        "overdue_tasks": overdue_tasks,
+        "task_completion_rate": task_completion_rate,
+        "avg_task_completion_time": avg_completion_time,
+        "total_projects": total_projects,
+        "active_projects": active_projects,
+        "completed_projects": completed_projects,
+        "project_involvement_score": project_involvement_score,
+        "avg_feedback_rating": None,  # Would need rating data in feedback
+        "total_feedbacks": total_feedbacks,
+        "revenue_contribution": revenue_contribution,
+        "overall_performance_score": overall_performance_score,
+        "productivity_rank": None  # Calculated in summary endpoint
+    }
+
 # Root endpoint
 @api_router.get("/")
 async def root():
