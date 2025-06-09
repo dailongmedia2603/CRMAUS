@@ -691,6 +691,21 @@ async def read_users(skip: int = 0, limit: int = 100, current_user: User = Depen
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not enough permissions")
     users = await db.users.find().skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich with team information
+    for user in users:
+        # Get team memberships for this user
+        team_memberships = await db.team_members.find({"user_id": user["id"]}).to_list(length=100)
+        team_ids = [tm["team_id"] for tm in team_memberships]
+        user["team_ids"] = team_ids
+        
+        # Get team names
+        if team_ids:
+            teams = await db.teams.find({"id": {"$in": team_ids}}).to_list(length=100)
+            user["team_names"] = [team["name"] for team in teams]
+        else:
+            user["team_names"] = []
+    
     return users
 
 @api_router.get("/users/by-role/{role}", response_model=List[User])
