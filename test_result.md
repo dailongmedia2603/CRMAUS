@@ -171,9 +171,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Expense Categories API"
-    - "Expense Folders API"
-    - "Expenses API"
+    - "User Management API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
