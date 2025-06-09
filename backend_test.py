@@ -439,6 +439,325 @@ def test_internal_task_management():
     
     return create_success and list_success and get_success and add_feedback_success and get_feedback_success and delete_success
 
+def test_team_management():
+    """Test Team Management API endpoints"""
+    print("\n=== Testing Team Management API ===")
+    
+    # Test GET /api/teams/ - List teams
+    response = requests.get(
+        f"{BACKEND_URL}/teams/",
+        headers=get_headers()
+    )
+    
+    list_teams_success = print_test_result("List Teams", response)
+    if list_teams_success:
+        teams = response.json()
+        print(f"Found {len(teams)} teams")
+    
+    # Test POST /api/teams/ - Create team
+    new_team = {
+        "name": "Marketing Team",
+        "description": "Digital marketing specialists",
+        "color": "#4F46E5",  # Indigo color
+        "is_active": True
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/teams/",
+        headers=get_headers(),
+        json=new_team
+    )
+    
+    create_team_success = print_test_result("Create Team", response)
+    team_id = None
+    
+    if create_team_success:
+        created_team = response.json()
+        team_id = created_team["id"]
+        print(f"Created new team: {created_team['name']} (ID: {team_id})")
+        print(f"Team details: {created_team['description']}, Color: {created_team['color']}")
+        
+        # Test GET /api/teams/{team_id} - Get team details
+        response = requests.get(
+            f"{BACKEND_URL}/teams/{team_id}",
+            headers=get_headers()
+        )
+        
+        get_team_success = print_test_result("Get Team Details", response)
+        
+        if get_team_success:
+            team = response.json()
+            print(f"Team details: {team['name']} - {team['description']}")
+            
+            # Verify team details match what we created
+            if (team["name"] == new_team["name"] and 
+                team["description"] == new_team["description"] and
+                team["color"] == new_team["color"]):
+                print("✅ Team details match created team")
+            else:
+                print("❌ Team details do not match created team")
+                get_team_success = False
+        
+        # Test PUT /api/teams/{team_id} - Update team
+        update_data = {
+            "name": "Digital Marketing Team",
+            "description": "Specialists in digital marketing and social media"
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/teams/{team_id}",
+            headers=get_headers(),
+            json=update_data
+        )
+        
+        update_team_success = print_test_result("Update Team", response)
+        
+        if update_team_success:
+            updated_team = response.json()
+            print(f"Updated team: {updated_team['name']} - {updated_team['description']}")
+            
+            # Verify team details were updated
+            if (updated_team["name"] == update_data["name"] and 
+                updated_team["description"] == update_data["description"]):
+                print("✅ Team details were updated correctly")
+            else:
+                print("❌ Team details were not updated correctly")
+                update_team_success = False
+        
+        # Get an active user to add as team member
+        response = requests.get(
+            f"{BACKEND_URL}/users/",
+            headers=get_headers()
+        )
+        
+        if response.status_code != 200:
+            print("❌ Failed to get users list")
+            print(f"Response: {response.text}")
+            add_member_success = False
+            get_members_success = False
+            update_member_success = False
+            remove_member_success = False
+        else:
+            users = response.json()
+            active_users = [user for user in users if user["is_active"]]
+            
+            if not active_users:
+                print("❌ No active users found for team membership")
+                add_member_success = False
+                get_members_success = False
+                update_member_success = False
+                remove_member_success = False
+            else:
+                user_to_add = active_users[0]
+                user_id = user_to_add["id"]
+                print(f"Using user for team membership: {user_to_add['full_name']} (ID: {user_id})")
+                
+                # Test POST /api/teams/{team_id}/members/ - Add team member
+                member_data = {
+                    "user_id": user_id,
+                    "role": "member"
+                }
+                
+                response = requests.post(
+                    f"{BACKEND_URL}/teams/{team_id}/members/",
+                    headers=get_headers(),
+                    json=member_data
+                )
+                
+                add_member_success = print_test_result("Add Team Member", response)
+                
+                if add_member_success:
+                    added_member = response.json()
+                    print(f"Added member: {added_member['user_name']} with role: {added_member['role']}")
+                    
+                    # Test GET /api/teams/{team_id}/members/ - Get team members
+                    response = requests.get(
+                        f"{BACKEND_URL}/teams/{team_id}/members/",
+                        headers=get_headers()
+                    )
+                    
+                    get_members_success = print_test_result("Get Team Members", response)
+                    
+                    if get_members_success:
+                        members = response.json()
+                        print(f"Found {len(members)} team members")
+                        
+                        # Verify our added member is in the list
+                        found = any(member["user_id"] == user_id for member in members)
+                        if found:
+                            print("✅ Added member found in members list")
+                        else:
+                            print("❌ Added member not found in members list")
+                            get_members_success = False
+                    
+                    # Test PUT /api/teams/{team_id}/members/{user_id} - Update member role
+                    update_role_data = {
+                        "new_role": "leader"
+                    }
+                    
+                    response = requests.put(
+                        f"{BACKEND_URL}/teams/{team_id}/members/{user_id}",
+                        headers=get_headers(),
+                        json=update_role_data
+                    )
+                    
+                    update_member_success = print_test_result("Update Member Role", response)
+                    
+                    if update_member_success:
+                        print(f"Updated member role to: {update_role_data['new_role']}")
+                        
+                        # Verify role was updated
+                        response = requests.get(
+                            f"{BACKEND_URL}/teams/{team_id}/members/",
+                            headers=get_headers()
+                        )
+                        
+                        if response.status_code == 200:
+                            members = response.json()
+                            member = next((m for m in members if m["user_id"] == user_id), None)
+                            
+                            if member and member["role"] == update_role_data["new_role"]:
+                                print("✅ Member role was updated correctly")
+                            else:
+                                print("❌ Member role was not updated correctly")
+                                update_member_success = False
+                    
+                    # Test DELETE /api/teams/{team_id}/members/{user_id} - Remove team member
+                    response = requests.delete(
+                        f"{BACKEND_URL}/teams/{team_id}/members/{user_id}",
+                        headers=get_headers()
+                    )
+                    
+                    remove_member_success = print_test_result("Remove Team Member", response)
+                    
+                    if remove_member_success:
+                        print(f"Successfully removed member with ID: {user_id}")
+                        
+                        # Verify member was removed
+                        response = requests.get(
+                            f"{BACKEND_URL}/teams/{team_id}/members/",
+                            headers=get_headers()
+                        )
+                        
+                        if response.status_code == 200:
+                            members = response.json()
+                            found = any(member["user_id"] == user_id for member in members)
+                            
+                            if not found:
+                                print("✅ Member was successfully removed")
+                            else:
+                                print("❌ Member was not removed")
+                                remove_member_success = False
+                else:
+                    get_members_success = False
+                    update_member_success = False
+                    remove_member_success = False
+        
+        # Test DELETE /api/teams/{team_id} - Delete team
+        response = requests.delete(
+            f"{BACKEND_URL}/teams/{team_id}",
+            headers=get_headers()
+        )
+        
+        delete_team_success = print_test_result("Delete Team", response)
+        
+        if delete_team_success:
+            print(f"Successfully deleted team with ID: {team_id}")
+            
+            # Verify team is deleted
+            response = requests.get(
+                f"{BACKEND_URL}/teams/{team_id}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 404:
+                print("✅ Team successfully deleted (404 Not Found)")
+            else:
+                print(f"❌ Team not deleted properly: {response.status_code}")
+                delete_team_success = False
+    else:
+        get_team_success = False
+        update_team_success = False
+        add_member_success = False
+        get_members_success = False
+        update_member_success = False
+        remove_member_success = False
+        delete_team_success = False
+    
+    return (list_teams_success and create_team_success and get_team_success and 
+            update_team_success and add_member_success and get_members_success and 
+            update_member_success and remove_member_success and delete_team_success)
+
+def test_performance_endpoints():
+    """Test Performance API endpoints"""
+    print("\n=== Testing Performance API ===")
+    
+    # Get an active user for testing
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    if response.status_code != 200:
+        print("❌ Failed to get users list")
+        print(f"Response: {response.text}")
+        return False
+    
+    users = response.json()
+    active_users = [user for user in users if user["is_active"]]
+    
+    if not active_users:
+        print("❌ No active users found for performance testing")
+        return False
+    
+    test_user = active_users[0]
+    user_id = test_user["id"]
+    print(f"Using user for performance testing: {test_user['full_name']} (ID: {user_id})")
+    
+    # Test GET /api/performance/users/{user_id} - Get user performance
+    # Test with different period types
+    period_types = ["daily", "weekly", "monthly"]
+    user_perf_success = True
+    
+    for period_type in period_types:
+        response = requests.get(
+            f"{BACKEND_URL}/performance/users/{user_id}?period_type={period_type}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result(f"Get User Performance ({period_type})", response)
+        if success:
+            performance = response.json()
+            print(f"User performance ({period_type}):")
+            print(f"- Total tasks: {performance.get('total_tasks', 'N/A')}")
+            print(f"- Completed tasks: {performance.get('completed_tasks', 'N/A')}")
+            print(f"- Task completion rate: {performance.get('task_completion_rate', 'N/A')}")
+            print(f"- Overall performance score: {performance.get('overall_performance_score', 'N/A')}")
+        else:
+            user_perf_success = False
+    
+    # Test GET /api/performance/summary - Get performance summary
+    response = requests.get(
+        f"{BACKEND_URL}/performance/summary",
+        headers=get_headers()
+    )
+    
+    summary_success = print_test_result("Get Performance Summary", response)
+    if summary_success:
+        summary = response.json()
+        print(f"Performance summary: {len(summary)} user records")
+        if len(summary) > 0:
+            print("Sample user performance:")
+            sample = summary[0]
+            print(f"- User: {sample.get('user_name', 'N/A')}")
+            print(f"- Role: {sample.get('user_role', 'N/A')}")
+            print(f"- Performance trend: {sample.get('performance_trend', 'N/A')}")
+            
+            current_perf = sample.get('current_performance', {})
+            print(f"- Current performance score: {current_perf.get('overall_performance_score', 'N/A')}")
+    
+    return user_perf_success and summary_success
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
@@ -448,11 +767,19 @@ def main():
         print("Failed to authenticate. Exiting tests.")
         return
     
+    # Test team management endpoints
+    team_management_success = test_team_management()
+    
+    # Test performance endpoints
+    performance_success = test_performance_endpoints()
+    
     # Test internal task management API with feedback functionality
     internal_task_success = test_internal_task_management()
     
     print("\n=== Test Results ===")
-    print(f"Internal Task Management API with Feedback: {'✅' if internal_task_success else '❌'}")
+    print(f"Team Management API: {'✅' if team_management_success else '❌'}")
+    print(f"Performance API: {'✅' if performance_success else '❌'}")
+    print(f"Internal Task Management API: {'✅' if internal_task_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
