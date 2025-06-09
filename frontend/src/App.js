@@ -1929,8 +1929,15 @@ const TaskRow = React.memo(({
             <form onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('Form submitted with reportLink:', reportLink);
+              console.log('isSubmitting:', isSubmitting);
+              console.log('reportLink.trim():', reportLink.trim());
+              
               if (!isSubmitting && reportLink.trim()) {
+                console.log('Calling submitCompletion...');
                 submitCompletion();
+              } else {
+                console.log('Validation failed:', { isSubmitting, reportLinkEmpty: !reportLink.trim() });
               }
             }}>
               <div className="mb-6">
@@ -1938,11 +1945,12 @@ const TaskRow = React.memo(({
                   Link báo cáo *
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   placeholder="https://example.com/report"
                   value={reportLink}
                   onChange={(e) => {
                     e.stopPropagation();
+                    console.log('Input changed to:', e.target.value);
                     setReportLink(e.target.value);
                   }}
                   onFocus={(e) => e.stopPropagation()}
@@ -1954,7 +1962,7 @@ const TaskRow = React.memo(({
                 />
                 {reportLink && (
                   <p className="text-xs text-gray-500 mt-1">
-                    ✓ Link hợp lệ
+                    ✓ Link đã nhập
                   </p>
                 )}
               </div>
