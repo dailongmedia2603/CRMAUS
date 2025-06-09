@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = '/api';
 
 const Projects = ({ user }) => {
   const navigate = useNavigate();
