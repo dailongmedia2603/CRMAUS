@@ -2740,11 +2740,364 @@ def test_module_tai_khoan_apis():
     
     return token_success and users_success and create_user_success
 
-if __name__ == "__main__":
-    print("=== Starting User Management API Tests ===")
+def test_human_resources_module():
+    """Test the Human Resources module functionality"""
+    print("\n=== Testing Human Resources Module ===")
     print(f"Backend URL: {BACKEND_URL}")
     
-    # Test the specific endpoints requested for module-tai-khoan
-    test_module_tai_khoan_apis()
+    # Get authentication token
+    if not get_token():
+        print("Failed to authenticate. Exiting tests.")
+        return False
+    
+    # 1. Test GET /api/users/ - List all employees with role-based filtering
+    print("\n1. Testing GET /api/users/ - List all employees")
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    users_success = print_test_result("Get Users List (Admin Only)", response)
+    if users_success:
+        users = response.json()
+        print(f"Found {len(users)} users")
+        
+        # Display some user information
+        for i, user in enumerate(users[:3]):  # Show first 3 users
+            print(f"  User {i+1}: {user['email']} - {user['full_name']} - Role: {user['role']}")
+        
+        if len(users) > 3:
+            print(f"  ... and {len(users) - 3} more users")
+    
+    # 2. Test POST /api/users/ - Create new employee with login credentials (admin only)
+    print("\n2. Testing POST /api/users/ - Create new employee")
+    
+    # Generate a unique email
+    test_email = f"test_employee_{uuid.uuid4().hex[:8]}@example.com"
+    
+    user_data = {
+        "email": test_email,
+        "password": "EmployeePass123!",
+        "full_name": "Test Employee",
+        "role": "staff"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers(),
+        json=user_data
+    )
+    
+    create_user_success = print_test_result("Create New Employee (Admin Only)", response)
+    new_user_id = None
+    if create_user_success:
+        new_user = response.json()
+        new_user_id = new_user["id"]
+        print(f"Created new employee: {new_user['email']} - {new_user['full_name']} - Role: {new_user['role']}")
+        
+        # Verify the user was created by getting the user list again
+        response = requests.get(
+            f"{BACKEND_URL}/users/",
+            headers=get_headers()
+        )
+        
+        if response.status_code == 200:
+            updated_users = response.json()
+            if len(updated_users) > len(users):
+                print(f"✅ User list updated: {len(updated_users)} users (was {len(users)})")
+            else:
+                print(f"❌ User list not updated: still shows {len(updated_users)} users")
+    
+    # 3. Test GET /api/users/by-role/{role} - Filter users by specific roles
+    print("\n3. Testing GET /api/users/by-role/{role} - Filter users by role")
+    
+    # Test all role types
+    roles = ["admin", "account", "creative", "staff", "manager", "content", "design", "editor", "sale"]
+    role_results = {}
+    
+    for role in roles:
+        response = requests.get(
+            f"{BACKEND_URL}/users/by-role/{role}",
+            headers=get_headers()
+        )
+        
+        role_success = print_test_result(f"Get Users by Role: {role}", response)
+        role_results[role] = role_success
+        
+        if role_success:
+            role_users = response.json()
+            print(f"Found {len(role_users)} users with role '{role}'")
+            
+            # Verify all returned users have the correct role
+            all_correct_role = True
+            for user in role_users:
+                if user["role"] != role:
+                    all_correct_role = False
+                    print(f"❌ User with incorrect role found: {user['email']} has role '{user['role']}' instead of '{role}'")
+            
+            if all_correct_role and len(role_users) > 0:
+                print(f"✅ All users have the correct role: '{role}'")
+    
+    # Test invalid role (should fail)
+    response = requests.get(
+        f"{BACKEND_URL}/users/by-role/invalid_role",
+        headers=get_headers()
+    )
+    
+    print_test_result("Get Users by Invalid Role (should fail)", response, expected_status=400)
+    
+    # 4. Test PUT /api/users/{user_id}/status - Activate/deactivate user accounts (admin only)
+    print("\n4. Testing PUT /api/users/{user_id}/status - Activate/deactivate user")
+    
+    if new_user_id:
+        # Deactivate the user
+        status_data = {
+            "is_active": False
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/users/{new_user_id}/status",
+            headers=get_headers(),
+            json=status_data
+        )
+        
+        deactivate_success = print_test_result("Deactivate User (Admin Only)", response)
+        
+        # Verify status was updated
+        if deactivate_success:
+            response = requests.get(
+                f"{BACKEND_URL}/users/",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                users = response.json()
+                status_updated = False
+                for user in users:
+                    if user["id"] == new_user_id and user["is_active"] == False:
+                        status_updated = True
+                        break
+                
+                if status_updated:
+                    print("✅ User deactivation verified")
+                else:
+                    print("❌ User status not updated")
+        
+        # Reactivate the user
+        status_data = {
+            "is_active": True
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/users/{new_user_id}/status",
+            headers=get_headers(),
+            json=status_data
+        )
+        
+        activate_success = print_test_result("Activate User (Admin Only)", response)
+        
+        # Verify status was updated
+        if activate_success:
+            response = requests.get(
+                f"{BACKEND_URL}/users/",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                users = response.json()
+                status_updated = False
+                for user in users:
+                    if user["id"] == new_user_id and user["is_active"] == True:
+                        status_updated = True
+                        break
+                
+                if status_updated:
+                    print("✅ User activation verified")
+                else:
+                    print("❌ User status not updated")
+        
+        # Test non-admin trying to update user status (should fail)
+        # Create a non-admin user for this test
+        non_admin_email = f"non_admin_{uuid.uuid4().hex[:8]}@example.com"
+        non_admin_password = "NonAdminPass123!"
+        non_admin_data = {
+            "email": non_admin_email,
+            "password": non_admin_password,
+            "full_name": "Non-Admin User",
+            "role": "staff"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/users/",
+            headers=get_headers(),
+            json=non_admin_data
+        )
+        
+        non_admin_id = None
+        if response.status_code == 200:
+            non_admin_user = response.json()
+            non_admin_id = non_admin_user["id"]
+            print(f"Created non-admin user: {non_admin_user['email']} with ID: {non_admin_id}")
+            
+            # Get token for non-admin user
+            login_response = requests.post(
+                f"{BACKEND_URL}/token",
+                data={"username": non_admin_email, "password": non_admin_password}
+            )
+            
+            if login_response.status_code == 200:
+                non_admin_token = login_response.json()["access_token"]
+                non_admin_headers = {
+                    "Authorization": f"Bearer {non_admin_token}",
+                    "Content-Type": "application/json"
+                }
+                
+                # Now try to update user status as non-admin
+                response = requests.put(
+                    f"{BACKEND_URL}/users/{new_user_id}/status",
+                    headers=non_admin_headers,
+                    json={"is_active": False}
+                )
+                
+                print_test_result("Update User Status (Non-Admin, should fail)", response, expected_status=403)
+    
+    # 5. Test PUT /api/users/{user_id}/password - Reset user passwords (admin only)
+    print("\n5. Testing PUT /api/users/{user_id}/password - Reset user password")
+    
+    if new_user_id:
+        # Reset password as admin
+        reset_data = {
+            "new_password": "ResetPassword789!"
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/users/{new_user_id}/password",
+            headers=get_headers(),
+            json=reset_data
+        )
+        
+        reset_success = print_test_result("Reset User Password (Admin Only)", response)
+        
+        # Verify password reset by logging in with new password
+        if reset_success:
+            login_response = requests.post(
+                f"{BACKEND_URL}/token",
+                data={"username": test_email, "password": "ResetPassword789!"}
+            )
+            
+            login_success = print_test_result("Login with Reset Password", login_response)
+            if login_success:
+                print("✅ Password reset verified")
+            else:
+                print("❌ Failed to login with reset password")
+        
+        # Test non-admin trying to reset password (should fail)
+        if non_admin_id:
+            response = requests.put(
+                f"{BACKEND_URL}/users/{new_user_id}/password",
+                headers=non_admin_headers,
+                json=reset_data
+            )
+            
+            print_test_result("Reset User Password (Non-Admin, should fail)", response, expected_status=403)
+    
+    # 6. Test DELETE /api/users/{user_id} - Delete users (admin only)
+    print("\n6. Testing DELETE /api/users/{user_id} - Delete user")
+    
+    if new_user_id:
+        # Delete user as admin
+        response = requests.delete(
+            f"{BACKEND_URL}/users/{new_user_id}",
+            headers=get_headers()
+        )
+        
+        delete_success = print_test_result("Delete User (Admin Only)", response)
+        
+        # Verify user was deleted
+        if delete_success:
+            response = requests.get(
+                f"{BACKEND_URL}/users/",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                users = response.json()
+                deleted = True
+                for user in users:
+                    if user["id"] == new_user_id:
+                        deleted = False
+                        break
+                
+                if deleted:
+                    print("✅ User deletion verified")
+                else:
+                    print("❌ User still exists after deletion")
+        
+        # Test non-admin trying to delete user (should fail)
+        if non_admin_id:
+            # Create another user to try to delete
+            another_email = f"another_user_{uuid.uuid4().hex[:8]}@example.com"
+            another_data = {
+                "email": another_email,
+                "password": "AnotherPass123!",
+                "full_name": "Another User",
+                "role": "staff"
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/users/",
+                headers=get_headers(),
+                json=another_data
+            )
+            
+            another_id = None
+            if response.status_code == 200:
+                another_user = response.json()
+                another_id = another_user["id"]
+                
+                # Try to delete as non-admin
+                response = requests.delete(
+                    f"{BACKEND_URL}/users/{another_id}",
+                    headers=non_admin_headers
+                )
+                
+                print_test_result("Delete User (Non-Admin, should fail)", response, expected_status=403)
+                
+                # Clean up - delete the user with admin privileges
+                if another_id:
+                    requests.delete(
+                        f"{BACKEND_URL}/users/{another_id}",
+                        headers=get_headers()
+                    )
+    
+    # Clean up - delete test users
+    print("\n=== Cleaning up test users ===")
+    
+    if non_admin_id:
+        response = requests.delete(
+            f"{BACKEND_URL}/users/{non_admin_id}",
+            headers=get_headers()
+        )
+        print_test_result(f"Delete Non-Admin User ({non_admin_email})", response)
+    
+    # Summary
+    print("\n=== Human Resources Module Testing Summary ===")
+    print(f"1. GET /api/users/ - List all employees: {'✅ Passed' if users_success else '❌ Failed'}")
+    print(f"2. POST /api/users/ - Create new employee: {'✅ Passed' if create_user_success else '❌ Failed'}")
+    print(f"3. GET /api/users/by-role/{{role}} - Filter users by role: {'✅ Passed' if all(role_results.values()) else '❌ Failed'}")
+    
+    if new_user_id:
+        print(f"4. PUT /api/users/{{user_id}}/status - Activate/deactivate user: {'✅ Passed' if deactivate_success and activate_success else '❌ Failed'}")
+        print(f"5. PUT /api/users/{{user_id}}/password - Reset user password: {'✅ Passed' if reset_success else '❌ Failed'}")
+        print(f"6. DELETE /api/users/{{user_id}} - Delete user: {'✅ Passed' if delete_success else '❌ Failed'}")
+    
+    return users_success and create_user_success and all(role_results.values())
+
+if __name__ == "__main__":
+    print("=== Starting Human Resources Module Tests ===")
+    print(f"Backend URL: {BACKEND_URL}")
+    
+    # Test the Human Resources module functionality
+    test_human_resources_module()
     
     print("\n=== All tests completed ===")
