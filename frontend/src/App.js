@@ -2317,10 +2317,11 @@ const Account = () => {
   ];
 
   useEffect(() => {
-    if (user?.role === 'admin' && activeTab === 'users') {
+    if (user?.role === 'admin' && activeTab === 'users' && token) {
+      console.log('Fetching users - user:', user?.role, 'activeTab:', activeTab, 'hasToken:', !!token);
       fetchUsers();
     }
-  }, [activeTab, user]);
+  }, [activeTab, user, token]);
 
   const fetchUsers = async () => {
     try {
