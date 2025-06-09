@@ -1302,6 +1302,43 @@ const Task = () => {
     }
   };
 
+  // Report modal functions
+  const handleOpenReportModal = (task) => {
+    setReportTask(task);
+    setReportLink('');
+    setShowReportModal(true);
+  };
+
+  const handleCloseReportModal = () => {
+    if (!isSubmittingReport) {
+      setShowReportModal(false);
+      setReportTask(null);
+      setReportLink('');
+    }
+  };
+
+  const submitCompletion = async () => {
+    if (!reportLink.trim()) {
+      toast.error('Vui lòng nhập link báo cáo');
+      return;
+    }
+
+    setIsSubmittingReport(true);
+
+    try {
+      await handleStatusChange(reportTask.id, 'completed', reportLink);
+      setShowReportModal(false);
+      setReportTask(null);
+      setReportLink('');
+      toast.success('Hoàn thành công việc thành công!');
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast.error('Có lỗi xảy ra khi hoàn thành công việc');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   // Filter tasks based on current filters
   const filteredTasks = tasks.filter(task => {
     if (searchTerm && !task.name.toLowerCase().includes(searchTerm.toLowerCase())) {
