@@ -27,6 +27,7 @@ const API = process.env.REACT_APP_BACKEND_URL || '';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Authentication check
