@@ -2368,9 +2368,15 @@ const Account = () => {
     }
 
     try {
-      await axios.post(`${API}/api/users/`, userForm, {
+      console.log('Creating user with data:', userForm);
+      console.log('User role:', user?.role);
+      console.log('Token available:', !!token);
+      
+      const response = await axios.post(`${API}/api/users/`, userForm, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('User created successfully:', response.data);
       
       setShowCreateModal(false);
       setUserForm({ email: '', full_name: '', role: 'staff', password: '' });
@@ -2378,7 +2384,16 @@ const Account = () => {
       fetchUsers();
     } catch (error) {
       console.error('Error creating user:', error);
-      toast.error(error.response?.data?.detail || 'Lỗi khi tạo tài khoản');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      if (error.response?.status === 403) {
+        toast.error('Không có quyền tạo tài khoản');
+      } else if (error.response?.status === 401) {
+        toast.error('Phiên đăng nhập đã hết hạn');
+      } else {
+        toast.error(error.response?.data?.detail || 'Lỗi khi tạo tài khoản');
+      }
     }
   };
 
