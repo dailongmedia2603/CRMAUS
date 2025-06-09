@@ -436,13 +436,14 @@ body {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  z-index: 99999 !important;
+  z-index: 999999 !important;
   background-color: rgba(0, 0, 0, 0.6) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 1rem !important;
   backdrop-filter: blur(2px) !important;
+  pointer-events: auto !important;
 }
 
 .modal-content {
@@ -455,9 +456,17 @@ body {
   overflow-y: auto !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
   position: relative !important;
-  z-index: 100000 !important;
+  z-index: 1000000 !important;
   transform: scale(1) !important;
   animation: modalIn 0.2s ease-out !important;
+  pointer-events: auto !important;
+  /* Prevent parent hover effects */
+  isolation: isolate !important;
+}
+
+/* Prevent flickering */
+.modal-overlay * {
+  pointer-events: auto !important;
 }
 
 @keyframes modalIn {
