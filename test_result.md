@@ -150,6 +150,9 @@
       - working: true
         agent: "testing"
         comment: "Tested the specific user management APIs mentioned in the module-tai-khoan rebuild: POST /api/token, GET /api/users/, and POST /api/users/. All three endpoints are working correctly. The POST /api/token endpoint successfully authenticates with admin credentials and returns a valid token. The GET /api/users/ endpoint returns the list of users (14 users found) and properly enforces admin-only access. The POST /api/users/ endpoint successfully creates new users with the specified details and enforces admin-only access. The user list is properly updated after creating a new user."
+      - working: true
+        agent: "testing"
+        comment: "Tested the Human Resources module functionality. All endpoints are working correctly: GET /api/users/ returns the list of all employees (15 users found) and properly enforces admin-only access. POST /api/users/ successfully creates new employees with login credentials and enforces admin-only access. GET /api/users/by-role/{role} correctly filters users by specific roles (admin, account, creative, staff, manager, content, design, editor, sale) and returns only users with the specified role. PUT /api/users/{user_id}/status correctly activates/deactivates user accounts and enforces admin-only access. PUT /api/users/{user_id}/password successfully resets user passwords and enforces admin-only access. DELETE /api/users/{user_id} correctly deletes users and enforces admin-only access. All endpoints properly validate input data and enforce appropriate permissions."
 
 metadata:
   created_by: "testing_agent"
