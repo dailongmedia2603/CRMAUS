@@ -1629,6 +1629,7 @@ const Task = () => {
           setNewFeedback={setNewFeedback}
           onClose={() => setFeedbackTask(null)}
           onAddFeedback={handleAddFeedback}
+          user={user}
         />
       )}
     </div>
