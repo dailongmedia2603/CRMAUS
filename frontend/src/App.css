@@ -436,23 +436,37 @@ body {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  z-index: 9999 !important;
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 99999 !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 1rem !important;
+  backdrop-filter: blur(2px) !important;
 }
 
 .modal-content {
   background: white !important;
-  border-radius: 12px !important;
+  border-radius: 16px !important;
   padding: 2rem !important;
   width: 100% !important;
   max-width: 32rem !important;
   max-height: 90vh !important;
   overflow-y: auto !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
   position: relative !important;
-  z-index: 10000 !important;
+  z-index: 100000 !important;
+  transform: scale(1) !important;
+  animation: modalIn 0.2s ease-out !important;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
