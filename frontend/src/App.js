@@ -1114,11 +1114,18 @@ const Task = () => {
 
     if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} công việc đã chọn?`)) {
       try {
-        setTasks(prev => prev.filter(t => !selectedTasks.includes(t.id)));
+        await axios.post(`${API}/api/internal-tasks/bulk-delete`, {
+          task_ids: selectedTasks
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
         setSelectedTasks([]);
         toast.success(`Xóa ${selectedTasks.length} công việc thành công!`);
+        fetchTasks(); // Refresh task list
         fetchStatistics();
       } catch (error) {
+        console.error('Error bulk deleting tasks:', error);
         toast.error('Lỗi khi xóa công việc');
       }
     }
