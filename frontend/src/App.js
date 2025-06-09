@@ -1669,6 +1669,9 @@ const TaskRow = ({
   const [reportLink, setReportLink] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Debug logging
+  console.log('TaskRow render - showReportModal:', showReportModal, 'task:', task.name, 'status:', task.status);
+
   const toggleTaskSelection = (taskId) => {
     if (selectedTasks.includes(taskId)) {
       setSelectedTasks(selectedTasks.filter(id => id !== taskId));
