@@ -2325,13 +2325,34 @@ const Account = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      
+      // Kiểm tra token
+      if (!token) {
+        console.error('No token available for fetchUsers');
+        toast.error('Không có quyền truy cập');
+        return;
+      }
+      
+      console.log('Fetching users with token:', token?.substring(0, 10) + '...');
+      
       const response = await axios.get(`${API}/api/users/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('Users fetch response:', response.data);
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
-      toast.error('Lỗi khi tải danh sách người dùng');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      if (error.response?.status === 403) {
+        toast.error('Không có quyền xem danh sách người dùng');
+      } else if (error.response?.status === 401) {
+        toast.error('Phiên đăng nhập đã hết hạn');
+      } else {
+        toast.error('Lỗi khi tải danh sách người dùng');
+      }
     } finally {
       setLoading(false);
     }
