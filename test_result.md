@@ -129,6 +129,9 @@
       - working: true
         agent: "testing"
         comment: "Successfully tested all internal task management API endpoints. The POST /api/internal-tasks/ endpoint creates tasks correctly with all required fields. The GET /api/internal-tasks/ endpoint returns tasks with proper filtering by status, priority, assigned_to, search terms, and date ranges. The GET /api/internal-tasks/statistics endpoint returns accurate statistics. The GET /api/internal-tasks/{id} endpoint returns detailed task information with enriched user names. The PUT /api/internal-tasks/{id} endpoint updates tasks correctly. The PATCH /api/internal-tasks/{id}/status endpoint properly enforces the workflow (not_started -> in_progress -> completed) and validates that report_link is required for completed status. The DELETE /api/internal-tasks/{id} endpoint deletes tasks successfully. The POST /api/internal-tasks/bulk-delete endpoint deletes multiple tasks. The feedback system (POST and GET /api/internal-tasks/{id}/feedback/) works correctly. All endpoints properly validate input data and return appropriate error messages."
+      - working: true
+        agent: "testing"
+        comment: "Retested all the requested internal task management API endpoints with the local backend URL (http://localhost:8001). All endpoints are working correctly: GET /api/internal-tasks/ successfully retrieves the task list, POST /api/internal-tasks/ creates new tasks with all required fields, GET /api/internal-tasks/statistics returns accurate statistics including counts by status and priority, PUT /api/internal-tasks/{id} updates tasks correctly, DELETE /api/internal-tasks/{id} deletes tasks successfully, PATCH /api/internal-tasks/{id}/status properly updates task status (verified not_started -> in_progress transition), and POST /api/internal-tasks/bulk-delete successfully deletes multiple tasks. All tests passed with proper authentication."
 
 metadata:
   created_by: "testing_agent"
