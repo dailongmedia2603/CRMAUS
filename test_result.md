@@ -159,6 +159,9 @@
       - working: true
         agent: "testing"
         comment: "Tested the Human Resources module functionality. All endpoints are working correctly: GET /api/users/ returns the list of all employees (15 users found) and properly enforces admin-only access. POST /api/users/ successfully creates new employees with login credentials and enforces admin-only access. GET /api/users/by-role/{role} correctly filters users by specific roles (admin, account, creative, staff, manager, content, design, editor, sale) and returns only users with the specified role. PUT /api/users/{user_id}/status correctly activates/deactivates user accounts and enforces admin-only access. PUT /api/users/{user_id}/password successfully resets user passwords and enforces admin-only access. DELETE /api/users/{user_id} correctly deletes users and enforces admin-only access. All endpoints properly validate input data and enforce appropriate permissions."
+      - working: true
+        agent: "testing"
+        comment: "Retested the Human Resources API endpoints after the frontend fix (adding the missing /api prefix). All endpoints are working correctly: POST /api/token successfully authenticates with admin credentials (admin@example.com/admin123) and returns a valid token. GET /api/users/ returns the list of users (1 user found) and properly enforces admin-only access. GET /api/users/by-role/{role} correctly filters users by all roles (admin, account, creative, staff, manager, content, design, editor, sale). POST /api/users/ successfully creates new users with the specified details. PUT /api/users/{user_id}/status correctly activates/deactivates user accounts. PUT /api/users/{user_id}/password successfully resets user passwords. DELETE /api/users/{user_id} correctly deletes users. All endpoints properly validate input data and enforce appropriate permissions."
 
 metadata:
   created_by: "testing_agent"
