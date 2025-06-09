@@ -605,6 +605,120 @@ async def read_users_by_role(role: str, current_user: User = Depends(get_current
     users = await db.users.find({"role": role, "is_active": True}).to_list(length=100)
     return users
 
+# Additional User Management Endpoints for module-tai-khoan
+@api_router.put("/users/me/", response_model=User)
+async def update_current_user(user_update: dict, current_user: User = Depends(get_current_active_user)):
+    """Cập nhật thông tin user hiện tại"""
+    # Kiểm tra email unique nếu thay đổi
+    if user_update.get("email") and user_update["email"] != current_user.email:
+        existing_user = await db.users.find_one({"email": user_update["email"], "id": {"$ne": current_user.id}})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already exists")
+    
+    update_data = {k: v for k, v in user_update.items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    await db.users.update_one({"id": current_user.id}, {"$set": update_data})
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"id": current_user.id})
+    return updated_user
+
+@api_router.put("/users/me/password")
+async def update_current_user_password(
+    password_data: dict, 
+    current_user: User = Depends(get_current_active_user)
+):
+    """Đổi mật khẩu user hiện tại"""
+    current_password = password_data.get("current_password")
+    new_password = password_data.get("new_password")
+    
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Current password and new password are required")
+    
+    # Verify current password
+    if not verify_password(current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+    
+    # Update password
+    hashed_new_password = get_password_hash(new_password)
+    await db.users.update_one(
+        {"id": current_user.id}, 
+        {"$set": {"hashed_password": hashed_new_password, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": "Password updated successfully"}
+
+@api_router.put("/users/{user_id}/password")
+async def reset_user_password(
+    user_id: str,
+    password_data: dict,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Reset mật khẩu user (Admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    new_password = password_data.get("new_password")
+    if not new_password:
+        raise HTTPException(status_code=400, detail="New password is required")
+    
+    # Check if target user exists
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update password
+    hashed_new_password = get_password_hash(new_password)
+    await db.users.update_one(
+        {"id": user_id}, 
+        {"$set": {"hashed_password": hashed_new_password, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": "Password reset successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_current_active_user)):
+    """Xóa user (Admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"detail": "User deleted successfully"}
+
+@api_router.put("/users/{user_id}/status")
+async def update_user_status(
+    user_id: str, 
+    status_data: dict,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật trạng thái active/inactive của user (Admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot change your own account status")
+    
+    is_active = status_data.get("is_active")
+    if is_active is None:
+        raise HTTPException(status_code=400, detail="is_active field is required")
+    
+    result = await db.users.update_one(
+        {"id": user_id}, 
+        {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"detail": f"User {'activated' if is_active else 'deactivated'} successfully"}
+
 # Client routes
 @api_router.post("/clients/", response_model=Client)
 async def create_client(client: ClientCreate, current_user: User = Depends(get_current_active_user)):
