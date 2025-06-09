@@ -13,6 +13,7 @@ PASSWORD = "admin123"
 
 # Global variables
 token = None
+created_user_id = None
 
 def get_token():
     """Get authentication token"""
@@ -130,6 +131,111 @@ def test_dashboard():
     
     return success
 
+def test_user_management():
+    """Test User Management API endpoints"""
+    global created_user_id
+    print("\n=== Testing User Management API ===")
+    
+    # Test GET /api/users/ - Get list of users (admin only)
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    users_success = print_test_result("Get Users List", response)
+    if users_success:
+        users = response.json()
+        print(f"Found {len(users)} users")
+    
+    # Test GET /api/users/by-role/{role} - Filter users by role
+    roles = ["admin", "account", "creative", "staff", "manager", "content", "design", "editor", "sale"]
+    role_success = True
+    
+    for role in roles:
+        response = requests.get(
+            f"{BACKEND_URL}/users/by-role/{role}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result(f"Get Users by Role: {role}", response)
+        if success:
+            role_users = response.json()
+            print(f"Found {len(role_users)} users with role '{role}'")
+        else:
+            role_success = False
+    
+    # Test POST /api/users/ - Create new user (admin only)
+    new_user = {
+        "email": f"test_user_{int(time.time())}@example.com",
+        "full_name": "Test User",
+        "role": "staff",
+        "password": "testpassword123"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers(),
+        json=new_user
+    )
+    
+    create_success = print_test_result("Create New User", response)
+    if create_success:
+        created_user = response.json()
+        created_user_id = created_user["id"]
+        print(f"Created new user: {created_user['full_name']} (ID: {created_user_id})")
+    
+    # Test PUT /api/users/{user_id}/status - Activate/deactivate user (admin only)
+    if created_user_id:
+        # Deactivate user
+        response = requests.put(
+            f"{BACKEND_URL}/users/{created_user_id}/status",
+            headers=get_headers(),
+            json={"is_active": False}
+        )
+        
+        deactivate_success = print_test_result("Deactivate User", response)
+        
+        # Activate user
+        response = requests.put(
+            f"{BACKEND_URL}/users/{created_user_id}/status",
+            headers=get_headers(),
+            json={"is_active": True}
+        )
+        
+        activate_success = print_test_result("Activate User", response)
+    else:
+        deactivate_success = False
+        activate_success = False
+    
+    # Test PUT /api/users/{user_id}/password - Reset password (admin only)
+    if created_user_id:
+        response = requests.put(
+            f"{BACKEND_URL}/users/{created_user_id}/password",
+            headers=get_headers(),
+            json={"new_password": "newpassword456"}
+        )
+        
+        reset_password_success = print_test_result("Reset User Password", response)
+    else:
+        reset_password_success = False
+    
+    # Test DELETE /api/users/{user_id} - Delete user (admin only)
+    if created_user_id:
+        response = requests.delete(
+            f"{BACKEND_URL}/users/{created_user_id}",
+            headers=get_headers()
+        )
+        
+        delete_success = print_test_result("Delete User", response)
+        if delete_success:
+            print(f"Successfully deleted user with ID: {created_user_id}")
+            created_user_id = None
+    else:
+        delete_success = False
+    
+    return (users_success and role_success and create_success and 
+            deactivate_success and activate_success and reset_password_success and delete_success)
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
@@ -139,11 +245,15 @@ def main():
         print("Failed to authenticate. Exiting tests.")
         return
     
-    # Run only the specific tests we need
+    # Run the Human Resources API tests
+    user_management_success = test_user_management()
+    
+    # Run other tests if needed
     documents_success = test_documents()
     dashboard_success = test_dashboard()
     
     print("\n=== Test Results ===")
+    print(f"User Management API: {'✅' if user_management_success else '❌'}")
     print(f"Documents API: {'✅' if documents_success else '❌'}")
     print(f"Dashboard API: {'✅' if dashboard_success else '❌'}")
     
