@@ -1650,8 +1650,8 @@ const Task = () => {
   );
 };
 
-// TaskRow Component
-const TaskRow = ({ 
+// TaskRow Component with memo to prevent unnecessary re-renders
+const TaskRow = React.memo(({ 
   task, 
   selectedTasks, 
   setSelectedTasks, 
