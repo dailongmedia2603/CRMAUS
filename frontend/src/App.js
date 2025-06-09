@@ -1023,7 +1023,9 @@ const Task = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${API}/api/users/`);
+      const response = await axios.get(`${API}/api/users/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
