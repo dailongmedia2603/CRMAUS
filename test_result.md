@@ -135,6 +135,9 @@
       - working: true
         agent: "testing"
         comment: "Based on code review, the task completion popup is properly implemented. When a user clicks the 'Hoàn thành' button on a task with 'in_progress' status, the handleStatusUpdate function in the TaskRow component checks if the new status is 'completed' and if so, it sets showReportModal to true, which displays the popup. The popup contains a report link input field and buttons to cancel or complete the task. The implementation is correct, but the preview environment is currently having issues that prevent interactive testing."
+      - working: true
+        agent: "testing"
+        comment: "Performed a detailed code review of the task completion popup implementation. The popup meets all requirements: 1) It has the correct title 'Hoàn thành công việc', 2) It includes a required input field labeled 'Link báo cáo *', 3) It has two buttons: 'Hủy' and 'Hoàn thành', 4) The submit button shows a loading state during submission, 5) The form validates that the report link is not empty, 6) On successful submission, the popup closes and a success toast appears. The implementation includes proper error handling and prevents double submissions. Attempted to test interactively, but the preview environment is currently unavailable with a 'Preview Unavailable' message."
 
   - task: "User Management API"
     implemented: true
