@@ -220,12 +220,7 @@ const HumanResources = ({ user }) => {
       // For now, we'll update one by one
       for (const employeeId of selectedEmployees) {
         await axios.put(`${API}/users/${employeeId}/status`, 
-          { is_active: isActive }, 
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
+          { is_active: isActive }
         );
       }
       toast.success(`${isActive ? 'Kích hoạt' : 'Vô hiệu hóa'} tài khoản thành công!`);
