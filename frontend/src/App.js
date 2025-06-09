@@ -1269,11 +1269,22 @@ const Task = () => {
       const response = await axios.get(`${API}/api/internal-tasks/${taskId}/feedback/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setFeedbacks(response.data || []);
+      const feedbackData = response.data || [];
+      setFeedbacks(feedbackData);
+      
+      // Update feedback count for this task
+      setFeedbackCounts(prev => ({
+        ...prev,
+        [taskId]: feedbackData.length
+      }));
     } catch (error) {
       console.error('Error fetching feedbacks:', error);
       // Fallback to empty array if API not implemented yet
       setFeedbacks([]);
+      setFeedbackCounts(prev => ({
+        ...prev,
+        [taskId]: 0
+      }));
     }
   };
 
