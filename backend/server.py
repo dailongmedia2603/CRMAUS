@@ -77,6 +77,97 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: str = None
 
+# Team Models
+class TeamBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: str = "#3B82F6"  # Default blue color
+    is_active: bool = True
+
+class TeamCreate(TeamBase):
+    pass
+
+class TeamUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class Team(TeamBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+    member_count: int = 0  # Computed field
+
+# Team Membership Models
+class TeamMemberBase(BaseModel):
+    team_id: str
+    user_id: str
+    role: str = "member"  # leader, member
+
+class TeamMemberCreate(TeamMemberBase):
+    pass
+
+class TeamMember(TeamMemberBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+    # Enriched fields
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_role: Optional[str] = None
+
+# Performance Models
+class PerformanceMetric(BaseModel):
+    user_id: str
+    team_id: Optional[str] = None
+    period_type: str  # daily, weekly, monthly, quarterly, yearly
+    period_start: datetime
+    period_end: datetime
+    
+    # Task metrics
+    total_tasks: int = 0
+    completed_tasks: int = 0
+    overdue_tasks: int = 0
+    task_completion_rate: float = 0.0
+    avg_task_completion_time: Optional[float] = None  # in hours
+    
+    # Project metrics
+    total_projects: int = 0
+    active_projects: int = 0
+    completed_projects: int = 0
+    project_involvement_score: float = 0.0
+    
+    # Quality metrics
+    avg_feedback_rating: Optional[float] = None
+    total_feedbacks: int = 0
+    
+    # Financial metrics
+    revenue_contribution: float = 0.0  # từ projects và invoices
+    
+    # Computed scores
+    overall_performance_score: float = 0.0
+    productivity_rank: Optional[int] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PerformanceSummary(BaseModel):
+    user_id: str
+    user_name: str
+    user_email: str
+    user_role: str
+    team_names: List[str] = []
+    
+    # Current period metrics
+    current_performance: PerformanceMetric
+    
+    # Trend data (comparison with previous period)
+    task_completion_trend: float = 0.0  # percentage change
+    performance_trend: float = 0.0
+    rank_change: int = 0
+
 class ClientBase(BaseModel):
     name: str
     company: str
