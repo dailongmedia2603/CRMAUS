@@ -1075,18 +1075,16 @@ const Task = () => {
 
   const handleUpdateTask = async (taskData) => {
     try {
-      const updatedTask = {
-        ...editingTask,
-        ...taskData,
-        updated_at: new Date().toISOString(),
-        assigned_to_name: users.find(u => u.id === taskData.assigned_to)?.full_name || 'Unknown'
-      };
+      await axios.put(`${API}/api/internal-tasks/${editingTask.id}`, taskData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      setTasks(prev => prev.map(t => t.id === editingTask.id ? updatedTask : t));
       setEditingTask(null);
       toast.success('Cập nhật công việc thành công!');
+      fetchTasks(); // Refresh task list
       fetchStatistics();
     } catch (error) {
+      console.error('Error updating task:', error);
       toast.error('Lỗi khi cập nhật công việc');
     }
   };
