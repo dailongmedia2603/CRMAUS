@@ -214,7 +214,7 @@ metadata:
 test_plan:
   current_focus:
     - "User Management API"
-    - "Task Completion Popup"
+    - "UI Improvements"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
