@@ -241,10 +241,40 @@
         agent: "testing"
         comment: "Successfully tested the sidebar menu improvements in the live environment. The page loads correctly with no JSX syntax errors. The sidebar is fully functional with all menu items working properly. Verified: 1) Blue gradient header with CRM icon and 'Quản lý khách hàng' text is displayed correctly. 2) All menu items have consistent icons and styling. 3) Color scheme is properly implemented with correct active, hover, and default states. 4) Submenus for 'Dự án', 'Tài chính', and 'Bán hàng' are properly indented with left border and expand/collapse correctly when clicked. 5) User info section at the bottom displays the user avatar, name, role, and logout button correctly. All navigation works as expected when clicking on menu items."
 
+  - task: "Team Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the team management API endpoints: GET /api/teams/, POST /api/teams/, GET /api/teams/{team_id}, PUT /api/teams/{team_id}, DELETE /api/teams/{team_id}, POST /api/teams/{team_id}/members/, GET /api/teams/{team_id}/members/, PUT /api/teams/{team_id}/members/{user_id}, DELETE /api/teams/{team_id}/members/{user_id}"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all team management API endpoints. The GET /api/teams/ endpoint returns teams correctly. The POST /api/teams/ endpoint creates new teams successfully with manager role. The GET /api/teams/{team_id} endpoint returns team details correctly. The PUT /api/teams/{team_id} endpoint updates teams correctly. The DELETE /api/teams/{team_id} endpoint deletes teams successfully. The POST /api/teams/{team_id}/members/ endpoint adds team members correctly. The GET /api/teams/{team_id}/members/ endpoint returns team members correctly. The PUT /api/teams/{team_id}/members/{user_id} endpoint updates member roles correctly. The DELETE /api/teams/{team_id}/members/{user_id} endpoint removes team members successfully. All endpoints properly enforce permissions, with admin/manager-only operations correctly implemented."
+
+  - task: "Performance API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the performance API endpoints: GET /api/performance/users/{user_id}, GET /api/performance/summary"
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all performance API endpoints. The GET /api/performance/users/{user_id} endpoint returns user performance metrics correctly for different period types (daily, weekly, monthly). The GET /api/performance/summary endpoint returns performance summary data for all users correctly. The performance metrics include task metrics, project metrics, and overall performance scores. All endpoints properly enforce permissions, with admin/manager-only operations correctly implemented."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
@@ -253,6 +283,8 @@ test_plan:
     - "UI Improvements"
     - "Expense Management Tab Navigation"
     - "Sidebar Menu Improvements"
+    - "Team Management API"
+    - "Performance API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
