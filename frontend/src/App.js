@@ -1266,6 +1266,25 @@ const Task = () => {
     }
   };
 
+  const fetchFeedbackCounts = async (tasks) => {
+    try {
+      const counts = {};
+      await Promise.all(tasks.map(async (task) => {
+        try {
+          const response = await axios.get(`${API}/api/internal-tasks/${task.id}/feedback/`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          counts[task.id] = response.data?.length || 0;
+        } catch (error) {
+          counts[task.id] = 0;
+        }
+      }));
+      setFeedbackCounts(counts);
+    } catch (error) {
+      console.error('Error fetching feedback counts:', error);
+    }
+  };
+
   // Filter tasks based on current filters
   const filteredTasks = tasks.filter(task => {
     if (searchTerm && !task.name.toLowerCase().includes(searchTerm.toLowerCase())) {
