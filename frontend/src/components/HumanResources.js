@@ -52,7 +52,7 @@ const HumanResources = ({ user }) => {
       setLoading(true);
       
       // Filter by search term (searching in full_name and email)
-      const response = await axios.get(`${API}/users/`);
+      const response = await axios.get(`${API}/api/users/`);
       
       let filteredEmployees = response.data;
       
