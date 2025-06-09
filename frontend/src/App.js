@@ -1678,7 +1678,9 @@ const TaskRow = ({
   };
 
   const handleStatusUpdate = (newStatus) => {
+    console.log('handleStatusUpdate called with:', newStatus);
     if (newStatus === 'completed') {
+      console.log('Setting showReportModal to true');
       setShowReportModal(true);
     } else {
       onStatusChange(task.id, newStatus);
