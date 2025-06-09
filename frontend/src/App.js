@@ -2970,7 +2970,6 @@ const Account = () => {
     </div>
   );
 };
-};
 // ==================== MODULE-TAI-KHOAN END ====================
 
 const Settings = () => (
