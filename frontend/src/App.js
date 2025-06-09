@@ -1036,7 +1036,11 @@ const Task = () => {
       const response = await axios.get(`${API}/api/internal-tasks/?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTasks(response.data);
+      const tasksData = response.data;
+      setTasks(tasksData);
+      
+      // Fetch feedback counts for all tasks
+      await fetchFeedbackCounts(tasksData);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       toast.error('Lỗi khi tải danh sách công việc');
