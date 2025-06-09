@@ -53,7 +53,7 @@ const Campaigns = () => {
         return;
       }
 
-      await axios.post(`${API_BASE_URL}/api/campaigns/`, formData);
+      await axios.post(`/api/campaigns/`, formData);
       toast.success('Tạo chiến dịch thành công');
       setShowModal(false);
       setFormData({ name: '', description: '' });
