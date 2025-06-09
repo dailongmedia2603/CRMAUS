@@ -12,7 +12,7 @@ import CampaignsComponent from "./components/Campaigns.js";
 import CampaignDetailComponent from "./components/CampaignDetail.js";
 import DocumentsComponent from "./components/Documents.js";
 import TemplatesComponent from "./components/Templates.js";
-import ExpenseComponents from "./components/ExpenseComponents.js";
+import { ExpenseOverview } from "./components/ExpenseComponents.js";
 
 // Auth context
 const AuthContext = createContext();
