@@ -91,7 +91,7 @@ const Campaigns = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/campaigns/${campaignId}`);
+      await axios.delete(`/api/campaigns/${campaignId}`);
       toast.success('Xóa chiến dịch thành công');
       fetchCampaigns();
     } catch (error) {
