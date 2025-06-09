@@ -1133,21 +1133,20 @@ const Task = () => {
 
   const handleStatusChange = async (taskId, newStatus, reportLink = null) => {
     try {
-      const task = tasks.find(t => t.id === taskId);
-      const updatedTask = {
-        ...task,
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      };
-      
+      const updateData = { status: newStatus };
       if (reportLink) {
-        updatedTask.report_link = reportLink;
+        updateData.report_link = reportLink;
       }
       
-      setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+      await axios.patch(`${API}/api/internal-tasks/${taskId}/status`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       toast.success('Cập nhật trạng thái thành công!');
+      fetchTasks(); // Refresh task list
       fetchStatistics();
     } catch (error) {
+      console.error('Error updating task status:', error);
       toast.error('Lỗi khi cập nhật trạng thái');
     }
   };
