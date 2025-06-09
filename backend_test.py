@@ -966,6 +966,98 @@ def test_projects(client_ids=None):
     
     return created_project_ids
 
+def test_user_management_apis():
+    """Test the specific user management APIs mentioned in the review request"""
+    print("\n=== Testing User Management APIs ===")
+    
+    # 1. Test POST /api/token - Login to get token
+    print("\n1. Testing POST /api/token - Login")
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": EMAIL, "password": PASSWORD}
+    )
+    
+    token_success = print_test_result("Login with Admin Credentials", response)
+    if token_success:
+        token_data = response.json()
+        print(f"Token type: {token_data['token_type']}")
+        print(f"Access token received: {token_data['access_token'][:10]}...")
+    else:
+        print("❌ Failed to authenticate. Cannot proceed with further tests.")
+        return False
+    
+    # 2. Test GET /api/users/ - List all users (admin only)
+    print("\n2. Testing GET /api/users/ - List all users")
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    users_success = print_test_result("Get Users List (Admin Only)", response)
+    if users_success:
+        users = response.json()
+        print(f"Found {len(users)} users")
+        
+        # Display some user information
+        for i, user in enumerate(users[:3]):  # Show first 3 users
+            print(f"  User {i+1}: {user['email']} - {user['full_name']} - Role: {user['role']}")
+        
+        if len(users) > 3:
+            print(f"  ... and {len(users) - 3} more users")
+    
+    # 3. Test POST /api/users/ - Create new user (admin only)
+    print("\n3. Testing POST /api/users/ - Create new user")
+    
+    # Generate a unique email
+    test_email = f"test_user_{uuid.uuid4().hex[:8]}@example.com"
+    
+    user_data = {
+        "email": test_email,
+        "password": "TestPassword123!",
+        "full_name": "Test User",
+        "role": "staff"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers(),
+        json=user_data
+    )
+    
+    create_user_success = print_test_result("Create New User (Admin Only)", response)
+    if create_user_success:
+        new_user = response.json()
+        print(f"Created new user: {new_user['email']} - {new_user['full_name']} - Role: {new_user['role']}")
+        
+        # Verify the user was created by getting the user list again
+        response = requests.get(
+            f"{BACKEND_URL}/users/",
+            headers=get_headers()
+        )
+        
+        if response.status_code == 200:
+            updated_users = response.json()
+            if len(updated_users) > len(users):
+                print(f"✅ User list updated: {len(updated_users)} users (was {len(users)})")
+            else:
+                print(f"❌ User list not updated: still shows {len(updated_users)} users")
+        
+        # Clean up - delete the test user
+        if 'id' in new_user:
+            delete_response = requests.delete(
+                f"{BACKEND_URL}/users/{new_user['id']}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Delete Test User", delete_response)
+    
+    print("\n=== User Management APIs Testing Summary ===")
+    print(f"1. POST /api/token - Login: {'✅ Passed' if token_success else '❌ Failed'}")
+    print(f"2. GET /api/users/ - List all users: {'✅ Passed' if users_success else '❌ Failed'}")
+    print(f"3. POST /api/users/ - Create new user: {'✅ Passed' if create_user_success else '❌ Failed'}")
+    
+    return token_success and users_success and create_user_success
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
