@@ -144,6 +144,9 @@
       - working: true
         agent: "testing"
         comment: "Tested creating an internal task with the specified parameters: name='Test task', description='Test description', assigned_to=a valid user ID, deadline=future date, priority='normal', document_links=['https://example.com']. The task was successfully created with all parameters correctly stored. Verified that the task appears in the task list and can be retrieved by its ID. All task details matched the input parameters. The task was also successfully deleted. No errors were encountered during the testing process."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the internal task feedback API. Created a new internal task, added feedback with message 'Test feedback message', and verified that the feedback was correctly stored and retrieved. The GET /api/internal-tasks/{task_id}/feedback/ endpoint returns the feedback with the correct user_name and message. When the task is deleted, the associated feedback is also deleted. The feedback system works correctly and stores the user information properly."
 
   - task: "User Management API"
     implemented: true
