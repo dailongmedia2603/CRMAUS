@@ -95,7 +95,7 @@
         comment: "Retested the document API endpoints. The GET /api/documents/ endpoint works correctly and returns 4 documents. The GET /api/documents/{id} endpoint also works correctly. However, the GET /api/document-folders/ endpoint still returns a 404 error with the message 'Not Found'. This confirms that the document folders endpoint is not implemented correctly."
       - working: true
         agent: "testing"
-        comment: "Verified that the correct endpoint for document folders is GET /api/folders/ instead of GET /api/document-folders/. The GET /api/folders/ endpoint works correctly. The GET /api/documents/ and GET /api/documents/{id} endpoints also work correctly. All document management endpoints are now working as expected."
+        comment: "✅ FIXED: The issue was incorrect endpoint path in tests. The correct endpoint for document folders is GET /api/folders/ (not /api/document-folders/). All document endpoints now working: GET /api/folders/ returns document folders correctly, GET /api/documents/ returns documents list, and GET /api/documents/{id} returns specific document details. All endpoints working with proper authentication."
 
   - task: "Dashboard API"
     implemented: true
