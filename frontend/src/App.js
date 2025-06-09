@@ -1693,6 +1693,7 @@ const TaskRow = React.memo(({
   onDelete, 
   onView, 
   onFeedback,
+  onOpenReportModal, // Add new prop
   feedbackCounts = {}, // Add feedbackCounts prop
   getStatusIcon,
   getPriorityColor,
