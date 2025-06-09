@@ -183,7 +183,7 @@ function App() {
               <Route path="/task-templates" element={<TemplatesComponent user={user} />} />
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/invoices" element={<Invoices />} />
-              <Route path="/expenses" element={<ExpenseOverview user={user} />} />
+              <Route path="/expenses" element={<ExpenseManagement user={user} />} />
               <Route path="/financial-reports" element={<FinancialReports />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/sales-reports" element={<SalesReports />} />
