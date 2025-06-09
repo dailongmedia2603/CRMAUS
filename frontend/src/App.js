@@ -1189,11 +1189,25 @@ const Task = () => {
       });
       
       toast.success('Cập nhật trạng thái thành công!');
-      fetchTasks(); // Refresh task list
-      fetchStatistics();
+      
+      // Use setTimeout to prevent rapid re-renders
+      setTimeout(() => {
+        fetchTasks();
+        fetchStatistics();
+      }, 100);
     } catch (error) {
       console.error('Error updating task status:', error);
-      toast.error('Lỗi khi cập nhật trạng thái');
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Lỗi khi cập nhật trạng thái';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      
+      toast.error(errorMessage);
+      throw error; // Re-throw to handle in modal
     }
   };
 
