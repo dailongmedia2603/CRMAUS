@@ -571,7 +571,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 # User routes
 @api_router.post("/users/", response_model=User)
-async def create_user(user: UserCreate):
+async def create_user(user: UserCreate, current_user: User = Depends(get_current_active_user)):
+    # Kiểm tra quyền admin
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
     db_user = await db.users.find_one({"email": user.email})
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
