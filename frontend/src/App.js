@@ -1721,31 +1721,20 @@ const TaskRow = React.memo(({
 
   const submitCompletion = async () => {
     if (isSubmitting) {
-      console.log('Already submitting, preventing double submission');
       return; // Prevent double clicks
     }
     
     try {
-      console.log('Starting submitCompletion...');
       setIsSubmitting(true);
       const reportLinkValue = reportLink.trim();
       
       if (!reportLinkValue) {
-        console.error('Report link is empty');
         toast.error('Vui lòng nhập link báo cáo');
         return;
       }
       
-      console.log('Calling onStatusChange with:', {
-        taskId: task.id,
-        status: 'completed',
-        reportLink: reportLinkValue
-      });
-      
       // Call the status change with the report link
       await onStatusChange(task.id, 'completed', reportLinkValue);
-      
-      console.log('Status change successful, closing modal...');
       
       // Close modal after successful completion
       setShowReportModal(false);
@@ -1755,7 +1744,6 @@ const TaskRow = React.memo(({
       
     } catch (error) {
       console.error('Error completing task:', error);
-      console.error('Error response:', error.response?.data);
       
       let errorMessage = 'Lỗi khi hoàn thành công việc';
       if (error.response?.data?.detail) {
@@ -1773,7 +1761,6 @@ const TaskRow = React.memo(({
       toast.error(errorMessage);
       // Keep modal open if there's an error
     } finally {
-      console.log('Setting isSubmitting to false');
       setIsSubmitting(false);
     }
   };
