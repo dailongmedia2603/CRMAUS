@@ -333,6 +333,66 @@ def test_internal_task_management():
                 print("❌ Task details do not match created task")
                 get_success = False
         
+        # Test POST /api/internal-tasks/{task_id}/feedback/ - Add feedback to task
+        feedback_message = "Test feedback message"
+        feedback_data = {
+            "message": feedback_message
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+            headers=get_headers(),
+            json=feedback_data
+        )
+        
+        add_feedback_success = print_test_result("Add Feedback to Task", response)
+        
+        if add_feedback_success:
+            feedback = response.json()
+            print(f"Added feedback: {feedback['message']}")
+            print(f"Feedback by: {feedback['user_name']} (ID: {feedback['user_id']})")
+            
+            # Verify feedback message matches what we sent
+            if feedback["message"] == feedback_message:
+                print("✅ Feedback message matches")
+            else:
+                print("❌ Feedback message does not match")
+                add_feedback_success = False
+        
+        # Test GET /api/internal-tasks/{task_id}/feedback/ - Get task feedback
+        response = requests.get(
+            f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+            headers=get_headers()
+        )
+        
+        get_feedback_success = print_test_result("Get Task Feedback", response)
+        
+        if get_feedback_success:
+            feedbacks = response.json()
+            print(f"Found {len(feedbacks)} feedback items")
+            
+            # Verify our feedback is in the list
+            if len(feedbacks) > 0:
+                found_feedback = feedbacks[0]  # Should be the first one since we just added it
+                print(f"Feedback: {found_feedback['message']} by {found_feedback['user_name']}")
+                
+                # Check if user_name is properly displayed
+                if found_feedback["user_name"]:
+                    print(f"✅ User name is displayed: {found_feedback['user_name']}")
+                else:
+                    print("❌ User name is not displayed")
+                    get_feedback_success = False
+                
+                # Verify feedback message matches what we sent
+                if found_feedback["message"] == feedback_message:
+                    print("✅ Feedback message in list matches")
+                else:
+                    print("❌ Feedback message in list does not match")
+                    get_feedback_success = False
+            else:
+                print("❌ No feedback found")
+                get_feedback_success = False
+        
         # Test DELETE /api/internal-tasks/{task_id} - Delete task
         response = requests.delete(
             f"{BACKEND_URL}/internal-tasks/{task_id}",
@@ -355,15 +415,29 @@ def test_internal_task_management():
             else:
                 print(f"❌ Task not deleted properly: {response.status_code}")
                 delete_success = False
+            
+            # Verify feedback is also deleted (should return 404)
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{task_id}/feedback/",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 404:
+                print("✅ Task feedback successfully deleted (404 Not Found)")
+            else:
+                print(f"❌ Task feedback not deleted properly: {response.status_code}")
+                delete_success = False
     else:
         list_success = False
         get_success = False
+        add_feedback_success = False
+        get_feedback_success = False
         delete_success = False
         
         # Print the error response for debugging
         print(f"Error creating task: {response.text}")
     
-    return create_success and list_success and get_success and delete_success
+    return create_success and list_success and get_success and add_feedback_success and get_feedback_success and delete_success
 
 def main():
     """Main test function"""
