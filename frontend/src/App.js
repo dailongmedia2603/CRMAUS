@@ -1842,140 +1842,186 @@ const TaskModal = ({ task, users, onClose, onSubmit }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tên công việc *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-              className="modern-input"
-              placeholder="Nhập tên công việc..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mô tả
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
-              rows={4}
-              className="modern-input"
-              placeholder="Mô tả chi tiết công việc..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Link tài liệu
-            </label>
-            <div className="flex gap-2 mb-2">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tên công việc *
+              </label>
               <input
-                type="url"
-                value={newLink}
-                onChange={(e) => setNewLink(e.target.value)}
-                className="modern-input flex-1"
-                placeholder="Nhập link tài liệu..."
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                placeholder="Nhập tên công việc..."
               />
-              <button
-                type="button"
-                onClick={addDocumentLink}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Thêm
-              </button>
             </div>
-            {formData.document_links.length > 0 && (
-              <div className="space-y-2">
-                {formData.document_links.map((link, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm truncate"
-                    >
-                      {link}
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => removeDocumentLink(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mô tả
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                rows={6}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Mô tả chi tiết công việc..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Link tài liệu
+              </label>
+              <div className="flex gap-3 mb-3">
+                <input
+                  type="url"
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập link tài liệu..."
+                />
+                <button
+                  type="button"
+                  onClick={addDocumentLink}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap font-medium"
+                >
+                  Thêm
+                </button>
               </div>
-            )}
+              {formData.document_links.length > 0 && (
+                <div className="space-y-3 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  {formData.document_links.map((link, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm truncate flex-1 mr-3"
+                        title={link}
+                      >
+                        {link}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeDocumentLink(index)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Xóa link"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Người nhận *
-            </label>
-            <select
-              required
-              value={formData.assigned_to}
-              onChange={(e) => setFormData(prev => ({...prev, assigned_to: e.target.value}))}
-              className="modern-input"
-            >
-              <option value="">Chọn người nhận</option>
-              {users.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.full_name} ({user.role})
-                </option>
-              ))}
-            </select>
+          {/* Right Column */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Người nhận *
+              </label>
+              <select
+                required
+                value={formData.assigned_to}
+                onChange={(e) => setFormData(prev => ({...prev, assigned_to: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              >
+                <option value="">Chọn người nhận</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name} ({user.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ưu tiên
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({...prev, priority: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              >
+                <option value="low">Thấp</option>
+                <option value="normal">Trung bình</option>
+                <option value="high">Cao</option>
+                <option value="urgent">Khẩn cấp</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Deadline *
+              </label>
+              <input
+                type="datetime-local"
+                required
+                value={formData.deadline}
+                onChange={(e) => setFormData(prev => ({...prev, deadline: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              />
+            </div>
+
+            {/* Preview/Status Box */}
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h4 className="font-medium text-gray-900 mb-3">Thông tin tóm tắt</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tên:</span>
+                  <span className="font-medium">{formData.name || 'Chưa nhập'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Người nhận:</span>
+                  <span className="font-medium">
+                    {formData.assigned_to ? 
+                      users.find(u => u.id === formData.assigned_to)?.full_name || 'Unknown' : 
+                      'Chưa chọn'
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Ưu tiên:</span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    formData.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                    formData.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                    formData.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {formData.priority === 'urgent' ? 'Khẩn cấp' :
+                     formData.priority === 'high' ? 'Cao' :
+                     formData.priority === 'normal' ? 'Trung bình' : 'Thấp'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Số link:</span>
+                  <span className="font-medium">{formData.document_links.length}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ưu tiên
-            </label>
-            <select
-              value={formData.priority}
-              onChange={(e) => setFormData(prev => ({...prev, priority: e.target.value}))}
-              className="modern-input"
-            >
-              <option value="low">Thấp</option>
-              <option value="normal">Trung bình</option>
-              <option value="high">Cao</option>
-              <option value="urgent">Khẩn cấp</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Deadline *
-            </label>
-            <input
-              type="datetime-local"
-              required
-              value={formData.deadline}
-              onChange={(e) => setFormData(prev => ({...prev, deadline: e.target.value}))}
-              className="modern-input"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
+          {/* Full Width Submit Buttons */}
+          <div className="md:col-span-2 flex justify-end space-x-4 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium text-lg"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-lg"
             >
               {task ? 'Cập nhật' : 'Tạo công việc'}
             </button>
