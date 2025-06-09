@@ -110,6 +110,7 @@ function App() {
                    window.location.pathname === "/invoices" ? "Hóa đơn" :
                    window.location.pathname === "/campaigns" ? "Chiến dịch" :
                    window.location.pathname === "/documents" ? "Tài liệu" :
+                   window.location.pathname === "/human-resources" ? "Nhân sự" :
                    window.location.pathname === "/settings" ? "Cài đặt" :
                    'Trang'}
                 </span>
