@@ -1241,6 +1241,13 @@ const Task = () => {
       
       setFeedbacks(prev => [...prev, newFeedbackItem]);
       setNewFeedback('');
+      
+      // Update feedback count for this task
+      setFeedbackCounts(prev => ({
+        ...prev,
+        [feedbackTask.id]: (prev[feedbackTask.id] || 0) + 1
+      }));
+      
       toast.success('Thêm feedback thành công!');
     } catch (error) {
       console.error('Error adding feedback:', error);
