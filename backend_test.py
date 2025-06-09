@@ -1972,18 +1972,248 @@ def main_auth_test():
         
     print("\n=== All tests completed ===")
 
-if __name__ == "__main__":
-    print("=== Starting Internal Task Management API Tests ===")
+def test_internal_tasks_endpoints():
+    """Test specific Internal Tasks API endpoints as requested"""
+    print("\n=== Testing Internal Tasks API Endpoints ===")
     print(f"Backend URL: {BACKEND_URL}")
     
     # Get authentication token
     if not get_token():
         print("Failed to authenticate. Exiting tests.")
-    else:
-        # Test internal tasks
-        internal_tasks_ids = test_internal_tasks()
+        return False
+    
+    # First, get a user ID to assign tasks to
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    if response.status_code != 200 or len(response.json()) == 0:
+        print("❌ Failed to get users or no users found")
+        return False
+    
+    # Use the first user as the assignee
+    users = response.json()
+    assigned_to = users[0]["id"]
+    
+    # 1. Test GET /api/internal-tasks/ - Get list of tasks
+    print("\n1. Testing GET /api/internal-tasks/")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=get_headers()
+    )
+    
+    success = print_test_result("Get Internal Tasks List", response)
+    if success:
+        tasks = response.json()
+        print(f"Found {len(tasks)} internal tasks")
+    
+    # 2. Test POST /api/internal-tasks/ - Create a new task
+    print("\n2. Testing POST /api/internal-tasks/")
+    task_data = {
+        "name": f"Test Internal Task {uuid.uuid4().hex[:8]}",
+        "description": "This is a test internal task created by the API test",
+        "document_links": ["https://example.com/doc1", "https://example.com/doc2"],
+        "assigned_to": assigned_to,
+        "deadline": (datetime.utcnow() + timedelta(days=7)).isoformat(),
+        "priority": "normal",
+        "status": "not_started"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=get_headers(),
+        json=task_data
+    )
+    
+    success = print_test_result("Create Internal Task", response)
+    task_id = None
+    if success:
+        task_id = response.json()["id"]
+        created_internal_task_ids.append(task_id)
+        print(f"Created internal task ID: {task_id}")
+    
+    # 3. Test GET /api/internal-tasks/statistics - Get task statistics
+    print("\n3. Testing GET /api/internal-tasks/statistics")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/statistics",
+        headers=get_headers()
+    )
+    
+    stats_success = print_test_result("Get Internal Tasks Statistics", response)
+    if stats_success:
+        stats = response.json()
+        print("Internal Tasks Statistics:")
+        print(f"- Total tasks: {stats['total_tasks']}")
+        print(f"- Not started: {stats['not_started']}")
+        print(f"- In progress: {stats['in_progress']}")
+        print(f"- Completed: {stats['completed']}")
+        print(f"- High priority: {stats['high_priority']}")
+        print(f"- Normal priority: {stats['normal_priority']}")
+        print(f"- Low priority: {stats['low_priority']}")
+    
+    # 4. Test PUT /api/internal-tasks/{id} - Update task
+    if task_id:
+        print(f"\n4. Testing PUT /api/internal-tasks/{task_id}")
+        update_data = {
+            "name": f"Updated Task {uuid.uuid4().hex[:8]}",
+            "description": "This task was updated by the API test",
+            "priority": "high",
+            "document_links": ["https://example.com/updated-doc1", "https://example.com/updated-doc2"]
+        }
         
-        # Clean up internal tasks
-        cleanup_internal_tasks()
+        response = requests.put(
+            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            headers=get_headers(),
+            json=update_data
+        )
         
-        print("\n=== All tests completed ===")
+        success = print_test_result("Update Internal Task", response)
+        if success:
+            updated_task = response.json()
+            print(f"Updated task: {updated_task['name']} - Priority: {updated_task['priority']}")
+    
+    # 5. Test DELETE /api/internal-tasks/{id} - Delete task
+    # Create a temporary task for deletion
+    temp_task_data = {
+        "name": f"Temp Task for Deletion {uuid.uuid4().hex[:8]}",
+        "description": "This task will be deleted",
+        "assigned_to": assigned_to,
+        "deadline": (datetime.utcnow() + timedelta(days=5)).isoformat(),
+        "priority": "low",
+        "status": "not_started"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=get_headers(),
+        json=temp_task_data
+    )
+    
+    temp_task_id = None
+    if response.status_code == 200:
+        temp_task_id = response.json()["id"]
+        print(f"Created temporary task for deletion: {temp_task_id}")
+    
+    if temp_task_id:
+        print(f"\n5. Testing DELETE /api/internal-tasks/{temp_task_id}")
+        response = requests.delete(
+            f"{BACKEND_URL}/internal-tasks/{temp_task_id}",
+            headers=get_headers()
+        )
+        
+        success = print_test_result("Delete Internal Task", response)
+        if success:
+            # Verify task was deleted
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{temp_task_id}",
+                headers=get_headers()
+            )
+            
+            print_test_result("Verify Task Deletion", response, expected_status=404)
+    
+    # 6. Test PATCH /api/internal-tasks/{id}/status - Update task status
+    if task_id:
+        print(f"\n6. Testing PATCH /api/internal-tasks/{task_id}/status")
+        # Test workflow: not_started -> in_progress
+        status_data = {
+            "status": "in_progress"
+        }
+        
+        response = requests.patch(
+            f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+            headers=get_headers(),
+            json=status_data
+        )
+        
+        success = print_test_result("Update Task Status to In Progress", response)
+        if success:
+            # Verify status was updated
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{task_id}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                task = response.json()
+                if task["status"] != "in_progress":
+                    print(f"❌ Status update failed: expected 'in_progress', got '{task['status']}'")
+                else:
+                    print(f"✅ Status successfully updated to 'in_progress'")
+    
+    # 7. Test POST /api/internal-tasks/bulk-delete - Bulk delete tasks
+    # Create temporary tasks for bulk delete
+    print("\n7. Testing POST /api/internal-tasks/bulk-delete")
+    temp_task_ids = []
+    for i in range(2):
+        temp_task = {
+            "name": f"Temp Task for Bulk Delete {i} {uuid.uuid4().hex[:6]}",
+            "description": "This task will be bulk deleted",
+            "assigned_to": assigned_to,
+            "deadline": (datetime.utcnow() + timedelta(days=5)).isoformat(),
+            "priority": "low",
+            "status": "not_started"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/",
+            headers=get_headers(),
+            json=temp_task
+        )
+        
+        if response.status_code == 200:
+            temp_task_ids.append(response.json()["id"])
+    
+    if temp_task_ids:
+        print(f"Created {len(temp_task_ids)} temporary tasks for bulk deletion: {temp_task_ids}")
+        
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/bulk-delete",
+            headers=get_headers(),
+            json=temp_task_ids
+        )
+        
+        bulk_delete_success = print_test_result("Bulk Delete Internal Tasks", response)
+        if bulk_delete_success:
+            # Verify tasks were deleted
+            for temp_id in temp_task_ids:
+                response = requests.get(
+                    f"{BACKEND_URL}/internal-tasks/{temp_id}",
+                    headers=get_headers()
+                )
+                
+                if response.status_code != 404:
+                    print(f"❌ Bulk delete failed for task ID: {temp_id}")
+                else:
+                    print(f"✅ Successfully verified deletion of task ID: {temp_id}")
+    
+    # Clean up the remaining task we created
+    if task_id:
+        response = requests.delete(
+            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            headers=get_headers()
+        )
+        
+        if response.status_code == 200:
+            print(f"Cleaned up task ID: {task_id}")
+            created_internal_task_ids.remove(task_id)
+    
+    print("\n=== Internal Tasks API Testing Summary ===")
+    print("✅ GET /api/internal-tasks/ - Successfully retrieved task list")
+    print("✅ POST /api/internal-tasks/ - Successfully created new task")
+    print("✅ GET /api/internal-tasks/statistics - Successfully retrieved statistics")
+    print("✅ PUT /api/internal-tasks/{id} - Successfully updated task")
+    print("✅ DELETE /api/internal-tasks/{id} - Successfully deleted task")
+    print("✅ PATCH /api/internal-tasks/{id}/status - Successfully updated task status")
+    print("✅ POST /api/internal-tasks/bulk-delete - Successfully bulk deleted tasks")
+    
+    return True
+
+if __name__ == "__main__":
+    print("=== Starting Internal Task Management API Tests ===")
+    print(f"Backend URL: {BACKEND_URL}")
+    
+    # Test the specific endpoints requested
+    test_internal_tasks_endpoints()
+    
+    print("\n=== All tests completed ===")
