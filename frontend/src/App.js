@@ -1653,6 +1653,7 @@ const TaskRow = ({
 }) => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportLink, setReportLink] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggleTaskSelection = (taskId) => {
     if (selectedTasks.includes(taskId)) {
@@ -1671,20 +1672,30 @@ const TaskRow = ({
   };
 
   const submitCompletion = async () => {
+    if (isSubmitting) return; // Prevent double clicks
+    
     try {
-      // Disable the modal temporarily to prevent re-rendering issues
+      setIsSubmitting(true);
       const reportLinkValue = reportLink.trim();
-      setShowReportModal(false);
-      setReportLink('');
       
       // Call the status change with the report link
       await onStatusChange(task.id, 'completed', reportLinkValue);
+      
+      // Close modal after successful completion
+      setShowReportModal(false);
+      setReportLink('');
     } catch (error) {
       console.error('Error completing task:', error);
-      // Reopen modal if there's an error
-      setShowReportModal(true);
-      setReportLink(reportLink);
+      // Keep modal open if there's an error
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    if (isSubmitting) return; // Prevent closing while submitting
+    setShowReportModal(false);
+    setReportLink('');
   };
 
   const getActionButton = () => {
