@@ -147,6 +147,9 @@
       - working: true
         agent: "testing"
         comment: "Successfully tested all user management API endpoints. The PUT /api/users/me/ endpoint correctly updates the current user's information. The PUT /api/users/me/password endpoint successfully changes the current user's password and requires the current password for verification. The PUT /api/users/{user_id}/password endpoint allows admins to reset other users' passwords. The DELETE /api/users/{user_id} endpoint correctly deletes users when called by an admin. The PUT /api/users/{user_id}/status endpoint allows admins to activate/deactivate users. All endpoints properly enforce permissions, with admin-only operations correctly rejecting requests from non-admin users."
+      - working: true
+        agent: "testing"
+        comment: "Tested the specific user management APIs mentioned in the module-tai-khoan rebuild: POST /api/token, GET /api/users/, and POST /api/users/. All three endpoints are working correctly. The POST /api/token endpoint successfully authenticates with admin credentials and returns a valid token. The GET /api/users/ endpoint returns the list of users (14 users found) and properly enforces admin-only access. The POST /api/users/ endpoint successfully creates new users with the specified details and enforces admin-only access. The user list is properly updated after creating a new user."
 
 metadata:
   created_by: "testing_agent"
