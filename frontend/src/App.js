@@ -1669,9 +1669,6 @@ const TaskRow = React.memo(({
   const [reportLink, setReportLink] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Debug logging
-  console.log('TaskRow render - showReportModal:', showReportModal, 'task:', task.name, 'status:', task.status);
-
   const toggleTaskSelection = (taskId) => {
     if (selectedTasks.includes(taskId)) {
       setSelectedTasks(selectedTasks.filter(id => id !== taskId));
@@ -1681,9 +1678,7 @@ const TaskRow = React.memo(({
   };
 
   const handleStatusUpdate = (newStatus) => {
-    console.log('handleStatusUpdate called with:', newStatus);
     if (newStatus === 'completed') {
-      console.log('Setting showReportModal to true');
       setShowReportModal(true);
     } else {
       onStatusChange(task.id, newStatus);
