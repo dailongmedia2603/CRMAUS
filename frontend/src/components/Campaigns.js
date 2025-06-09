@@ -103,7 +103,7 @@ const Campaigns = () => {
   // Archive/restore campaign
   const handleArchive = async (campaignId, archived = true) => {
     try {
-      await axios.put(`${API_BASE_URL}/api/campaigns/${campaignId}`, { archived });
+      await axios.put(`/api/campaigns/${campaignId}`, { archived });
       toast.success(archived ? 'Lưu trữ chiến dịch thành công' : 'Khôi phục chiến dịch thành công');
       fetchCampaigns();
     } catch (error) {
