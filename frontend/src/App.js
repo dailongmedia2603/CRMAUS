@@ -1037,8 +1037,13 @@ const Task = () => {
       const params = new URLSearchParams();
       if (dateFilter !== 'all') params.append('date_filter', dateFilter);
       
-      // For now, we'll calculate statistics from the tasks array
-      // In a real implementation, this would be a separate API endpoint
+      const response = await axios.get(`${API}/api/internal-tasks/statistics?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStatistics(response.data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      // Fallback to calculating from tasks array if API fails
       const stats = {
         total_tasks: tasks.length,
         not_started: tasks.filter(t => t.status === 'not_started').length,
@@ -1049,8 +1054,6 @@ const Task = () => {
         low_priority: tasks.filter(t => t.priority === 'low').length
       };
       setStatistics(stats);
-    } catch (error) {
-      console.error('Error fetching statistics:', error);
     }
   };
 
