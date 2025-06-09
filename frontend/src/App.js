@@ -1004,6 +1004,12 @@ const Task = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [newFeedback, setNewFeedback] = useState('');
   const [feedbackCounts, setFeedbackCounts] = useState({}); // Store feedback counts for each task
+  
+  // Report modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportTask, setReportTask] = useState(null);
+  const [reportLink, setReportLink] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchTasks();
