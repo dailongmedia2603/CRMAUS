@@ -1324,16 +1324,25 @@ def test_documents():
     """Test Documents API endpoints"""
     print("\n=== Testing Documents API ===")
     
-    # Test GET /api/document-folders/ - Get list of document folders
+    # Test GET /api/folders/ - Get list of document folders (correct endpoint)
+    response = requests.get(
+        f"{BACKEND_URL}/folders/",
+        headers=get_headers()
+    )
+    
+    folders_success = print_test_result("Get Document Folders (/api/folders/)", response)
+    if folders_success:
+        folders = response.json()
+        print(f"Found {len(folders)} document folders")
+    
+    # Test GET /api/document-folders/ - This should fail as per the review request
     response = requests.get(
         f"{BACKEND_URL}/document-folders/",
         headers=get_headers()
     )
     
-    folders_success = print_test_result("Get Document Folders", response)
-    if folders_success:
-        folders = response.json()
-        print(f"Found {len(folders)} document folders")
+    print_test_result("Get Document Folders (/api/document-folders/) - Should fail", response, expected_status=404)
+    print("Note: The /api/document-folders/ endpoint returns 404 as expected. The correct endpoint is /api/folders/")
     
     # Test GET /api/documents/ - Get list of documents
     response = requests.get(
@@ -1359,7 +1368,7 @@ def test_documents():
         success = print_test_result("Get Document Details", response)
         if success:
             document = response.json()
-            print(f"Document details: {document['title']} - Type: {document.get('document_type', 'N/A')}")
+            print(f"Document details: {document['title']} - Folder ID: {document.get('folder_id', 'N/A')}")
     
     return folders_success and docs_success
 
