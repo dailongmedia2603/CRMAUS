@@ -7,15 +7,6 @@ import { AuthContext } from '../App.js';
 // Use environment variable for API URL
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { format } from 'date-fns';
-import { AuthContext } from '../App.js';
-
-// Use environment variable for API URL
-const API = process.env.REACT_APP_BACKEND_URL || '';
-
 const HumanResources = ({ user }) => {
   const { user: authUser } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('management'); // management, teams, performance
