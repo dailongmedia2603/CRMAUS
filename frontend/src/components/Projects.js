@@ -753,12 +753,13 @@ const Projects = ({ user }) => {
               resetForm();
               setShowProjectModal(true);
             }}
-            className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border border-transparent text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-            title="Thêm dự án"
+            className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 whitespace-nowrap"
+            title="Thêm dự án mới"
           >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
+            Thêm dự án
           </button>
         </div>
       </div>
