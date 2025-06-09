@@ -141,6 +141,9 @@
       - working: true
         agent: "testing"
         comment: "Identified and fixed an issue with the Task Management frontend component. The API constant in App.js was defined as an empty string (const API = '') which was causing the frontend to make relative API calls. This was inconsistent with the HumanResources component which correctly used the environment variable (const API = process.env.REACT_APP_BACKEND_URL || ''). Updated App.js to use the environment variable consistently. The API endpoints are working correctly, but the frontend was not using the correct URL to access them."
+      - working: true
+        agent: "testing"
+        comment: "Tested creating an internal task with the specified parameters: name='Test task', description='Test description', assigned_to=a valid user ID, deadline=future date, priority='normal', document_links=['https://example.com']. The task was successfully created with all parameters correctly stored. Verified that the task appears in the task list and can be retrieved by its ID. All task details matched the input parameters. The task was also successfully deleted. No errors were encountered during the testing process."
 
   - task: "User Management API"
     implemented: true
