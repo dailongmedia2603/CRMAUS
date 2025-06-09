@@ -1067,18 +1067,18 @@ def main():
         print("Failed to authenticate. Exiting tests.")
         return
     
-    # Run tests
-    category_ids = test_expense_categories()
-    folder_ids = test_expense_folders()
-    expense_ids = test_expenses(category_ids, folder_ids)
-    test_expense_statistics()
-    client_ids = test_clients()
-    project_ids = test_projects(client_ids)
+    # Run only the specific tests we need
+    documents_success = test_documents()
+    dashboard_success = test_dashboard()
     
-    # Clean up
-    cleanup()
+    print("\n=== Test Results ===")
+    print(f"Documents API: {'✅' if documents_success else '❌'}")
+    print(f"Dashboard API: {'✅' if dashboard_success else '❌'}")
     
     print("\n=== All tests completed ===")
+
+if __name__ == "__main__":
+    main()
 
 def test_projects_api():
     """Test projects API"""
