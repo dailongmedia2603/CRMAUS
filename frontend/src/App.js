@@ -1670,10 +1670,21 @@ const TaskRow = ({
     }
   };
 
-  const submitCompletion = () => {
-    onStatusChange(task.id, 'completed', reportLink);
-    setShowReportModal(false);
-    setReportLink('');
+  const submitCompletion = async () => {
+    try {
+      // Disable the modal temporarily to prevent re-rendering issues
+      const reportLinkValue = reportLink.trim();
+      setShowReportModal(false);
+      setReportLink('');
+      
+      // Call the status change with the report link
+      await onStatusChange(task.id, 'completed', reportLinkValue);
+    } catch (error) {
+      console.error('Error completing task:', error);
+      // Reopen modal if there's an error
+      setShowReportModal(true);
+      setReportLink(reportLink);
+    }
   };
 
   const getActionButton = () => {
