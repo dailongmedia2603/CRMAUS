@@ -1014,6 +1014,7 @@ const Task = () => {
   const [feedbackTask, setFeedbackTask] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
   const [newFeedback, setNewFeedback] = useState('');
+  const [feedbackCounts, setFeedbackCounts] = useState({}); // Store feedback counts for each task
 
   useEffect(() => {
     fetchTasks();
