@@ -175,22 +175,35 @@
         agent: "testing"
         comment: "Successfully tested the Expense Management page tab navigation system. The page has three tabs as required: 'Tổng quan' (Overview) with chart icon, 'Danh sách chi phí' (Expense List) with list icon, and 'Cấu hình' (Configuration) with settings icon. All tabs work correctly when clicked and display the appropriate content. The 'Danh sách chi phí' tab shows the expense table and 'Thêm chi phí' button with a + icon. The 'Cấu hình' tab correctly displays two sub-tabs: 'Hạng mục chi phí' (Expense Categories) and 'Thư mục' (Folders), each with their respective 'Add' buttons. The tab navigation is smooth and displays the correct content for each tab."
 
-metadata:
-  created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
-  run_ui: false
-
-test_plan:
-  current_focus:
-    - "User Management API"
-    - "UI Improvements"
-    - "Expense Management Tab Navigation"
-  stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
-
-  - task: "UI Improvements"
+  - task: "Internal Task Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the internal task management API endpoints: POST /api/internal-tasks/, GET /api/internal-tasks/, GET /api/internal-tasks/statistics, GET /api/internal-tasks/{task_id}, PUT /api/internal-tasks/{task_id}, DELETE /api/internal-tasks/{task_id}, POST /api/internal-tasks/bulk-delete, PATCH /api/internal-tasks/{task_id}/status, POST /api/internal-tasks/{task_id}/feedback/, GET /api/internal-tasks/{task_id}/feedback/"
+      - working: false
+        agent: "testing"
+        comment: "Attempted to test the internal task management API endpoints, but encountered connectivity issues with the backend server. The server at https://d25f1ed3-bd7c-4b9f-9a59-7d2661b69383.preview.emergentagent.com is accessible, but the API endpoints are returning 404 errors. This suggests that either the API endpoints are not implemented correctly or the API path is incorrect. The server appears to be hosting a static website rather than a FastAPI application."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all internal task management API endpoints. The POST /api/internal-tasks/ endpoint creates tasks correctly with all required fields. The GET /api/internal-tasks/ endpoint returns tasks with proper filtering by status, priority, assigned_to, search terms, and date ranges. The GET /api/internal-tasks/statistics endpoint returns accurate statistics. The GET /api/internal-tasks/{id} endpoint returns detailed task information with enriched user names. The PUT /api/internal-tasks/{id} endpoint updates tasks correctly. The PATCH /api/internal-tasks/{id}/status endpoint properly enforces the workflow (not_started -> in_progress -> completed) and validates that report_link is required for completed status. The DELETE /api/internal-tasks/{id} endpoint deletes tasks successfully. The POST /api/internal-tasks/bulk-delete endpoint deletes multiple tasks. The feedback system (POST and GET /api/internal-tasks/{id}/feedback/) works correctly. All endpoints properly validate input data and return appropriate error messages."
+      - working: true
+        agent: "testing"
+        comment: "Retested all the requested internal task management API endpoints with the local backend URL (http://localhost:8001). All endpoints are working correctly: GET /api/internal-tasks/ successfully retrieves the task list, POST /api/internal-tasks/ creates new tasks with all required fields, GET /api/internal-tasks/statistics returns accurate statistics including counts by status and priority, PUT /api/internal-tasks/{id} updates tasks correctly, DELETE /api/internal-tasks/{id} deletes tasks successfully, PATCH /api/internal-tasks/{id}/status properly updates task status (verified not_started -> in_progress transition), and POST /api/internal-tasks/bulk-delete successfully deletes multiple tasks. All tests passed with proper authentication."
+      - working: true
+        agent: "testing"
+        comment: "Identified and fixed an issue with the Task Management frontend component. The API constant in App.js was defined as an empty string (const API = '') which was causing the frontend to make relative API calls. This was inconsistent with the HumanResources component which correctly used the environment variable (const API = process.env.REACT_APP_BACKEND_URL || ''). Updated App.js to use the environment variable consistently. The API endpoints are working correctly, but the frontend was not using the correct URL to access them."
+      - working: true
+        agent: "testing"
+        comment: "Tested creating an internal task with the specified parameters: name='Test task', description='Test description', assigned_to=a valid user ID, deadline=future date, priority='normal', document_links=['https://example.com']. The task was successfully created with all parameters correctly stored. Verified that the task appears in the task list and can be retrieved by its ID. All task details matched the input parameters. The task was also successfully deleted. No errors were encountered during the testing process."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the internal task feedback API. Created a new internal task, added feedback with message 'Test feedback message', and verified that the feedback was correctly stored and retrieved. The GET /api/internal-tasks/{task_id}/feedback/ endpoint returns the feedback with the correct user_name and message. When the task is deleted, the associated feedback is also deleted. The feedback system works correctly and stores the user information properly."
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
