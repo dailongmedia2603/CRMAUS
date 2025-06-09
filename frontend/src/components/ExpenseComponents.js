@@ -3,8 +3,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Use relative API path (will be proxied)
+const API = '/api';
 
 // Tab 1: Tổng quan với charts và thống kê
 export const ExpenseOverview = () => {
