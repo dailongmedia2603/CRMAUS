@@ -171,9 +171,7 @@ test_plan:
     - "Expense Categories API"
     - "Expense Folders API"
     - "Expenses API"
-  stuck_tasks:
-    - "Documents API"
-    - "Dashboard API"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
