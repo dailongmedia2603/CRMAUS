@@ -33,14 +33,16 @@ function App() {
   // Authentication check
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+      const savedToken = localStorage.getItem('token');
+      if (savedToken) {
         try {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setToken(savedToken);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
           const response = await axios.get(`${API}/api/users/me/`);
           setUser(response.data);
         } catch (error) {
           localStorage.removeItem('token');
+          setToken(null);
           delete axios.defaults.headers.common['Authorization'];
         }
       }
@@ -50,14 +52,16 @@ function App() {
     checkAuth();
   }, []);
 
-  const login = (userData, token) => {
+  const login = (userData, userToken) => {
     setUser(userData);
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setToken(userToken);
+    localStorage.setItem('token', userToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${userToken}`;
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
   };
