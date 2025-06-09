@@ -2206,23 +2206,32 @@ const TaskDetailModal = ({ task, onClose }) => {
   );
 };
 
-// FeedbackModal Component
-const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, onAddFeedback }) => {
+// FeedbackModal Component - Improved with persistent storage and better UI
+const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, onAddFeedback, user }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">
-            Feedback - {task.name}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Feedback - {task.name}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Thảo luận và góp ý về công việc này
+            </p>
             {feedbacks.length > 0 && (
-              <span className="ml-2 bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
-                {feedbacks.length}
+              <span className="inline-flex items-center mt-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                {feedbacks.length} bình luận
               </span>
             )}
-          </h2>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2230,51 +2239,98 @@ const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, 
           </button>
         </div>
 
-        {/* Feedback List */}
-        <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
-          {feedbacks.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Chưa có feedback nào</p>
-          ) : (
-            feedbacks.map((feedback) => (
-              <div key={feedback.id} className="bg-gray-50 p-3 rounded-lg">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-medium text-sm text-gray-900">
-                    {feedback.user_name}
+        {/* Content */}
+        <div className="flex flex-col h-[calc(90vh-140px)]">
+          {/* Feedback List */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {feedbacks.length === 0 ? (
+              <div className="text-center py-12">
+                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <p className="text-gray-500 text-lg">Chưa có feedback nào</p>
+                <p className="text-gray-400 text-sm mt-1">Hãy là người đầu tiên góp ý về công việc này</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {feedbacks.map((feedback) => (
+                  <div key={feedback.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-sm font-semibold">
+                            {feedback.user_name?.charAt(0).toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-gray-900">
+                            {feedback.user_name || 'Unknown User'}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(feedback.created_at).toLocaleString('vi-VN', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed pl-11">{feedback.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Add Feedback Section */}
+          <div className="border-t border-gray-200 p-6 bg-white">
+            <div className="flex items-start space-x-4">
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold">
+                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="mb-3">
+                  <span className="text-sm font-medium text-gray-900">
+                    {user?.full_name || 'Current User'}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(feedback.created_at).toLocaleString('vi-VN')}
+                  <span className="text-xs text-gray-500 ml-2">
+                    Đang viết feedback...
                   </span>
                 </div>
-                <p className="text-gray-700 text-sm">{feedback.message}</p>
+                <textarea
+                  value={newFeedback}
+                  onChange={(e) => setNewFeedback(e.target.value)}
+                  placeholder="Nhập feedback của bạn về công việc này..."
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base"
+                />
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-xs text-gray-500">
+                    {newFeedback.length}/500 ký tự
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={onClose}
+                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+                    >
+                      Đóng
+                    </button>
+                    <button
+                      onClick={onAddFeedback}
+                      disabled={!newFeedback.trim() || newFeedback.length > 500}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      Gửi feedback
+                    </button>
+                  </div>
+                </div>
               </div>
-            ))
-          )}
-        </div>
-
-        {/* Add Feedback */}
-        <div className="border-t pt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Thêm feedback</label>
-          <textarea
-            value={newFeedback}
-            onChange={(e) => setNewFeedback(e.target.value)}
-            placeholder="Nhập feedback..."
-            rows={3}
-            className="modern-input mb-3"
-          />
-          <div className="flex justify-between">
-            <button
-              onClick={onAddFeedback}
-              disabled={!newFeedback.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              Gửi feedback
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-            >
-              Đóng
-            </button>
+            </div>
           </div>
         </div>
       </div>
