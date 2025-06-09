@@ -1199,12 +1199,24 @@ const Task = () => {
 
   const handleAddFeedback = async () => {
     try {
+      if (!newFeedback.trim()) {
+        toast.error('Vui lòng nhập nội dung feedback');
+        return;
+      }
+
+      const response = await axios.post(`${API}/api/internal-tasks/${feedbackTask.id}/feedback/`, {
+        message: newFeedback.trim()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Add new feedback to the list with user info
       const newFeedbackItem = {
-        id: Date.now().toString(),
-        work_item_id: feedbackTask.id,
-        user_id: 'current-user-id',
-        user_name: 'Current User',
-        message: newFeedback,
+        id: response.data.id || Date.now().toString(),
+        task_id: feedbackTask.id,
+        user_id: user.id,
+        user_name: user.full_name,
+        message: newFeedback.trim(),
         created_at: new Date().toISOString()
       };
       
@@ -1212,17 +1224,30 @@ const Task = () => {
       setNewFeedback('');
       toast.success('Thêm feedback thành công!');
     } catch (error) {
-      toast.error('Lỗi khi thêm feedback');
+      console.error('Error adding feedback:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Lỗi khi thêm feedback';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
   const fetchFeedbacks = async (taskId) => {
     try {
-      // For demo purposes, return empty array
-      // In real implementation: const response = await axios.get(`${API}/api/work-items/${taskId}/feedback/`);
-      setFeedbacks([]);
+      const response = await axios.get(`${API}/api/internal-tasks/${taskId}/feedback/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFeedbacks(response.data || []);
     } catch (error) {
       console.error('Error fetching feedbacks:', error);
+      // Fallback to empty array if API not implemented yet
+      setFeedbacks([]);
     }
   };
 
