@@ -165,16 +165,17 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/clients" element={<Clients />} />
               <Route path="/task" element={<Task />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/campaigns" element={<Campaigns />} />
-              <Route path="/task-templates" element={<TaskTemplates />} />
+              <Route path="/projects" element={<ProjectsComponent user={user} />} />
+              <Route path="/campaigns" element={<CampaignsComponent user={user} />} />
+              <Route path="/campaigns/:id" element={<CampaignDetailComponent user={user} />} />
+              <Route path="/task-templates" element={<TemplatesComponent user={user} />} />
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/invoices" element={<Invoices />} />
-              <Route path="/expenses" element={<ExpenseManagement />} />
+              <Route path="/expenses" element={<ExpenseComponents.ExpenseOverview user={user} />} />
               <Route path="/financial-reports" element={<FinancialReports />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/sales-reports" element={<SalesReports />} />
-              <Route path="/documents" element={<Documents />} />
+              <Route path="/documents" element={<DocumentsComponent user={user} />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/account" element={<Account />} />
               <Route path="/settings" element={<Settings />} />
