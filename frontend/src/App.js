@@ -1683,6 +1683,7 @@ const TaskRow = React.memo(({
   onEdit, 
   onDelete, 
   onView, 
+  feedbackCounts = {}, // Add feedbackCounts prop
   onFeedback,
   getStatusIcon,
   getPriorityColor,
