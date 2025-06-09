@@ -1092,10 +1092,15 @@ const Task = () => {
   const handleDeleteTask = async (taskId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
       try {
-        setTasks(prev => prev.filter(t => t.id !== taskId));
+        await axios.delete(`${API}/api/internal-tasks/${taskId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
         toast.success('Xóa công việc thành công!');
+        fetchTasks(); // Refresh task list
         fetchStatistics();
       } catch (error) {
+        console.error('Error deleting task:', error);
         toast.error('Lỗi khi xóa công việc');
       }
     }
