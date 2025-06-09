@@ -93,7 +93,6 @@ const HumanResources = ({ user }) => {
 
 // Human Resources Management Tab (original functionality with Team column)
 const HumanResourcesManagement = ({ user }) => {
-  const { user: authUser } = useContext(AuthContext);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
