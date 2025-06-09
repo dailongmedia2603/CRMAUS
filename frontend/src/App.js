@@ -1082,17 +1082,40 @@ const Task = () => {
 
   const handleCreateTask = async (taskData) => {
     try {
+      console.log('Creating task with data:', taskData);
+      console.log('API URL:', `${API}/api/internal-tasks/`);
+      
       const response = await axios.post(`${API}/api/internal-tasks/`, taskData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
+      console.log('Task created successfully:', response.data);
       setShowCreateModal(false);
       toast.success('Tạo công việc thành công!');
       fetchTasks(); // Refresh task list
       fetchStatistics();
     } catch (error) {
       console.error('Error creating task:', error);
-      toast.error('Lỗi khi tạo công việc');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Lỗi khi tạo công việc';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(err => err.msg || err).join(', ');
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
