@@ -190,20 +190,20 @@
         agent: "testing"
         comment: "Based on code review, the task completion popup is properly implemented. When a user clicks the 'Hoàn thành' button on a task with 'in_progress' status, the handleStatusUpdate function in the TaskRow component checks if the new status is 'completed' and if so, it sets showReportModal to true, which displays the popup. The popup contains a report link input field and buttons to cancel or complete the task. The implementation is correct, but the preview environment is currently having issues that prevent interactive testing."
 
-  - task: "Expense Management Tab Navigation"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/components/ExpenseComponents.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "testing"
-        comment: "Need to test the Expense Management page tab navigation system with three tabs: 'Tổng quan' (Overview), 'Danh sách chi phí' (Expense List), and 'Cấu hình' (Configuration)."
-      - working: true
-        agent: "testing"
-        comment: "Successfully tested the Expense Management page tab navigation system. The page has three tabs as required: 'Tổng quan' (Overview) with chart icon, 'Danh sách chi phí' (Expense List) with list icon, and 'Cấu hình' (Configuration) with settings icon. All tabs work correctly when clicked and display the appropriate content. The 'Danh sách chi phí' tab shows the expense table and 'Thêm chi phí' button with a + icon. The 'Cấu hình' tab correctly displays two sub-tabs: 'Hạng mục chi phí' (Expense Categories) and 'Thư mục' (Folders), each with their respective 'Add' buttons. The tab navigation is smooth and displays the correct content for each tab."
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "User Management API"
+    - "UI Improvements"
+    - "Expense Management Tab Navigation"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
 
   - task: "UI Improvements"
     implemented: true
