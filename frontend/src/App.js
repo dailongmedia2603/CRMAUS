@@ -165,7 +165,8 @@ function App() {
           <main className="flex-1 p-6">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/clients" element={<Clients />} />
+              <Route path="/clients" element={<ClientsComponent user={user} />} />
+              <Route path="/clients/:id" element={<ClientDetailComponent user={user} />} />
               <Route path="/task" element={<Task />} />
               <Route path="/projects" element={<ProjectsComponent user={user} />} />
               <Route path="/campaigns" element={<CampaignsComponent user={user} />} />
