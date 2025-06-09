@@ -1971,7 +1971,7 @@ const TaskRow = React.memo(({
       )}
     </>
   );
-};
+});
 
 // TaskModal Component (Create/Edit)
 const TaskModal = ({ task, users, onClose, onSubmit }) => {
