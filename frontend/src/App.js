@@ -1336,10 +1336,7 @@ const Task = () => {
       toast.error('Có lỗi xảy ra khi hoàn thành công việc');
     } finally {
       setIsSubmittingReport(false);
-    }
-  };
-
-  // Filter tasks based on current filters
+  // Report modal functions
   const handleOpenReportModal = (task) => {
     setReportTask(task);
     setReportLink('');
