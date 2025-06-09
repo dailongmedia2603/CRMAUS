@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 
 // Use environment variable for API URL
-const API = process.env.REACT_APP_BACKEND_URL || '/api';
+const API = process.env.REACT_APP_BACKEND_URL || '';
 
 const HumanResources = ({ user }) => {
   const [employees, setEmployees] = useState([]);
