@@ -30,7 +30,7 @@ const Campaigns = () => {
   const fetchCampaigns = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/campaigns/`, {
+      const response = await axios.get(`/api/campaigns/`, {
         params: {
           search: searchTerm || undefined,
           archived: showArchived
