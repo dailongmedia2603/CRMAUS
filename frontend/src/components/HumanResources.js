@@ -50,14 +50,9 @@ const HumanResources = ({ user }) => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
       
       // Filter by search term (searching in full_name and email)
-      const response = await axios.get(`${API}/users/`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await axios.get(`${API}/users/`);
       
       let filteredEmployees = response.data;
       
