@@ -184,6 +184,7 @@ function App() {
               <Route path="/sales-reports" element={<SalesReports />} />
               <Route path="/documents" element={<DocumentsComponent user={user} />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/human-resources" element={<HumanResources user={user} />} />
               <Route path="/account" element={<Account />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" />} />
