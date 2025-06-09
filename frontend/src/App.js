@@ -22,8 +22,8 @@ import HumanResources from "./components/HumanResources.js";
 const AuthContext = createContext();
 export { AuthContext };
 
-// Environment variables - Use relative path for API calls (will be proxied)
-const API = '';
+// Environment variables - Use backend URL from environment variable
+const API = process.env.REACT_APP_BACKEND_URL || '';
 
 function App() {
   const [user, setUser] = useState(null);
