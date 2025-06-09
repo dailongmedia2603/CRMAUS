@@ -2015,10 +2015,8 @@ const TaskRow = React.memo(({
                   type="submit"
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('Submit button clicked');
-                    console.log('Current state:', { reportLink, isSubmitting });
                     
-                    // Fallback if form submit doesn't work
+                    // Fallback validation
                     if (!reportLink.trim()) {
                       e.preventDefault();
                       toast.error('Vui lòng nhập link báo cáo');
