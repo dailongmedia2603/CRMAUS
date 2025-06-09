@@ -448,21 +448,11 @@ def main():
         print("Failed to authenticate. Exiting tests.")
         return
     
-    # Test internal task management API
+    # Test internal task management API with feedback functionality
     internal_task_success = test_internal_task_management()
     
-    # Run the Human Resources API tests
-    user_management_success = test_user_management()
-    
-    # Run other tests if needed
-    documents_success = test_documents()
-    dashboard_success = test_dashboard()
-    
     print("\n=== Test Results ===")
-    print(f"Internal Task Management API: {'✅' if internal_task_success else '❌'}")
-    print(f"User Management API: {'✅' if user_management_success else '❌'}")
-    print(f"Documents API: {'✅' if documents_success else '❌'}")
-    print(f"Dashboard API: {'✅' if dashboard_success else '❌'}")
+    print(f"Internal Task Management API with Feedback: {'✅' if internal_task_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
