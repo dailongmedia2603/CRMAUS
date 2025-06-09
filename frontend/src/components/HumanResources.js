@@ -8,6 +8,7 @@ import { AuthContext } from '../App.js';
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
 const HumanResources = ({ user }) => {
+  const { user: authUser } = useContext(AuthContext);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
