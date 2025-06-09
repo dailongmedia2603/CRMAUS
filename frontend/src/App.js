@@ -170,6 +170,7 @@ function App() {
               <Route path="/clients/:id" element={<ClientDetailComponent user={user} />} />
               <Route path="/task" element={<Task />} />
               <Route path="/projects" element={<ProjectsComponent user={user} />} />
+              <Route path="/projects/:id" element={<ProjectDetailComponent user={user} />} />
               <Route path="/campaigns" element={<CampaignsComponent user={user} />} />
               <Route path="/campaigns/:id" element={<CampaignDetailComponent user={user} />} />
               <Route path="/task-templates" element={<TemplatesComponent user={user} />} />
