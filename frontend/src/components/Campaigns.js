@@ -120,7 +120,7 @@ const Campaigns = () => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/api/campaigns/bulk-action`, {
+      await axios.post(`/api/campaigns/bulk-action`, {
         action,
         campaign_ids: selectedCampaigns
       });
