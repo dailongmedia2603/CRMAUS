@@ -236,6 +236,135 @@ def test_user_management():
     return (users_success and role_success and create_success and 
             deactivate_success and activate_success and reset_password_success and delete_success)
 
+def test_internal_task_management():
+    """Test Internal Task Management API endpoints"""
+    print("\n=== Testing Internal Task Management API ===")
+    
+    # Get an active user ID for assignment
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    if response.status_code != 200:
+        print("❌ Failed to get users list")
+        print(f"Response: {response.text}")
+        return False
+    
+    users = response.json()
+    active_users = [user for user in users if user["is_active"]]
+    
+    if not active_users:
+        print("❌ No active users found for task assignment")
+        return False
+    
+    assigned_user = active_users[0]
+    assigned_user_id = assigned_user["id"]
+    print(f"Using user for assignment: {assigned_user['full_name']} (ID: {assigned_user_id})")
+    
+    # Test POST /api/internal-tasks/ - Create new internal task
+    future_date = (datetime.utcnow() + timedelta(days=7)).isoformat()
+    
+    new_task = {
+        "name": "Test task",
+        "description": "Test description",
+        "assigned_to": assigned_user_id,
+        "deadline": future_date,
+        "priority": "normal",
+        "document_links": ["https://example.com"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=get_headers(),
+        json=new_task
+    )
+    
+    create_success = print_test_result("Create New Internal Task", response)
+    
+    if create_success:
+        created_task = response.json()
+        task_id = created_task["id"]
+        print(f"Created new task: {created_task['name']} (ID: {task_id})")
+        print(f"Task details: Priority: {created_task['priority']}, Status: {created_task['status']}")
+        print(f"Assigned to: {created_task['assigned_to_name']} (ID: {created_task['assigned_to']})")
+        print(f"Document links: {created_task['document_links']}")
+        
+        # Test GET /api/internal-tasks/ - Get list of tasks
+        response = requests.get(
+            f"{BACKEND_URL}/internal-tasks/",
+            headers=get_headers()
+        )
+        
+        list_success = print_test_result("Get Internal Tasks List", response)
+        
+        if list_success:
+            tasks = response.json()
+            print(f"Found {len(tasks)} internal tasks")
+            
+            # Verify our created task is in the list
+            found = any(task["id"] == task_id for task in tasks)
+            if found:
+                print("✅ Created task found in tasks list")
+            else:
+                print("❌ Created task not found in tasks list")
+                list_success = False
+        
+        # Test GET /api/internal-tasks/{task_id} - Get task details
+        response = requests.get(
+            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            headers=get_headers()
+        )
+        
+        get_success = print_test_result("Get Internal Task Details", response)
+        
+        if get_success:
+            task = response.json()
+            print(f"Task details: {task['name']} - {task['description']}")
+            
+            # Verify task details match what we created
+            if (task["name"] == new_task["name"] and 
+                task["description"] == new_task["description"] and
+                task["assigned_to"] == new_task["assigned_to"] and
+                task["priority"] == new_task["priority"] and
+                task["document_links"] == new_task["document_links"]):
+                print("✅ Task details match created task")
+            else:
+                print("❌ Task details do not match created task")
+                get_success = False
+        
+        # Test DELETE /api/internal-tasks/{task_id} - Delete task
+        response = requests.delete(
+            f"{BACKEND_URL}/internal-tasks/{task_id}",
+            headers=get_headers()
+        )
+        
+        delete_success = print_test_result("Delete Internal Task", response)
+        
+        if delete_success:
+            print(f"Successfully deleted task with ID: {task_id}")
+            
+            # Verify task is deleted
+            response = requests.get(
+                f"{BACKEND_URL}/internal-tasks/{task_id}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 404:
+                print("✅ Task successfully deleted (404 Not Found)")
+            else:
+                print(f"❌ Task not deleted properly: {response.status_code}")
+                delete_success = False
+    else:
+        list_success = False
+        get_success = False
+        delete_success = False
+        
+        # Print the error response for debugging
+        print(f"Error creating task: {response.text}")
+    
+    return create_success and list_success and get_success and delete_success
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
@@ -245,6 +374,9 @@ def main():
         print("Failed to authenticate. Exiting tests.")
         return
     
+    # Test internal task management API
+    internal_task_success = test_internal_task_management()
+    
     # Run the Human Resources API tests
     user_management_success = test_user_management()
     
@@ -253,6 +385,7 @@ def main():
     dashboard_success = test_dashboard()
     
     print("\n=== Test Results ===")
+    print(f"Internal Task Management API: {'✅' if internal_task_success else '❌'}")
     print(f"User Management API: {'✅' if user_management_success else '❌'}")
     print(f"Documents API: {'✅' if documents_success else '❌'}")
     print(f"Dashboard API: {'✅' if dashboard_success else '❌'}")
