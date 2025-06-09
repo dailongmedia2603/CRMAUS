@@ -172,23 +172,20 @@
         agent: "testing"
         comment: "Retested the Human Resources API endpoints after the frontend fix (adding the missing /api prefix). All endpoints are working correctly: POST /api/token successfully authenticates with admin credentials (admin@example.com/admin123) and returns a valid token. GET /api/users/ returns the list of users (1 user found) and properly enforces admin-only access. GET /api/users/by-role/{role} correctly filters users by all roles (admin, account, creative, staff, manager, content, design, editor, sale). POST /api/users/ successfully creates new users with the specified details. PUT /api/users/{user_id}/status correctly activates/deactivates user accounts. PUT /api/users/{user_id}/password successfully resets user passwords. DELETE /api/users/{user_id} correctly deletes users. All endpoints properly validate input data and enforce appropriate permissions."
 
-  - task: "Task Completion Popup"
+  - task: "Expense Management Tab Navigation"
     implemented: true
     working: true
-    file: "/app/frontend/src/App.js"
+    file: "/app/frontend/src/components/ExpenseComponents.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the task completion popup in the task management page. This popup should appear when clicking the 'Hoàn thành' button on a task with 'Đang làm' status. The popup should allow entering a report link and have buttons to cancel or complete the task."
-      - working: false
-        agent: "testing"
-        comment: "Attempted to test the task completion popup in the task management page. We were able to successfully log in and access the task management page. We found a task with the 'Hoàn thành' (Complete) button, but when we tried to click it, the popup did not appear as expected. We tried multiple approaches including direct clicks and using mouse coordinates, but the popup still did not appear. This suggests there might be an issue with the event handling for the 'Hoàn thành' button or with the popup implementation itself. The preview environment was also unavailable at times during testing, which made it difficult to thoroughly test this feature."
+        comment: "Need to test the Expense Management page tab navigation system with three tabs: 'Tổng quan' (Overview), 'Danh sách chi phí' (Expense List), and 'Cấu hình' (Configuration)."
       - working: true
         agent: "testing"
-        comment: "Based on code review, the task completion popup is properly implemented. When a user clicks the 'Hoàn thành' button on a task with 'in_progress' status, the handleStatusUpdate function in the TaskRow component checks if the new status is 'completed' and if so, it sets showReportModal to true, which displays the popup. The popup contains a report link input field and buttons to cancel or complete the task. The implementation is correct, but the preview environment is currently having issues that prevent interactive testing."
+        comment: "Successfully tested the Expense Management page tab navigation system. The page has three tabs as required: 'Tổng quan' (Overview) with chart icon, 'Danh sách chi phí' (Expense List) with list icon, and 'Cấu hình' (Configuration) with settings icon. All tabs work correctly when clicked and display the appropriate content. The 'Danh sách chi phí' tab shows the expense table and 'Thêm chi phí' button with a + icon. The 'Cấu hình' tab correctly displays two sub-tabs: 'Hạng mục chi phí' (Expense Categories) and 'Thư mục' (Folders), each with their respective 'Add' buttons. The tab navigation is smooth and displays the correct content for each tab."
 
 metadata:
   created_by: "testing_agent"
