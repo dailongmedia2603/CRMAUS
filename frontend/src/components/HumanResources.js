@@ -158,11 +158,7 @@ const HumanResources = ({ user }) => {
   const handleDelete = async (employeeId) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa nhân sự này? Hành động này không thể hoàn tác.')) {
       try {
-        await axios.delete(`${API}/users/${employeeId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        await axios.delete(`${API}/api/users/${employeeId}`);
         toast.success('Xóa nhân sự thành công!');
         fetchEmployees();
       } catch (error) {
@@ -174,13 +170,8 @@ const HumanResources = ({ user }) => {
 
   const handleStatusToggle = async (employee) => {
     try {
-      await axios.put(`${API}/users/${employee.id}/status`, 
-        { is_active: !employee.is_active }, 
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
+      await axios.put(`${API}/api/users/${employee.id}/status`, 
+        { is_active: !employee.is_active }
       );
       toast.success(`${!employee.is_active ? 'Kích hoạt' : 'Vô hiệu hóa'} tài khoản thành công!`);
       fetchEmployees();
@@ -194,13 +185,8 @@ const HumanResources = ({ user }) => {
     const newPassword = prompt('Nhập mật khẩu mới cho nhân sự này:');
     if (newPassword && newPassword.length >= 6) {
       try {
-        await axios.put(`${API}/users/${employee.id}/password`, 
-          { new_password: newPassword }, 
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
+        await axios.put(`${API}/api/users/${employee.id}/password`, 
+          { new_password: newPassword }
         );
         toast.success('Reset mật khẩu thành công!');
       } catch (error) {
