@@ -448,35 +448,44 @@ const SidebarContent = ({ user, logout }) => {
     }));
   };
 
+  // Unified color scheme - blue theme
+  const activeClasses = "text-white bg-blue-600 shadow-md";
+  const hoverClasses = "text-blue-700 bg-blue-50 hover:bg-blue-100";
+  const defaultClasses = "text-gray-700 hover:text-blue-700 hover:bg-blue-50";
+  
+  const subActiveClasses = "text-white bg-blue-600 shadow-sm";
+  const subHoverClasses = "text-blue-700 bg-blue-50 hover:bg-blue-100";
+  const subDefaultClasses = "text-gray-600 hover:text-blue-700 hover:bg-blue-50";
+
   return (
-    <div className="h-screen w-64 bg-white shadow-lg flex flex-col">
+    <div className="h-screen w-64 bg-white shadow-lg flex flex-col border-r border-gray-200">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3 shadow-md">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0a2 2 0 002-2v-1a2 2 0 00-2-2H5a2 2 0 00-2 2v1a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">CRM AUS</h1>
+            <h1 className="text-xl font-bold text-white">CRM AUS</h1>
+            <p className="text-blue-100 text-xs">Quản lý khách hàng</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {/* Dashboard */}
         <button
           onClick={() => navigate("/")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location === "/"
-              ? "active text-white bg-blue-600"
-              : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location === "/" ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15V9m4 6V9m4 6V9" />
           </svg>
           Dashboard
         </button>
@@ -484,87 +493,80 @@ const SidebarContent = ({ user, logout }) => {
         {/* Client */}
         <button
           onClick={() => navigate("/clients")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/clients")
-              ? "active text-white bg-purple-600"
-              : "text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/clients") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          Client
+          Khách hàng
         </button>
 
         {/* Task */}
         <button
           onClick={() => navigate("/task")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/task")
-              ? "active text-white bg-green-600"
-              : "text-gray-700 hover:bg-green-50 hover:text-green-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/task") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          Task
+          Công việc
         </button>
 
         {/* Dự án Section */}
-        <div className="pt-2">
+        <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('project')}
-            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              openSubmenus.project || location.startsWith("/projects") || location.startsWith("/campaigns") || location.startsWith("/task-templates") 
+                ? hoverClasses : defaultClasses
+            }`}
           >
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
               Dự án
             </div>
-            <svg className={`w-4 h-4 transform transition-transform ${openSubmenus.project ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.project ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
           
           {openSubmenus.project && (
-            <div className="ml-4 mt-1 space-y-1">
+            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
               <button
                 onClick={() => navigate("/projects")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/projects")
-                    ? "text-white bg-indigo-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/projects") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Danh sách dự án
               </button>
               <button
                 onClick={() => navigate("/campaigns")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/campaigns")
-                    ? "text-white bg-indigo-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/campaigns") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-5 8l3-3m0 0l-3-3m3 3H8" />
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
                 Chiến dịch
               </button>
               <button
                 onClick={() => navigate("/task-templates")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/task-templates")
-                    ? "text-white bg-indigo-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/task-templates") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
                 Template dịch vụ
@@ -574,72 +576,67 @@ const SidebarContent = ({ user, logout }) => {
         </div>
 
         {/* Tài chính Section */}
-        <div className="pt-2">
+        <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('finance')}
-            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              openSubmenus.finance || location.startsWith("/invoices") || location.startsWith("/contracts") || location.startsWith("/expenses") || location.startsWith("/financial-reports")
+                ? hoverClasses : defaultClasses
+            }`}
           >
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Tài chính
             </div>
-            <svg className={`w-4 h-4 transform transition-transform ${openSubmenus.finance ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.finance ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
           
           {openSubmenus.finance && (
-            <div className="ml-4 mt-1 space-y-1">
+            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
               <button
                 onClick={() => navigate("/invoices")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/invoices")
-                    ? "text-white bg-yellow-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/invoices") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Hóa đơn
               </button>
               <button
                 onClick={() => navigate("/contracts")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/contracts")
-                    ? "text-white bg-yellow-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/contracts") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Hợp đồng
               </button>
               <button
                 onClick={() => navigate("/expenses")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/expenses")
-                    ? "text-white bg-yellow-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/expenses") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Quản lý chi phí
               </button>
               <button
                 onClick={() => navigate("/financial-reports")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/financial-reports")
-                    ? "text-white bg-yellow-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/financial-reports") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Báo cáo tài chính
@@ -649,59 +646,56 @@ const SidebarContent = ({ user, logout }) => {
         </div>
 
         {/* Bán hàng Section */}
-        <div className="pt-2">
+        <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('sales')}
-            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              openSubmenus.sales || location.startsWith("/opportunities") || location.startsWith("/sales-reports")
+                ? hoverClasses : defaultClasses
+            }`}
           >
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
               Bán hàng
             </div>
-            <svg className={`w-4 h-4 transform transition-transform ${openSubmenus.sales ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.sales ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
           
           {openSubmenus.sales && (
-            <div className="ml-4 mt-1 space-y-1">
+            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
               <button
                 onClick={() => navigate("/clients")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/clients")
-                    ? "text-white bg-green-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/clients") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Khách hàng
               </button>
               <button
                 onClick={() => navigate("/opportunities")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/opportunities")
-                    ? "text-white bg-green-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/opportunities") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
                 Cơ hội
               </button>
               <button
                 onClick={() => navigate("/sales-reports")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/sales-reports")
-                    ? "text-white bg-green-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.startsWith("/sales-reports") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Báo cáo
@@ -713,13 +707,11 @@ const SidebarContent = ({ user, logout }) => {
         {/* Tài liệu */}
         <button
           onClick={() => navigate("/documents")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/documents")
-              ? "active text-white bg-orange-600"
-              : "text-gray-700 hover:bg-orange-50 hover:text-orange-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/documents") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2H8.5a2.5 2.5 0 01-2.5-2.5v-8.5z" />
           </svg>
           Tài liệu
@@ -728,13 +720,11 @@ const SidebarContent = ({ user, logout }) => {
         {/* Báo cáo */}
         <button
           onClick={() => navigate("/reports")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/reports")
-              ? "active text-white bg-pink-600"
-              : "text-gray-700 hover:bg-pink-50 hover:text-pink-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/reports") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           Báo cáo
@@ -743,13 +733,11 @@ const SidebarContent = ({ user, logout }) => {
         {/* Nhân sự */}
         <button
           onClick={() => navigate("/human-resources")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/human-resources")
-              ? "active text-white bg-indigo-600"
-              : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/human-resources") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
           </svg>
           Nhân sự
@@ -758,13 +746,11 @@ const SidebarContent = ({ user, logout }) => {
         {/* Tài khoản */}
         <button
           onClick={() => navigate("/account")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/account")
-              ? "active text-white bg-teal-600"
-              : "text-gray-700 hover:bg-teal-50 hover:text-teal-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.startsWith("/account") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           Tài khoản
@@ -774,13 +760,11 @@ const SidebarContent = ({ user, logout }) => {
         {user?.role === 'admin' && (
           <button
             onClick={() => navigate("/settings")}
-            className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              location.startsWith("/settings")
-                ? "active text-white bg-gray-600"
-                : "text-gray-700 hover:bg-gray-50 hover:text-gray-700"
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.startsWith("/settings") ? activeClasses : defaultClasses
             }`}
           >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -790,14 +774,37 @@ const SidebarContent = ({ user, logout }) => {
       </nav>
 
       {/* User Info & Logout */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-              <span className="text-sm font-semibold text-gray-700">
+          <div className="flex items-center flex-1 min-w-0">
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+              <span className="text-sm font-semibold text-white">
                 {user?.full_name?.charAt(0) || 'U'}
               </span>
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.full_name || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {user?.role || 'N/A'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
+            title="Đăng xuất"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
             <div>
               <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
               <p className="text-xs text-gray-500">{user?.role}</p>
