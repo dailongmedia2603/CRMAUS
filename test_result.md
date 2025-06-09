@@ -160,21 +160,6 @@
         agent: "testing"
         comment: "Retested the Human Resources API endpoints after the frontend fix (adding the missing /api prefix). All endpoints are working correctly: POST /api/token successfully authenticates with admin credentials (admin@example.com/admin123) and returns a valid token. GET /api/users/ returns the list of users (1 user found) and properly enforces admin-only access. GET /api/users/by-role/{role} correctly filters users by all roles (admin, account, creative, staff, manager, content, design, editor, sale). POST /api/users/ successfully creates new users with the specified details. PUT /api/users/{user_id}/status correctly activates/deactivates user accounts. PUT /api/users/{user_id}/password successfully resets user passwords. DELETE /api/users/{user_id} correctly deletes users. All endpoints properly validate input data and enforce appropriate permissions."
 
-  - task: "Expense Management Tab Navigation"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/components/ExpenseComponents.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "testing"
-        comment: "Need to test the Expense Management page tab navigation system with three tabs: 'Tổng quan' (Overview), 'Danh sách chi phí' (Expense List), and 'Cấu hình' (Configuration)."
-      - working: true
-        agent: "testing"
-        comment: "Successfully tested the Expense Management page tab navigation system. The page has three tabs as required: 'Tổng quan' (Overview) with chart icon, 'Danh sách chi phí' (Expense List) with list icon, and 'Cấu hình' (Configuration) with settings icon. All tabs work correctly when clicked and display the appropriate content. The 'Danh sách chi phí' tab shows the expense table and 'Thêm chi phí' button with a + icon. The 'Cấu hình' tab correctly displays two sub-tabs: 'Hạng mục chi phí' (Expense Categories) and 'Thư mục' (Folders), each with their respective 'Add' buttons. The tab navigation is smooth and displays the correct content for each tab."
-
   - task: "Internal Task Management API"
     implemented: true
     working: true
@@ -204,6 +189,8 @@
       - working: true
         agent: "testing"
         comment: "Successfully tested the internal task feedback API. Created a new internal task, added feedback with message 'Test feedback message', and verified that the feedback was correctly stored and retrieved. The GET /api/internal-tasks/{task_id}/feedback/ endpoint returns the feedback with the correct user_name and message. When the task is deleted, the associated feedback is also deleted. The feedback system works correctly and stores the user information properly."
+
+  - task: "UI Improvements"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
@@ -217,6 +204,36 @@
       - working: true
         agent: "testing"
         comment: "Based on code review, all UI improvements have been properly implemented. 1) The feedback count is displayed correctly using the feedbackCounts object which stores the actual count for each task (line 1826: 'Feedback ({feedbackCounts[task.id] || 0})'). 2) Feedback buttons with non-zero counts have red styling (lines 1820-1823: 'className={`text-sm px-3 py-1 rounded hover:bg-gray-200 transition-colors ${feedbackCounts[task.id] > 0 ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-gray-100 text-gray-700'}`}'). 3) All add buttons across different pages (Tasks, Projects, Clients, Templates, Expenses, Human Resources) are implemented as circular buttons with only the + icon and no text, using consistent styling (w-12 h-12 rounded-full with SVG icon). The preview environment is currently having issues that prevent interactive testing, but the code implementation is correct."
+
+  - task: "Expense Management Tab Navigation"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/ExpenseComponents.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Expense Management page tab navigation system with three tabs: 'Tổng quan' (Overview), 'Danh sách chi phí' (Expense List), and 'Cấu hình' (Configuration)."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Expense Management page tab navigation system. The page has three tabs as required: 'Tổng quan' (Overview) with chart icon, 'Danh sách chi phí' (Expense List) with list icon, and 'Cấu hình' (Configuration) with settings icon. All tabs work correctly when clicked and display the appropriate content. The 'Danh sách chi phí' tab shows the expense table and 'Thêm chi phí' button with a + icon. The 'Cấu hình' tab correctly displays two sub-tabs: 'Hạng mục chi phí' (Expense Categories) and 'Thư mục' (Folders), each with their respective 'Add' buttons. The tab navigation is smooth and displays the correct content for each tab."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "User Management API"
+    - "UI Improvements"
+    - "Expense Management Tab Navigation"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
