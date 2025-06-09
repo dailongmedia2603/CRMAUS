@@ -1059,28 +1059,16 @@ const Task = () => {
 
   const handleCreateTask = async (taskData) => {
     try {
-      // For demo purposes, we'll create a mock task
-      const newTask = {
-        id: Date.now().toString(),
-        name: taskData.name,
-        description: taskData.description,
-        assigned_to: taskData.assigned_to,
-        assigned_by: 'current-user-id',
-        deadline: taskData.deadline,
-        priority: taskData.priority,
-        status: 'not_started',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        document_links: taskData.document_links || [],
-        assigned_to_name: users.find(u => u.id === taskData.assigned_to)?.full_name || 'Unknown',
-        assigned_by_name: 'Current User'
-      };
+      const response = await axios.post(`${API}/api/internal-tasks/`, taskData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      setTasks(prev => [newTask, ...prev]);
       setShowCreateModal(false);
       toast.success('Tạo công việc thành công!');
+      fetchTasks(); // Refresh task list
       fetchStatistics();
     } catch (error) {
+      console.error('Error creating task:', error);
       toast.error('Lỗi khi tạo công việc');
     }
   };
