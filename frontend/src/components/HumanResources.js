@@ -16,7 +16,98 @@ import { AuthContext } from '../App.js';
 // Use environment variable for API URL
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
+import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { format } from 'date-fns';
+import { AuthContext } from '../App.js';
+
+// Use environment variable for API URL
+const API = process.env.REACT_APP_BACKEND_URL || '';
+
 const HumanResources = ({ user }) => {
+  const { user: authUser } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('management'); // management, teams, performance
+  
+  // Tab content rendering
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'management':
+        return <HumanResourcesManagement user={user} />;
+      case 'teams':
+        return <TeamManagement user={user} />;
+      case 'performance':
+        return <PerformanceTracking user={user} />;
+      default:
+        return <HumanResourcesManagement user={user} />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Quản lý nhân sự</h2>
+          <p className="text-gray-600">Quản lý thông tin và tài khoản nhân viên công ty</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('management')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'management'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Quản lý nhân sự
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('teams')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'teams'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Team
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('performance')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'performance'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Hiệu suất
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {renderTabContent()}
+    </div>
+  );
   const { user: authUser } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('management'); // management, teams, performance
   
