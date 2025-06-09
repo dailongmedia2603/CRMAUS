@@ -96,7 +96,7 @@
       - working: true
         agent: "testing"
         comment: "✅ FIXED: The issue was incorrect endpoint path in tests. The correct endpoint for document folders is GET /api/folders/ (not /api/document-folders/). All document endpoints now working: GET /api/folders/ returns document folders correctly, GET /api/documents/ returns documents list, and GET /api/documents/{id} returns specific document details. All endpoints working with proper authentication."
-
+        
   - task: "Dashboard API"
     implemented: true
     working: true
@@ -171,6 +171,21 @@
       - working: true
         agent: "testing"
         comment: "Retested the Human Resources API endpoints after the frontend fix (adding the missing /api prefix). All endpoints are working correctly: POST /api/token successfully authenticates with admin credentials (admin@example.com/admin123) and returns a valid token. GET /api/users/ returns the list of users (1 user found) and properly enforces admin-only access. GET /api/users/by-role/{role} correctly filters users by all roles (admin, account, creative, staff, manager, content, design, editor, sale). POST /api/users/ successfully creates new users with the specified details. PUT /api/users/{user_id}/status correctly activates/deactivates user accounts. PUT /api/users/{user_id}/password successfully resets user passwords. DELETE /api/users/{user_id} correctly deletes users. All endpoints properly validate input data and enforce appropriate permissions."
+
+  - task: "Task Completion Popup"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the task completion popup in the task management page. This popup should appear when clicking the 'Hoàn thành' button on a task with 'Đang làm' status. The popup should allow entering a report link and have buttons to cancel or complete the task."
+      - working: false
+        agent: "testing"
+        comment: "Attempted to test the task completion popup in the task management page. We were able to successfully log in and access the task management page. We found a task with the 'Hoàn thành' (Complete) button, but when we tried to click it, the popup did not appear as expected. We tried multiple approaches including direct clicks and using mouse coordinates, but the popup still did not appear. This suggests there might be an issue with the event handling for the 'Hoàn thành' button or with the popup implementation itself. The preview environment was also unavailable at times during testing, which made it difficult to thoroughly test this feature."
 
 metadata:
   created_by: "testing_agent"
