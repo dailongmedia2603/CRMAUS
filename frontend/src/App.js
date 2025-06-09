@@ -2270,17 +2270,13 @@ const Reports = () => (
 );
 
 // ==================== MODULE-TAI-KHOAN START ====================
-// Account Management Module - Complete User Management System (REBUILT)
+// Account Management Module - Simple & Reliable User Management
 const Account = () => {
   const { user, token } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('profile');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [userToResetPassword, setUserToResetPassword] = useState(null);
-
-  // Forms
   const [userForm, setUserForm] = useState({
     email: '',
     full_name: '',
@@ -2288,89 +2284,60 @@ const Account = () => {
     password: ''
   });
 
-  const [profileForm, setProfileForm] = useState({
-    full_name: user?.full_name || '',
-    email: user?.email || '',
-    current_password: '',
-    new_password: '',
-    confirm_password: ''
-  });
-
-  const [passwordForm, setPasswordForm] = useState({
-    new_password: '',
-    confirm_password: ''
-  });
-
   const roles = [
     { value: 'admin', label: 'Admin', color: 'bg-red-100 text-red-800' },
     { value: 'account', label: 'Account Manager', color: 'bg-blue-100 text-blue-800' },
-    { value: 'creative', label: 'Creative', color: 'bg-purple-100 text-purple-800' },
-    { value: 'staff', label: 'Staff', color: 'bg-gray-100 text-gray-800' },
     { value: 'manager', label: 'Project Manager', color: 'bg-green-100 text-green-800' },
     { value: 'content', label: 'Content Creator', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'design', label: 'Designer', color: 'bg-pink-100 text-pink-800' },
     { value: 'editor', label: 'Editor', color: 'bg-indigo-100 text-indigo-800' },
-    { value: 'sale', label: 'Sales', color: 'bg-orange-100 text-orange-800' }
+    { value: 'sale', label: 'Sales', color: 'bg-orange-100 text-orange-800' },
+    { value: 'creative', label: 'Creative', color: 'bg-purple-100 text-purple-800' },
+    { value: 'staff', label: 'Staff', color: 'bg-gray-100 text-gray-800' }
   ];
 
-  // Fetch users function - SIMPLE AND DIRECT
+  // Load users - SIMPLE FUNCTION
   const loadUsers = async () => {
+    console.log('🔄 loadUsers called');
+    console.log('User role:', user?.role);
+    console.log('Token exists:', !!token);
+    console.log('API URL:', API);
+
     if (!token || user?.role !== 'admin') {
-      console.log('Cannot load users - no token or not admin');
+      console.log('❌ Cannot load users - no admin access');
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log('🔄 Loading users...');
-      console.log('Token:', token?.substring(0, 20) + '...');
-      console.log('API URL:', `${API}/api/users/`);
+      console.log('📡 Making API call to get users...');
       
-      const response = await fetch(`${API}/api/users/`, {
-        method: 'GET',
-        headers: {
+      const response = await axios.get(`${API}/api/users/`, {
+        headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      console.log('Response status:', response.status);
+      console.log('✅ Users API response:', response.data);
+      console.log('Number of users:', response.data.length);
       
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Response error:', errorData);
-        throw new Error(`HTTP ${response.status}: ${errorData}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Users loaded:', data.length, 'users');
-      console.log('Users data:', data);
+      setUsers(response.data);
+      toast.success(`Tải thành công ${response.data.length} tài khoản!`);
       
-      setUsers(data);
-      toast.success(`Tải thành công ${data.length} tài khoản!`);
     } catch (error) {
       console.error('❌ Error loading users:', error);
-      toast.error(`Lỗi tải danh sách: ${error.message}`);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
       setUsers([]);
+      toast.error(`Lỗi tải danh sách: ${error.response?.data?.detail || error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Load users when switching to users tab
-  useEffect(() => {
-    console.log('Account useEffect:', { 
-      activeTab, 
-      userRole: user?.role, 
-      hasToken: !!token 
-    });
-    
-    if (activeTab === 'users' && user?.role === 'admin' && token) {
-      loadUsers();
-    }
-  }, [activeTab, user?.role, token]);
-
-  // Create user function
+  // Create user
   const createUser = async (e) => {
     e.preventDefault();
     
@@ -2382,161 +2349,46 @@ const Account = () => {
     try {
       console.log('Creating user:', userForm);
       
-      const response = await fetch(`${API}/api/users/`, {
-        method: 'POST',
-        headers: {
+      const response = await axios.post(`${API}/api/users/`, userForm, {
+        headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userForm)
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Lỗi tạo tài khoản');
-      }
-
-      const newUser = await response.json();
-      console.log('✅ User created:', newUser);
+      console.log('✅ User created:', response.data);
       
       setShowCreateModal(false);
       setUserForm({ email: '', full_name: '', role: 'staff', password: '' });
       toast.success('Tạo tài khoản thành công!');
-      loadUsers(); // Reload list
+      loadUsers(); // Reload
     } catch (error) {
       console.error('❌ Error creating user:', error);
-      toast.error(error.message);
+      toast.error(error.response?.data?.detail || 'Lỗi tạo tài khoản');
     }
   };
 
-  // Delete user function
+  // Delete user
   const deleteUser = async (userId, userName) => {
     if (userId === user.id) {
       toast.error('Không thể xóa tài khoản của chính mình');
       return;
     }
 
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa tài khoản "${userName}"?`)) {
+    if (!window.confirm(`Xóa tài khoản "${userName}"?`)) {
       return;
     }
 
     try {
-      const response = await fetch(`${API}/api/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
+      await axios.delete(`${API}/api/users/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Lỗi xóa tài khoản');
-      }
 
       toast.success('Xóa tài khoản thành công!');
-      loadUsers(); // Reload list
+      loadUsers(); // Reload
     } catch (error) {
       console.error('❌ Error deleting user:', error);
-      toast.error(error.message);
-    }
-  };
-
-  // Reset password function
-  const resetPassword = async (e) => {
-    e.preventDefault();
-    
-    if (passwordForm.new_password !== passwordForm.confirm_password) {
-      toast.error('Mật khẩu xác nhận không khớp');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API}/api/users/${userToResetPassword.id}/password`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ new_password: passwordForm.new_password })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Lỗi đặt lại mật khẩu');
-      }
-
-      setShowPasswordModal(false);
-      setUserToResetPassword(null);
-      setPasswordForm({ new_password: '', confirm_password: '' });
-      toast.success('Đặt lại mật khẩu thành công!');
-    } catch (error) {
-      console.error('❌ Error resetting password:', error);
-      toast.error(error.message);
-    }
-  };
-
-  // Update profile function
-  const updateProfile = async (e) => {
-    e.preventDefault();
-    
-    try {
-      // Update basic info if changed
-      if (profileForm.full_name !== user.full_name || profileForm.email !== user.email) {
-        const updateData = {
-          full_name: profileForm.full_name,
-          email: profileForm.email
-        };
-        
-        const response = await fetch(`${API}/api/users/me/`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Lỗi cập nhật thông tin');
-        }
-      }
-
-      // Update password if provided
-      if (profileForm.new_password) {
-        if (profileForm.new_password !== profileForm.confirm_password) {
-          toast.error('Mật khẩu xác nhận không khớp');
-          return;
-        }
-
-        const response = await fetch(`${API}/api/users/me/password`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            current_password: profileForm.current_password,
-            new_password: profileForm.new_password
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Lỗi đổi mật khẩu');
-        }
-      }
-
-      toast.success('Cập nhật thông tin thành công!');
-      setProfileForm({
-        ...profileForm,
-        current_password: '',
-        new_password: '',
-        confirm_password: ''
-      });
-    } catch (error) {
-      console.error('❌ Error updating profile:', error);
-      toast.error(error.message);
+      toast.error('Lỗi xóa tài khoản');
     }
   };
 
@@ -2552,6 +2404,18 @@ const Account = () => {
         <p className="text-gray-600 mt-1">Quản lý thông tin cá nhân và tài khoản người dùng</p>
       </div>
 
+      {/* Debug Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+        <h3 className="font-semibold text-blue-800 mb-2">🔍 Debug Info:</h3>
+        <ul className="text-blue-700 space-y-1">
+          <li>👤 User: {user?.full_name} ({user?.role})</li>
+          <li>🔑 Token: {token ? 'Available' : 'Missing'}</li>
+          <li>📡 API: {API}</li>
+          <li>👥 Users loaded: {users.length}</li>
+          <li>🎯 Is Admin: {user?.role === 'admin' ? 'Yes' : 'No'}</li>
+        </ul>
+      </div>
+
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
@@ -2560,7 +2424,7 @@ const Account = () => {
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'profile'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             Thông tin cá nhân
@@ -2568,11 +2432,14 @@ const Account = () => {
           
           {user?.role === 'admin' && (
             <button
-              onClick={() => setActiveTab('users')}
+              onClick={() => {
+                setActiveTab('users');
+                loadUsers(); // Load users when tab is clicked
+              }}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'users'
                   ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               Quản lý tài khoản ({users.length})
@@ -2583,96 +2450,23 @@ const Account = () => {
 
       {/* Profile Tab */}
       {activeTab === 'profile' && (
-        <div className="space-y-6">
-          <div className="modern-card p-6">
-            <h2 className="text-lg font-semibold mb-6">Thông tin cá nhân</h2>
-            
-            <form onSubmit={updateProfile} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Họ và tên
-                  </label>
-                  <input
-                    type="text"
-                    value={profileForm.full_name}
-                    onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                    className="modern-input"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={profileForm.email}
-                    onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                    className="modern-input"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vai trò hiện tại
-                </label>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleInfo(user?.role).color}`}>
-                  {getRoleInfo(user?.role).label}
-                </span>
-              </div>
-
-              <hr className="my-6" />
-              <h3 className="text-md font-semibold mb-4">Đổi mật khẩu</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mật khẩu hiện tại
-                  </label>
-                  <input
-                    type="password"
-                    value={profileForm.current_password}
-                    onChange={(e) => setProfileForm({ ...profileForm, current_password: e.target.value })}
-                    className="modern-input"
-                    placeholder="Nhập mật khẩu hiện tại"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mật khẩu mới
-                  </label>
-                  <input
-                    type="password"
-                    value={profileForm.new_password}
-                    onChange={(e) => setProfileForm({ ...profileForm, new_password: e.target.value })}
-                    className="modern-input"
-                    placeholder="Nhập mật khẩu mới"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Xác nhận mật khẩu mới
-                  </label>
-                  <input
-                    type="password"
-                    value={profileForm.confirm_password}
-                    onChange={(e) => setProfileForm({ ...profileForm, confirm_password: e.target.value })}
-                    className="modern-input"
-                    placeholder="Xác nhận mật khẩu mới"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button type="submit" className="btn-primary">
-                  Cập nhật thông tin
-                </button>
-              </div>
-            </form>
+        <div className="modern-card p-6">
+          <h2 className="text-lg font-semibold mb-4">Thông tin cá nhân</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
+              <div className="text-gray-900">{user?.full_name}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <div className="text-gray-900">{user?.email}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleInfo(user?.role).color}`}>
+                {getRoleInfo(user?.role).label}
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -2692,16 +2486,13 @@ const Account = () => {
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                 disabled={loading}
               >
-                {loading ? 'Đang tải...' : 'Tải lại'}
+                {loading ? '⏳ Đang tải...' : '🔄 Tải lại'}
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="btn-primary"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Tạo tài khoản mới
+                ➕ Tạo tài khoản mới
               </button>
             </div>
           </div>
@@ -2717,12 +2508,12 @@ const Account = () => {
               </div>
             ) : users.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                <p>Chưa có tài khoản nào</p>
+                <p className="mb-4">Chưa có tài khoản nào</p>
                 <button 
                   onClick={loadUsers}
-                  className="mt-2 text-blue-600 hover:text-blue-800 underline"
+                  className="btn-primary"
                 >
-                  Thử tải lại
+                  🔄 Thử tải lại
                 </button>
               </div>
             ) : (
@@ -2740,9 +2531,6 @@ const Account = () => {
                         Vai trò
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Trạng thái
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ngày tạo
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -2755,8 +2543,8 @@ const Account = () => {
                       <tr key={userItem.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-sm font-semibold text-gray-700">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-sm font-semibold text-blue-800">
                                 {userItem.full_name?.charAt(0) || 'U'}
                               </span>
                             </div>
@@ -2778,43 +2566,19 @@ const Account = () => {
                             {getRoleInfo(userItem.role).label}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            userItem.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {userItem.is_active ? 'Hoạt động' : 'Tạm khóa'}
-                          </span>
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(userItem.created_at).toLocaleDateString('vi-VN')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-2">
+                          {userItem.id !== user.id && (
                             <button
-                              onClick={() => {
-                                setUserToResetPassword(userItem);
-                                setShowPasswordModal(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Đặt lại mật khẩu"
+                              onClick={() => deleteUser(userItem.id, userItem.full_name)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Xóa tài khoản"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                              </svg>
+                              🗑️ Xóa
                             </button>
-                            
-                            {userItem.id !== user.id && (
-                              <button
-                                onClick={() => deleteUser(userItem.id, userItem.full_name)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Xóa tài khoản"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -2903,64 +2667,6 @@ const Account = () => {
                 </button>
                 <button type="submit" className="btn-primary">
                   Tạo tài khoản
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Reset Password Modal */}
-      {showPasswordModal && userToResetPassword && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Đặt lại mật khẩu cho {userToResetPassword.full_name}
-            </h3>
-            
-            <form onSubmit={resetPassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu mới *
-                </label>
-                <input
-                  type="password"
-                  value={passwordForm.new_password}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                  className="modern-input"
-                  required
-                  minLength="6"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Xác nhận mật khẩu mới *
-                </label>
-                <input
-                  type="password"
-                  value={passwordForm.confirm_password}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                  className="modern-input"
-                  required
-                  minLength="6"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setUserToResetPassword(null);
-                    setPasswordForm({ new_password: '', confirm_password: '' });
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn-primary">
-                  Đặt lại mật khẩu
                 </button>
               </div>
             </form>
