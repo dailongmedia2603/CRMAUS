@@ -15,6 +15,7 @@ import TemplatesComponent from "./components/Templates.js";
 import { ExpenseOverview } from "./components/ExpenseComponents.js";
 import ClientsComponent from "./components/Clients.js";
 import ClientDetailComponent from "./components/ClientDetail.js";
+import ProjectDetailComponent from "./components/ProjectDetail.js";
 
 // Auth context
 const AuthContext = createContext();
