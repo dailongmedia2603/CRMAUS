@@ -963,6 +963,7 @@ const LoginComponent = ({ login }) => {
 // Task Management Component - ADVANCED IMPLEMENTATION
 const Task = () => {
   const { user, token } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
