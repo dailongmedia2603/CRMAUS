@@ -1008,7 +1008,7 @@ const Task = () => {
       if (dateFilter !== 'all') params.append('date_filter', dateFilter);
       if (showCompleted) params.append('completed_only', 'true');
 
-      const response = await axios.get(`${API}/api/work-items/?${params}`);
+      const response = await axios.get(`${API}/api/internal-tasks/?${params}`);
       setTasks(response.data);
     } catch (error) {
       console.error('Error fetching tasks:', error);
