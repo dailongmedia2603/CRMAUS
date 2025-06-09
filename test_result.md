@@ -138,6 +138,9 @@
       - working: true
         agent: "testing"
         comment: "Retested all the requested internal task management API endpoints with the local backend URL (http://localhost:8001). All endpoints are working correctly: GET /api/internal-tasks/ successfully retrieves the task list, POST /api/internal-tasks/ creates new tasks with all required fields, GET /api/internal-tasks/statistics returns accurate statistics including counts by status and priority, PUT /api/internal-tasks/{id} updates tasks correctly, DELETE /api/internal-tasks/{id} deletes tasks successfully, PATCH /api/internal-tasks/{id}/status properly updates task status (verified not_started -> in_progress transition), and POST /api/internal-tasks/bulk-delete successfully deletes multiple tasks. All tests passed with proper authentication."
+      - working: true
+        agent: "testing"
+        comment: "Identified and fixed an issue with the Task Management frontend component. The API constant in App.js was defined as an empty string (const API = '') which was causing the frontend to make relative API calls. This was inconsistent with the HumanResources component which correctly used the environment variable (const API = process.env.REACT_APP_BACKEND_URL || ''). Updated App.js to use the environment variable consistently. The API endpoints are working correctly, but the frontend was not using the correct URL to access them."
 
   - task: "User Management API"
     implemented: true
