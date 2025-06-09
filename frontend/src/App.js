@@ -1700,21 +1700,12 @@ const TaskRow = React.memo(({
   getPriorityLabel,
   getStatusLabel
 }) => {
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportLink, setReportLink] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const toggleTaskSelection = (taskId) => {
-    if (selectedTasks.includes(taskId)) {
-      setSelectedTasks(selectedTasks.filter(id => id !== taskId));
-    } else {
-      setSelectedTasks([...selectedTasks, taskId]);
-    }
-  };
-
-  const handleStatusUpdate = (newStatus) => {
+  const handleStatusUpdate = async (newStatus) => {
     if (newStatus === 'completed') {
-      setShowReportModal(true);
+      // Open report modal instead of inline logic
+      onOpenReportModal(task);
     } else {
       onStatusChange(task.id, newStatus);
     }
