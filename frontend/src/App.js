@@ -1612,6 +1612,7 @@ const Task = () => {
                       setFeedbackTask(task);
                       fetchFeedbacks(task.id);
                     }}
+                    feedbackCounts={feedbackCounts}
                     getStatusIcon={getStatusIcon}
                     getPriorityColor={getPriorityColor}
                     getPriorityLabel={getPriorityLabel}
