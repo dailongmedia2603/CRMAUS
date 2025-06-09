@@ -1725,10 +1725,7 @@ const TaskRow = React.memo(({
     } else if (task.status === 'in_progress') {
       return (
         <button
-          onClick={() => {
-            console.log('Hoàn thành button clicked for task:', task.id);
-            handleStatusUpdate('completed');
-          }}
+          onClick={() => handleStatusUpdate('completed')}
           className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm"
         >
           Hoàn thành
