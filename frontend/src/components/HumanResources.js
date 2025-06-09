@@ -97,11 +97,7 @@ const HumanResources = ({ user }) => {
         // we'll need to handle this differently based on API structure
         if (currentEmployee.id === user?.id) {
           // Update current user
-          await axios.put(`${API}/api/users/me/`, updateData, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+          await axios.put(`${API}/api/users/me/`, updateData);
         } else {
           // For other users, we might need a different approach
           // Since backend doesn't have PUT /api/users/{id}, we'll use available endpoints
@@ -112,23 +108,14 @@ const HumanResources = ({ user }) => {
         // Update status separately if needed
         if (formData.is_active !== currentEmployee.is_active) {
           await axios.put(`${API}/api/users/${currentEmployee.id}/status`, 
-            { is_active: formData.is_active }, 
-            {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              }
-            }
+            { is_active: formData.is_active }
           );
         }
         
         toast.success('Cập nhật nhân sự thành công!');
       } else {
         // Create new employee
-        await axios.post(`${API}/api/users/`, formData, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        await axios.post(`${API}/api/users/`, formData);
         toast.success('Thêm nhân sự mới thành công!');
       }
       
