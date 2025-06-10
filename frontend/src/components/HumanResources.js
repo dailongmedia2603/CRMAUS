@@ -84,6 +84,23 @@ const HumanResources = ({ user }) => {
               Hiệu suất
             </div>
           </button>
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setActiveTab('permissions')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'permissions'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Phân quyền
+              </div>
+            </button>
+          )}
         </nav>
       </div>
 
