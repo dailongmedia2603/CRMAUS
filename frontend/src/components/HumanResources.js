@@ -1726,8 +1726,12 @@ const PermissionManagement = ({ user }) => {
     try {
       setLoading(true);
       const [rolesResponse, usersResponse] = await Promise.all([
-        axios.get(`${API}/api/permissions/roles`),
-        axios.get(`${API}/api/permissions/users`)
+        axios.get(`${API}/api/permissions/roles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/api/permissions/users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
       
       setRoles(rolesResponse.data);
