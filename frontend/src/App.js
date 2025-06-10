@@ -175,121 +175,123 @@ function App() {
   // Main app layout
   return (
     <AuthContext.Provider value={{ user, token, logout }}>
-      <div className="min-h-screen bg-gray-50 flex">
-        {/* Static sidebar for desktop */}
-        <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-          <SidebarContent user={user} logout={logout} />
-        </div>
+      <PermissionProvider user={user}>
+        <div className="min-h-screen bg-gray-50 flex">
+          {/* Static sidebar for desktop */}
+          <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
+            <SidebarContent user={user} logout={logout} />
+          </div>
 
-        {/* Main content */}
-        <div className="md:pl-64 flex flex-col flex-1">
-          {/* Modern Header */}
-          <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-            {/* Breadcrumb */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-sm">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                </svg>
-                <span className="text-gray-500">CRM AUS</span>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                <span className="text-gray-900 font-medium">
-                  {window.location.pathname === "/" ? "Dashboard" : 
-                   window.location.pathname === "/clients" ? "Client" :
-                   window.location.pathname.startsWith("/clients/") ? "Client Detail" :
-                   window.location.pathname === "/leads" ? "Lead" :
-                   window.location.pathname === "/task" ? "Nhiệm vụ" :
-                   window.location.pathname === "/projects" ? "Dự án" :
-                   window.location.pathname === "/contracts" ? "Hợp đồng" :
-                   window.location.pathname === "/invoices" ? "Hóa đơn" :
-                   window.location.pathname === "/campaigns" ? "Chiến dịch" :
-                   window.location.pathname === "/documents" ? "Tài liệu" :
-                   window.location.pathname === "/human-resources" ? "Nhân sự" :
-                   window.location.pathname === "/settings" ? "Cài đặt" :
-                   'Trang'}
-                </span>
-              </div>
-
-              {/* Right Side Actions */}
-              <div className="flex items-center space-x-4">
-                {/* Search Button */}
-                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          {/* Main content */}
+          <div className="md:pl-64 flex flex-col flex-1">
+            {/* Modern Header */}
+            <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+              {/* Breadcrumb */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
                   </svg>
-                </button>
-
-                {/* Notifications */}
-                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM5.07 7A7.002 7.002 0 0112 2c1.857 0 3.547.72 4.816 1.898M15 17h5l-5 5v-5z" />
+                  <span className="text-gray-500">CRM AUS</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button>
+                  <span className="text-gray-900 font-medium">
+                    {window.location.pathname === "/" ? "Dashboard" : 
+                     window.location.pathname === "/clients" ? "Client" :
+                     window.location.pathname.startsWith("/clients/") ? "Client Detail" :
+                     window.location.pathname === "/leads" ? "Lead" :
+                     window.location.pathname === "/task" ? "Nhiệm vụ" :
+                     window.location.pathname === "/projects" ? "Dự án" :
+                     window.location.pathname === "/contracts" ? "Hợp đồng" :
+                     window.location.pathname === "/invoices" ? "Hóa đơn" :
+                     window.location.pathname === "/campaigns" ? "Chiến dịch" :
+                     window.location.pathname === "/documents" ? "Tài liệu" :
+                     window.location.pathname === "/human-resources" ? "Nhân sự" :
+                     window.location.pathname === "/settings" ? "Cài đặt" :
+                     'Trang'}
+                  </span>
+                </div>
 
-                {/* Settings */}
-                <button 
-                  onClick={() => {
-                    if (user?.role === 'admin') {
-                      window.location.href = '/settings';
-                    }
-                  }}
-                  disabled={user?.role !== 'admin'}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 disabled:opacity-50"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
+                {/* Right Side Actions */}
+                <div className="flex items-center space-x-4">
+                  {/* Search Button */}
+                  <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
 
-                {/* User Menu */}
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-semibold text-gray-700">
-                      {user?.full_name?.charAt(0).toUpperCase() || 'U'}
-                    </span>
+                  {/* Notifications */}
+                  <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM5.07 7A7.002 7.002 0 0112 2c1.857 0 3.547.72 4.816 1.898M15 17h5l-5 5v-5z" />
+                    </svg>
+                  </button>
+
+                  {/* Settings */}
+                  <button 
+                    onClick={() => {
+                      if (user?.role === 'admin') {
+                        window.location.href = '/settings';
+                      }
+                    }}
+                    disabled={user?.role !== 'admin'}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+
+                  {/* User Menu */}
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
+                      <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
+                    </div>
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-gray-700">
+                        {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          {/* Main content area */}
-          <main className="flex-1 p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/clients" element={<ClientsComponent user={user} />} />
-              <Route path="/clients/:id" element={<ClientDetailComponent user={user} />} />
-              <Route path="/task" element={<Task />} />
-              <Route path="/projects" element={<ProjectsComponent user={user} />} />
-              <Route path="/projects/:id" element={<ProjectDetailComponent user={user} />} />
-              <Route path="/campaigns" element={<CampaignsComponent user={user} />} />
-              <Route path="/campaigns/:id" element={<CampaignDetailComponent user={user} />} />
-              <Route path="/task-templates" element={<TemplatesComponent user={user} />} />
-              <Route path="/contracts" element={<Contracts />} />
-              <Route path="/invoices" element={<Invoices />} />
-              <Route path="/expenses" element={<ExpenseManagement user={user} />} />
-              <Route path="/financial-reports" element={<FinancialReports />} />
-              <Route path="/opportunities" element={<Opportunities />} />
-              <Route path="/leads" element={<LeadsComponent user={user} />} />
-              <Route path="/sales-reports" element={<SalesReports />} />
-              <Route path="/documents" element={<DocumentsComponent user={user} />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/human-resources" element={<HumanResources user={user} />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
+            {/* Main content area */}
+            <main className="flex-1 p-6">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/clients" element={<ClientsComponent user={user} />} />
+                <Route path="/clients/:id" element={<ClientDetailComponent user={user} />} />
+                <Route path="/task" element={<Task />} />
+                <Route path="/projects" element={<ProjectsComponent user={user} />} />
+                <Route path="/projects/:id" element={<ProjectDetailComponent user={user} />} />
+                <Route path="/campaigns" element={<CampaignsComponent user={user} />} />
+                <Route path="/campaigns/:id" element={<CampaignDetailComponent user={user} />} />
+                <Route path="/task-templates" element={<TemplatesComponent user={user} />} />
+                <Route path="/contracts" element={<Contracts />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/expenses" element={<ExpenseManagement user={user} />} />
+                <Route path="/financial-reports" element={<FinancialReports />} />
+                <Route path="/opportunities" element={<Opportunities />} />
+                <Route path="/leads" element={<LeadsComponent user={user} />} />
+                <Route path="/sales-reports" element={<SalesReports />} />
+                <Route path="/documents" element={<DocumentsComponent user={user} />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/human-resources" element={<HumanResources user={user} />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
-      <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer position="top-right" autoClose={3000} />
+      </PermissionProvider>
     </AuthContext.Provider>
   );
 }
