@@ -19,8 +19,97 @@ import ProjectDetailComponent from "./components/ProjectDetail.js";
 import HumanResources from "./components/HumanResources.js";
 
 // Auth context
+// Create AuthContext for user authentication and permissions
 const AuthContext = createContext();
-export { AuthContext };
+
+// Create PermissionContext for permission management
+const PermissionContext = createContext();
+
+export { AuthContext, PermissionContext };
+
+// Permission Hook
+const usePermissions = () => {
+  const context = useContext(PermissionContext);
+  if (!context) {
+    throw new Error('usePermissions must be used within a PermissionProvider');
+  }
+  return context;
+};
+
+// Permission checking functions
+const checkPermission = (permissions, permissionId, action = 'view') => {
+  if (!permissions || !permissionId) return false;
+  const permission = permissions[permissionId];
+  if (!permission) return false;
+  return permission[`can_${action}`] || false;
+};
+
+const hasAnyPermission = (permissions, permissionIds, action = 'view') => {
+  if (!permissions || !permissionIds || !Array.isArray(permissionIds)) return false;
+  return permissionIds.some(permissionId => checkPermission(permissions, permissionId, action));
+};
+
+// Permission Provider Component
+const PermissionProvider = ({ children, user }) => {
+  const [permissions, setPermissions] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserPermissions();
+    } else {
+      setPermissions(null);
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchUserPermissions = async () => {
+    try {
+      setLoading(true);
+      
+      // Admin has all permissions
+      if (user.role === 'admin') {
+        setPermissions('admin');
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${API}/api/permissions/my-permissions`);
+      setPermissions(response.data.permissions);
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
+      setPermissions({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasPermission = (permissionId, action = 'view') => {
+    // Admin has all permissions
+    if (permissions === 'admin') return true;
+    return checkPermission(permissions, permissionId, action);
+  };
+
+  const hasAnyOfPermissions = (permissionIds, action = 'view') => {
+    // Admin has all permissions
+    if (permissions === 'admin') return true;
+    return hasAnyPermission(permissions, permissionIds, action);
+  };
+
+  const value = {
+    permissions,
+    loading,
+    hasPermission,
+    hasAnyOfPermissions,
+    refreshPermissions: fetchUserPermissions
+  };
+
+  return (
+    <PermissionContext.Provider value={value}>
+      {children}
+    </PermissionContext.Provider>
+  );
+};
 
 // Environment variables - Use backend URL from environment variable
 const API = process.env.REACT_APP_BACKEND_URL || '';
