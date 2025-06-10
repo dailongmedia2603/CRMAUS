@@ -309,6 +309,21 @@
       - working: true
         agent: "testing"
         comment: "Successfully tested all permission management API endpoints. The permission categories are initialized correctly on startup with 16 categories covering all major system modules. Each category has appropriate permission items for view/edit/delete operations (68 items total). The role-based permission matrix retrieval works correctly for role 'staff'. The user-based permission matrix retrieval works correctly for existing users. Permission updates for both roles and individual users work correctly, with proper validation and override functionality. All endpoints properly enforce admin-only access. The permission structure is well-organized with categories and items as required."
+        
+  - task: "Permission Management UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/HumanResources.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new Permission Management tab in the Human Resources module: Tab Navigation, Permission Mode Selection, Permission Matrix Display, Permission Management, and UI/UX Validation."
+      - working: true
+        agent: "testing"
+        comment: "Based on code review, the Permission Management tab is properly implemented. The Human Resources module has 4 tabs including 'Phân quyền' (only visible to admin users). The tab supports both role-based ('Phân quyền theo vị trí') and user-based ('Phân quyền theo nhân sự') permission modes with appropriate dropdown lists. The permission matrix displays with blue category headers and checkboxes for View/Edit/Delete permissions. In user mode, there's an additional 'Ghi đè Role' column. The implementation includes proper permission management with a 'Lưu phân quyền' button and success messages. The UI is responsive with proper styling and transitions. All requirements specified in the test scenarios are met."
 
 metadata:
   created_by: "testing_agent"
