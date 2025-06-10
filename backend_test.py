@@ -758,6 +758,288 @@ def test_performance_endpoints():
     
     return user_perf_success and summary_success
 
+def test_permission_management():
+    """Test Permission Management API endpoints"""
+    print("\n=== Testing Permission Management API ===")
+    
+    # Test GET /api/permissions/categories - Get permission categories
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/categories",
+        headers=get_headers()
+    )
+    
+    categories_success = print_test_result("Get Permission Categories", response)
+    if categories_success:
+        categories = response.json()
+        print(f"Found {len(categories)} permission categories")
+        
+        # Verify that all major system modules are included
+        expected_modules = ["dashboard", "clients", "projects", "tasks", "documents", "human_resources", "expenses"]
+        found_modules = [cat["name"] for cat in categories]
+        
+        all_modules_found = all(module in found_modules for module in expected_modules)
+        if all_modules_found:
+            print("✅ All major system modules are included in permission categories")
+        else:
+            missing = [module for module in expected_modules if module not in found_modules]
+            print(f"❌ Missing modules in permission categories: {missing}")
+            categories_success = False
+    
+    # Test GET /api/permissions/items - Get permission items
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/items",
+        headers=get_headers()
+    )
+    
+    items_success = print_test_result("Get Permission Items", response)
+    if items_success:
+        items = response.json()
+        print(f"Found {len(items)} permission items")
+        
+        # Verify that each category has appropriate permission items (view/edit/delete)
+        item_types = set()
+        for item in items:
+            item_name = item["name"]
+            if "view" in item_name:
+                item_types.add("view")
+            elif "edit" in item_name or "create" in item_name:
+                item_types.add("edit")
+            elif "delete" in item_name:
+                item_types.add("delete")
+        
+        if all(item_type in item_types for item_type in ["view", "edit", "delete"]):
+            print("✅ Permission items include view/edit/delete operations")
+        else:
+            missing = [item_type for item_type in ["view", "edit", "delete"] if item_type not in item_types]
+            print(f"❌ Missing permission item types: {missing}")
+            items_success = False
+    
+    # Get roles list for testing
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/roles",
+        headers=get_headers()
+    )
+    
+    roles_success = print_test_result("Get Roles List", response)
+    roles = []
+    if roles_success:
+        roles = response.json()
+        print(f"Found {len(roles)} roles")
+        
+        # Verify that common roles are included
+        expected_roles = ["admin", "staff", "manager"]
+        found_roles = [role["value"] for role in roles]
+        
+        all_roles_found = all(role in found_roles for role in expected_roles)
+        if all_roles_found:
+            print("✅ All common roles are included")
+        else:
+            missing = [role for role in expected_roles if role not in found_roles]
+            print(f"❌ Missing roles: {missing}")
+            roles_success = False
+    
+    # Test GET /api/permissions/matrix/role/{role_name} - Get permission matrix for role
+    role_matrix_success = True
+    if roles and len(roles) > 0:
+        test_role = "staff"  # Use 'staff' role for testing
+        
+        response = requests.get(
+            f"{BACKEND_URL}/permissions/matrix/role/{test_role}",
+            headers=get_headers()
+        )
+        
+        role_matrix_success = print_test_result(f"Get Permission Matrix for Role '{test_role}'", response)
+        if role_matrix_success:
+            matrix = response.json()
+            print(f"Permission matrix for role '{test_role}':")
+            print(f"- Categories: {len(matrix.get('categories', []))} categories")
+            print(f"- Items: {len(matrix.get('items', []))} items")
+            print(f"- Current permissions: {len(matrix.get('current_permissions', []))} permissions")
+            
+            # Verify matrix structure
+            if all(key in matrix for key in ["categories", "items", "current_permissions"]):
+                print("✅ Permission matrix has correct structure")
+            else:
+                missing = [key for key in ["categories", "items", "current_permissions"] if key not in matrix]
+                print(f"❌ Permission matrix missing keys: {missing}")
+                role_matrix_success = False
+    
+    # Get users list for testing
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/users",
+        headers=get_headers()
+    )
+    
+    users_success = print_test_result("Get Users List for Permission", response)
+    users = []
+    if users_success:
+        users = response.json()
+        print(f"Found {len(users)} users for permission management")
+    
+    # Test GET /api/permissions/matrix/user/{user_id} - Get permission matrix for user
+    user_matrix_success = True
+    if users and len(users) > 0:
+        test_user = users[0]
+        test_user_id = test_user["id"]
+        
+        response = requests.get(
+            f"{BACKEND_URL}/permissions/matrix/user/{test_user_id}",
+            headers=get_headers()
+        )
+        
+        user_matrix_success = print_test_result(f"Get Permission Matrix for User '{test_user['full_name']}'", response)
+        if user_matrix_success:
+            matrix = response.json()
+            print(f"Permission matrix for user '{test_user['full_name']}':")
+            print(f"- Categories: {len(matrix.get('categories', []))} categories")
+            print(f"- Items: {len(matrix.get('items', []))} items")
+            print(f"- Current permissions: {len(matrix.get('current_permissions', []))} permissions")
+            
+            # Verify matrix structure
+            if all(key in matrix for key in ["categories", "items", "current_permissions"]):
+                print("✅ Permission matrix has correct structure")
+            else:
+                missing = [key for key in ["categories", "items", "current_permissions"] if key not in matrix]
+                print(f"❌ Permission matrix missing keys: {missing}")
+                user_matrix_success = False
+    
+    # Test POST /api/permissions/role/{role}/update - Update role permissions
+    role_update_success = True
+    if items and len(items) > 0 and roles and len(roles) > 0:
+        test_role = "staff"  # Use 'staff' role for testing
+        test_permissions = []
+        
+        # Create test permissions for a few items
+        for i, item in enumerate(items):
+            if i < 5:  # Just use the first 5 items for testing
+                test_permissions.append({
+                    "permission_id": item["id"],
+                    "can_view": True,
+                    "can_edit": i % 2 == 0,  # Alternate edit permission
+                    "can_delete": False
+                })
+        
+        response = requests.post(
+            f"{BACKEND_URL}/permissions/role/{test_role}/update",
+            headers=get_headers(),
+            json=test_permissions
+        )
+        
+        role_update_success = print_test_result(f"Update Permissions for Role '{test_role}'", response)
+        if role_update_success:
+            print(f"Successfully updated permissions for role '{test_role}'")
+            
+            # Verify the update by getting the matrix again
+            response = requests.get(
+                f"{BACKEND_URL}/permissions/matrix/role/{test_role}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                matrix = response.json()
+                current_permissions = matrix.get("current_permissions", [])
+                
+                # Check if our test permissions were applied
+                if len(current_permissions) >= len(test_permissions):
+                    print("✅ Role permissions were updated successfully")
+                    
+                    # Verify a few specific permissions
+                    for test_perm in test_permissions:
+                        found = False
+                        for current_perm in current_permissions:
+                            if current_perm["permission_id"] == test_perm["permission_id"]:
+                                found = True
+                                if (current_perm["can_view"] == test_perm["can_view"] and
+                                    current_perm["can_edit"] == test_perm["can_edit"] and
+                                    current_perm["can_delete"] == test_perm["can_delete"]):
+                                    print(f"✅ Permission {test_perm['permission_id']} updated correctly")
+                                else:
+                                    print(f"❌ Permission {test_perm['permission_id']} not updated correctly")
+                                    role_update_success = False
+                                break
+                        
+                        if not found:
+                            print(f"❌ Permission {test_perm['permission_id']} not found after update")
+                            role_update_success = False
+                else:
+                    print("❌ Role permissions were not updated correctly")
+                    role_update_success = False
+            else:
+                print(f"❌ Failed to verify role permissions update: {response.status_code}")
+                role_update_success = False
+    
+    # Test POST /api/permissions/user/{user_id}/update - Update user permissions
+    user_update_success = True
+    if items and len(items) > 0 and users and len(users) > 0:
+        test_user = users[0]
+        test_user_id = test_user["id"]
+        test_permissions = []
+        
+        # Create test permissions for a few items with override
+        for i, item in enumerate(items):
+            if i < 5:  # Just use the first 5 items for testing
+                test_permissions.append({
+                    "permission_id": item["id"],
+                    "can_view": True,
+                    "can_edit": i % 2 == 0,  # Alternate edit permission
+                    "can_delete": i % 3 == 0,  # Some delete permissions
+                    "override_role": True  # Override role permissions
+                })
+        
+        response = requests.post(
+            f"{BACKEND_URL}/permissions/user/{test_user_id}/update",
+            headers=get_headers(),
+            json=test_permissions
+        )
+        
+        user_update_success = print_test_result(f"Update Permissions for User '{test_user['full_name']}'", response)
+        if user_update_success:
+            print(f"Successfully updated permissions for user '{test_user['full_name']}'")
+            
+            # Verify the update by getting the matrix again
+            response = requests.get(
+                f"{BACKEND_URL}/permissions/matrix/user/{test_user_id}",
+                headers=get_headers()
+            )
+            
+            if response.status_code == 200:
+                matrix = response.json()
+                current_permissions = matrix.get("current_permissions", [])
+                
+                # Check if our test permissions were applied
+                if len(current_permissions) >= len(test_permissions):
+                    print("✅ User permissions were updated successfully")
+                    
+                    # Verify a few specific permissions
+                    for test_perm in test_permissions:
+                        found = False
+                        for current_perm in current_permissions:
+                            if current_perm["permission_id"] == test_perm["permission_id"]:
+                                found = True
+                                if (current_perm["can_view"] == test_perm["can_view"] and
+                                    current_perm["can_edit"] == test_perm["can_edit"] and
+                                    current_perm["can_delete"] == test_perm["can_delete"] and
+                                    current_perm["override_role"] == test_perm["override_role"]):
+                                    print(f"✅ Permission {test_perm['permission_id']} updated correctly")
+                                else:
+                                    print(f"❌ Permission {test_perm['permission_id']} not updated correctly")
+                                    user_update_success = False
+                                break
+                        
+                        if not found:
+                            print(f"❌ Permission {test_perm['permission_id']} not found after update")
+                            user_update_success = False
+                else:
+                    print("❌ User permissions were not updated correctly")
+                    user_update_success = False
+            else:
+                print(f"❌ Failed to verify user permissions update: {response.status_code}")
+                user_update_success = False
+    
+    return (categories_success and items_success and roles_success and 
+            role_matrix_success and users_success and user_matrix_success and 
+            role_update_success and user_update_success)
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
@@ -766,6 +1048,9 @@ def main():
     if not get_token():
         print("Failed to authenticate. Exiting tests.")
         return
+    
+    # Test permission management endpoints
+    permission_management_success = test_permission_management()
     
     # Test team management endpoints
     team_management_success = test_team_management()
@@ -777,6 +1062,7 @@ def main():
     internal_task_success = test_internal_task_management()
     
     print("\n=== Test Results ===")
+    print(f"Permission Management API: {'✅' if permission_management_success else '❌'}")
     print(f"Team Management API: {'✅' if team_management_success else '❌'}")
     print(f"Performance API: {'✅' if performance_success else '❌'}")
     print(f"Internal Task Management API: {'✅' if internal_task_success else '❌'}")
