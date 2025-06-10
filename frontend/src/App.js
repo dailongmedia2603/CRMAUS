@@ -186,6 +186,7 @@ function App() {
               <Route path="/expenses" element={<ExpenseManagement user={user} />} />
               <Route path="/financial-reports" element={<FinancialReports />} />
               <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/leads" element={<LeadsComponent user={user} />} />
               <Route path="/sales-reports" element={<SalesReports />} />
               <Route path="/documents" element={<DocumentsComponent user={user} />} />
               <Route path="/reports" element={<Reports />} />
