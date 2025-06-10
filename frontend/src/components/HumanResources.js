@@ -1702,6 +1702,7 @@ const PerformanceTracking = ({ user }) => {
 
 // Permission Management Tab  
 const PermissionManagement = ({ user }) => {
+  const { token } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [permissionMode, setPermissionMode] = useState('role'); // 'role' or 'user'
   const [selectedTarget, setSelectedTarget] = useState('');
