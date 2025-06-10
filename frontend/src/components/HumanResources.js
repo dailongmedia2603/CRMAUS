@@ -1752,7 +1752,9 @@ const PermissionManagement = ({ user }) => {
   const fetchPermissionMatrix = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/api/permissions/matrix/${permissionMode}/${selectedTarget}`);
+      const response = await axios.get(`${API}/api/permissions/matrix/${permissionMode}/${selectedTarget}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPermissionMatrix(response.data);
       
       // Initialize permissions state
