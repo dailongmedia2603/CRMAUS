@@ -3008,4 +3008,125 @@ const Settings = () => (
   </div>
 );
 
+// LeadsComponent - Simple placeholder for Lead management
+const LeadsComponent = ({ user }) => (
+  <div className="space-y-6">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý Lead</h1>
+        <p className="text-gray-600 mt-1">Quản lý thông tin và theo dõi tiềm năng khách hàng</p>
+      </div>
+      <button
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+        title="Thêm lead mới"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Thêm Lead
+      </button>
+    </div>
+
+    {/* Statistics */}
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Tổng Lead</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Lead Qualified</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Chờ Follow-up</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4zM9 6h6v11H9V6z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Conversion Rate</dt>
+              <dd className="text-lg font-semibold text-gray-900">0%</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Content Placeholder */}
+    <div className="bg-white rounded-lg shadow-sm border">
+      <div className="text-center py-20">
+        <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Lead Management</h3>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Tính năng quản lý Lead đang được phát triển. Sẽ sớm được cập nhật với đầy đủ tính năng quản lý tiềm năng khách hàng.
+        </p>
+        <div className="mt-6">
+          <div className="text-sm text-gray-500">
+            Các tính năng sắp tới:
+          </div>
+          <ul className="mt-2 text-sm text-gray-600 space-y-1">
+            <li>• Quản lý thông tin Lead</li>
+            <li>• Theo dõi trạng thái Lead</li>
+            <li>• Phân công Sales</li>
+            <li>• Báo cáo conversion</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default App;
