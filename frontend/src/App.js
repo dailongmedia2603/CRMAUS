@@ -1840,58 +1840,6 @@ const TaskRow = React.memo(({
     }
   };
 
-  const submitCompletion = async () => {
-    if (isSubmitting) {
-      return; // Prevent double clicks
-    }
-    
-    try {
-      setIsSubmitting(true);
-      const reportLinkValue = reportLink.trim();
-      
-      if (!reportLinkValue) {
-        toast.error('Vui lòng nhập link báo cáo');
-        return;
-      }
-      
-      // Call the status change with the report link
-      await onStatusChange(task.id, 'completed', reportLinkValue);
-      
-      // Close modal after successful completion
-      setShowReportModal(false);
-      setReportLink('');
-      
-      toast.success('Hoàn thành công việc thành công!');
-      
-    } catch (error) {
-      console.error('Error completing task:', error);
-      
-      let errorMessage = 'Lỗi khi hoàn thành công việc';
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        } else if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail.map(err => err.msg || err).join(', ');
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
-      // Keep modal open if there's an error
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    if (isSubmitting) return; // Prevent closing while submitting
-    setShowReportModal(false);
-    setReportLink('');
-  };
-
   const getActionButton = () => {
     if (task.status === 'not_started') {
       return (
