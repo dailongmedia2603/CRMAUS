@@ -776,7 +776,7 @@ const SidebarContent = ({ user, logout }) => {
         <button
           onClick={() => navigate("/task")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/task") ? activeClasses : defaultClasses
+            location.pathname.startsWith("/task") ? activeClasses : defaultClasses
           }`}
         >
           <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -790,7 +790,7 @@ const SidebarContent = ({ user, logout }) => {
           <button
             onClick={() => toggleSubmenu('project')}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              openSubmenus.project || location.startsWith("/projects") || location.startsWith("/campaigns") || location.startsWith("/task-templates") 
+              openSubmenus.project || location.pathname.startsWith("/projects") || location.pathname.startsWith("/campaigns") || location.pathname.startsWith("/task-templates") 
                 ? hoverClasses : defaultClasses
             }`}
           >
@@ -810,7 +810,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/projects")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/projects") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/projects") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -821,7 +821,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/campaigns")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/campaigns") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/campaigns") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -832,7 +832,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/task-templates")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/task-templates") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/task-templates") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -849,7 +849,7 @@ const SidebarContent = ({ user, logout }) => {
           <button
             onClick={() => toggleSubmenu('finance')}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              openSubmenus.finance || location.startsWith("/invoices") || location.startsWith("/contracts") || location.startsWith("/expenses") || location.startsWith("/financial-reports")
+              openSubmenus.finance || location.pathname.startsWith("/invoices") || location.pathname.startsWith("/contracts") || location.pathname.startsWith("/expenses") || location.pathname.startsWith("/financial-reports")
                 ? hoverClasses : defaultClasses
             }`}
           >
@@ -869,7 +869,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/invoices")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/invoices") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/invoices") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -880,7 +880,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/contracts")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/contracts") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/contracts") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -891,7 +891,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/expenses")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/expenses") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/expenses") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -902,7 +902,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/financial-reports")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/financial-reports") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/financial-reports") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -919,7 +919,7 @@ const SidebarContent = ({ user, logout }) => {
           <button
             onClick={() => toggleSubmenu('sales')}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              openSubmenus.sales || location.startsWith("/opportunities") || location.startsWith("/sales-reports")
+              openSubmenus.sales || location.pathname.startsWith("/opportunities") || location.pathname.startsWith("/sales-reports")
                 ? hoverClasses : defaultClasses
             }`}
           >
@@ -939,7 +939,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/leads")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/leads") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/leads") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -950,7 +950,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/opportunities")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/opportunities") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/opportunities") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -961,7 +961,7 @@ const SidebarContent = ({ user, logout }) => {
               <button
                 onClick={() => navigate("/sales-reports")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/sales-reports") ? subActiveClasses : subDefaultClasses
+                  location.pathname.startsWith("/sales-reports") ? subActiveClasses : subDefaultClasses
                 }`}
               >
                 <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -977,7 +977,7 @@ const SidebarContent = ({ user, logout }) => {
         <button
           onClick={() => navigate("/documents")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/documents") ? activeClasses : defaultClasses
+            location.pathname.startsWith("/documents") ? activeClasses : defaultClasses
           }`}
         >
           <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -990,7 +990,7 @@ const SidebarContent = ({ user, logout }) => {
         <button
           onClick={() => navigate("/reports")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/reports") ? activeClasses : defaultClasses
+            location.pathname.startsWith("/reports") ? activeClasses : defaultClasses
           }`}
         >
           <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1003,7 +1003,7 @@ const SidebarContent = ({ user, logout }) => {
         <button
           onClick={() => navigate("/human-resources")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/human-resources") ? activeClasses : defaultClasses
+            location.pathname.startsWith("/human-resources") ? activeClasses : defaultClasses
           }`}
         >
           <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1016,7 +1016,7 @@ const SidebarContent = ({ user, logout }) => {
         <button
           onClick={() => navigate("/account")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/account") ? activeClasses : defaultClasses
+            location.pathname.startsWith("/account") ? activeClasses : defaultClasses
           }`}
         >
           <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1030,7 +1030,7 @@ const SidebarContent = ({ user, logout }) => {
           <button
             onClick={() => navigate("/settings")}
             className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              location.startsWith("/settings") ? activeClasses : defaultClasses
+              location.pathname.startsWith("/settings") ? activeClasses : defaultClasses
             }`}
           >
             <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
