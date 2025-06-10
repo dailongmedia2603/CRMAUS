@@ -570,7 +570,7 @@ const Clients = () => {
                             </svg>
                           ) : (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l4-4 4 4H9v10H7V8H5zM21 12l-4-4-4 4h2v6h4v-6h2z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l6 6V9h5a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-5a2 2 0 00-2-2H3" />
                             </svg>
                           )}
                         </button>
