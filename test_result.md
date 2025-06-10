@@ -421,8 +421,7 @@ ui_enhancements:
 test_plan:
   current_focus:
     - "Task Completion Popup"
-  stuck_tasks: 
-    - "Task Completion Popup"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
