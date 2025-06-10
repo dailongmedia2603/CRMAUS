@@ -171,6 +171,72 @@ class PerformanceSummary(BaseModel):
     performance_trend: float = 0.0
     rank_change: int = 0
 
+# Permission Management Models
+class PermissionCategory(BaseModel):
+    """Định nghĩa các nhóm chức năng lớn"""
+    id: str
+    name: str
+    display_name: str
+    description: Optional[str] = None
+    order: int = 0
+
+class PermissionItem(BaseModel):
+    """Định nghĩa các quyền cụ thể"""
+    id: str
+    category_id: str
+    name: str
+    display_name: str
+    description: Optional[str] = None
+    order: int = 0
+
+class RolePermissionBase(BaseModel):
+    """Phân quyền theo vị trí/role"""
+    role: str  # admin, manager, account, etc.
+    permission_id: str
+    can_view: bool = False
+    can_edit: bool = False
+    can_delete: bool = False
+
+class RolePermissionCreate(RolePermissionBase):
+    pass
+
+class RolePermission(RolePermissionBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+class UserPermissionBase(BaseModel):
+    """Phân quyền riêng cho từng user"""
+    user_id: str
+    permission_id: str
+    can_view: bool = False
+    can_edit: bool = False
+    can_delete: bool = False
+    override_role: bool = False  # Có ghi đè quyền role hay không
+
+class UserPermissionCreate(UserPermissionBase):
+    pass
+
+class UserPermission(UserPermissionBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+class PermissionSummary(BaseModel):
+    """Tổng hợp quyền của user hoặc role"""
+    target_type: str  # "role" hoặc "user"
+    target_id: str  # role name hoặc user_id
+    target_name: str  # display name
+    permissions: List[dict] = []  # List of permission with categories
+    
+class PermissionMatrix(BaseModel):
+    """Ma trận phân quyền để hiển thị"""
+    categories: List[PermissionCategory] = []
+    items: List[PermissionItem] = []
+    current_permissions: List[dict] = []
+
 class ClientBase(BaseModel):
     name: str
     company: str
