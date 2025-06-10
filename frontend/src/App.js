@@ -531,9 +531,11 @@ const SidebarContent = ({ user, logout }) => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
-  const [isFinanceMenuOpen, setIsFinanceMenuOpen] = useState(false);
-  const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
+  const [openSubmenus, setOpenSubmenus] = useState({
+    project: false,
+    finance: false,
+    sales: false
+  });
 
   // Permission-based menu items
   const menuItems = [
