@@ -913,6 +913,7 @@ def test_permission_management():
         for i, item in enumerate(items):
             if i < 5:  # Just use the first 5 items for testing
                 test_permissions.append({
+                    "role": test_role,  # Add the role field
                     "permission_id": item["id"],
                     "can_view": True,
                     "can_edit": i % 2 == 0,  # Alternate edit permission
