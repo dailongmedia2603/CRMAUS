@@ -261,6 +261,9 @@
       - working: true
         agent: "testing"
         comment: "Successfully tested the sidebar menu improvements in the live environment. The page loads correctly with no JSX syntax errors. The sidebar is fully functional with all menu items working properly. Verified: 1) Blue gradient header with CRM icon and 'Quản lý khách hàng' text is displayed correctly. 2) All menu items have consistent icons and styling. 3) Color scheme is properly implemented with correct active, hover, and default states. 4) Submenus for 'Dự án', 'Tài chính', and 'Bán hàng' are properly indented with left border and expand/collapse correctly when clicked. 5) User info section at the bottom displays the user avatar, name, role, and logout button correctly. All navigation works as expected when clicking on menu items."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the updated sidebar menu changes. Verified that the menu item below Dashboard is now labeled 'Client' (not 'Khách hàng'). Clicking on 'Client' menu correctly navigates to the client management page and all client management functionality works perfectly. The 'Bán hàng' (Sales) submenu has been updated with 'Lead' as the first submenu item (not 'Khách hàng'). Clicking on 'Lead' navigates to the new Lead page which displays the title 'Quản lý Lead', 4 statistics cards (Tổng Lead, Lead Qualified, Chờ Follow-up, Conversion Rate), placeholder content with 'Lead Management' heading, and a list of upcoming features. The original Client management is still accessible from the main 'Client' menu with no duplication issues. The breadcrumb shows 'Lead' when on the lead page, but there's a minor issue where it doesn't show 'Client' when on the client page (it shows 'Trang' instead). URLs are correct (/clients for Client, /leads for Lead) and both pages load properly without errors."
 
   - task: "Team Management API"
     implemented: true
