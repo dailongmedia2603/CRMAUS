@@ -8,7 +8,7 @@ import { AuthContext } from '../App.js';
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
 const HumanResources = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('management'); // management, teams, performance
+  const [activeTab, setActiveTab] = useState('management'); // management, teams, performance, permissions
   
   // Tab content rendering
   const renderTabContent = () => {
@@ -19,6 +19,8 @@ const HumanResources = ({ user }) => {
         return <TeamManagement user={user} />;
       case 'performance':
         return <PerformanceTracking user={user} />;
+      case 'permissions':
+        return <PermissionManagement user={user} />;
       default:
         return <HumanResourcesManagement user={user} />;
     }
