@@ -1056,7 +1056,12 @@ def test_specific_permission_endpoints():
     if roles_success:
         roles = response.json()
         print(f"Found {len(roles)} roles for permission assignment")
-        print(f"Sample roles: {[role['label'] for role in roles[:3]]}")
+        if len(roles) > 0:
+            # Print sample roles, handling different response formats
+            if 'label' in roles[0]:
+                print(f"Sample roles: {[role.get('label', 'N/A') for role in roles[:3]]}")
+            else:
+                print(f"Sample roles: {[role.get('value', 'N/A') for role in roles[:3]]}")
     
     # 2. GET /api/permissions/users - should return the list of users for permission assignment
     response = requests.get(
@@ -1069,7 +1074,13 @@ def test_specific_permission_endpoints():
         users = response.json()
         print(f"Found {len(users)} users for permission assignment")
         if len(users) > 0:
-            print(f"Sample users: {[user['label'] for user in users[:3]]}")
+            # Print sample users, handling different response formats
+            if 'label' in users[0]:
+                print(f"Sample users: {[user.get('label', 'N/A') for user in users[:3]]}")
+            elif 'full_name' in users[0]:
+                print(f"Sample users: {[user.get('full_name', 'N/A') for user in users[:3]]}")
+            else:
+                print(f"Sample users: {[user.get('id', 'N/A') for user in users[:3]]}")
     
     # 3. GET /api/permissions/categories - should return permission categories that were initialized on startup
     response = requests.get(
@@ -1081,7 +1092,8 @@ def test_specific_permission_endpoints():
     if categories_success:
         categories = response.json()
         print(f"Found {len(categories)} permission categories")
-        print(f"Sample categories: {[cat['display_name'] for cat in categories[:5]]}")
+        if len(categories) > 0:
+            print(f"Sample categories: {[cat.get('display_name', 'N/A') for cat in categories[:5]]}")
     
     # 4. GET /api/permissions/items - should return permission items that were initialized on startup
     response = requests.get(
@@ -1093,7 +1105,8 @@ def test_specific_permission_endpoints():
     if items_success:
         items = response.json()
         print(f"Found {len(items)} permission items")
-        print(f"Sample items: {[item['display_name'] for item in items[:5]]}")
+        if len(items) > 0:
+            print(f"Sample items: {[item.get('display_name', 'N/A') for item in items[:5]]}")
     
     # 5. GET /api/permissions/matrix/role/admin - should return permission matrix for admin role
     response = requests.get(
@@ -1113,7 +1126,7 @@ def test_specific_permission_endpoints():
     # First, get a user ID to test with
     user_id = None
     if users_success and len(users) > 0:
-        user_id = users[0]["id"]
+        user_id = users[0].get('id')
         
         response = requests.get(
             f"{BACKEND_URL}/permissions/matrix/user/{user_id}",
@@ -1123,7 +1136,8 @@ def test_specific_permission_endpoints():
         user_matrix_success = print_test_result(f"GET /api/permissions/matrix/user/{user_id}", response)
         if user_matrix_success:
             matrix = response.json()
-            print(f"User permission matrix for user {users[0]['label']}:")
+            user_name = users[0].get('full_name', users[0].get('label', user_id))
+            print(f"User permission matrix for user {user_name}:")
             print(f"- Categories: {len(matrix.get('categories', []))} categories")
             print(f"- Items: {len(matrix.get('items', []))} items")
             print(f"- Current permissions: {len(matrix.get('current_permissions', []))} permissions")
