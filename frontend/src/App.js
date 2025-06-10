@@ -1659,6 +1659,7 @@ const Task = () => {
                     onEdit={setEditingTask}
                     onDelete={handleDeleteTask}
                     onView={setViewingTask}
+                    onOpenReportModal={handleOpenReportModal}
                     onFeedback={(task) => {
                       setFeedbackTask(task);
                       fetchFeedbacks(task.id);
