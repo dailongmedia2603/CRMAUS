@@ -1829,7 +1829,6 @@ const TaskRow = React.memo(({
   getPriorityLabel,
   getStatusLabel
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleStatusUpdate = async (newStatus) => {
     if (newStatus === 'completed') {
