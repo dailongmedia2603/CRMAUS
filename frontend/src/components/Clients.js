@@ -604,40 +604,42 @@ const Clients = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">
-                {isEditing ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}
-              </h2>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {isEditing ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Avatar */}
-              <div className="flex justify-center mb-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-8">
+              {/* Avatar Section */}
+              <div className="flex justify-center">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                  <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                     {avatarPreview ? (
                       <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     )}
                   </div>
-                  <label htmlFor="avatar" className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <label htmlFor="avatar" className="absolute bottom-2 right-2 bg-blue-600 text-white p-3 rounded-full cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -652,220 +654,260 @@ const Clients = () => {
                 </div>
               </div>
 
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên khách hàng *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="modern-input"
-                    placeholder="Nhập tên khách hàng"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Công ty
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.company}
-                    onChange={(e) => setFormData({...formData, company: e.target.value})}
-                    className="modern-input"
-                    placeholder="Nhập tên công ty"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngành nghề
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.industry}
-                    onChange={(e) => setFormData({...formData, industry: e.target.value})}
-                    className="modern-input"
-                    placeholder="Nhập ngành nghề"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quy mô
-                  </label>
-                  <select
-                    value={formData.size}
-                    onChange={(e) => setFormData({...formData, size: e.target.value})}
-                    className="modern-input"
-                  >
-                    <option value="">Chọn quy mô</option>
-                    <option value="1-10">1-10 nhân viên</option>
-                    <option value="11-50">11-50 nhân viên</option>
-                    <option value="51-200">51-200 nhân viên</option>
-                    <option value="200+">200+ nhân viên</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.website}
-                    onChange={(e) => setFormData({...formData, website: e.target.value})}
-                    className="modern-input"
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="modern-input"
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-              </div>
-
-              {/* Contact Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên người liên hệ
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contact_name}
-                    onChange={(e) => setFormData({...formData, contact_name: e.target.value})}
-                    className="modern-input"
-                    placeholder="Nhập tên người liên hệ"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email liên hệ
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.contact_email}
-                    onChange={(e) => setFormData({...formData, contact_email: e.target.value})}
-                    className="modern-input"
-                    placeholder="email@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    SĐT liên hệ
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.contact_phone}
-                    onChange={(e) => setFormData({...formData, contact_phone: e.target.value})}
-                    className="modern-input"
-                    placeholder="Nhập số điện thoại liên hệ"
-                  />
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ
-                </label>
-                <textarea
-                  value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  rows={3}
-                  className="modern-input"
-                  placeholder="Nhập địa chỉ..."
-                />
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags
-                </label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {availableTags.map(tag => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => addTag(tag)}
-                      className={`px-3 py-1 text-xs rounded-full border ${
-                        formData.tags.includes(tag)
-                          ? 'bg-blue-100 text-blue-800 border-blue-300'
-                          : 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-                {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 text-blue-600 hover:text-blue-800"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
+              {/* Basic Information Section */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
+                  Thông tin cơ bản
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tên khách hàng *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Nhập tên khách hàng"
+                    />
                   </div>
-                )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Công ty
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.company}
+                      onChange={(e) => setFormData({...formData, company: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Nhập tên công ty"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ngành nghề
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.industry}
+                      onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Nhập ngành nghề"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quy mô
+                    </label>
+                    <select
+                      value={formData.size}
+                      onChange={(e) => setFormData({...formData, size: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                    >
+                      <option value="">Chọn quy mô</option>
+                      <option value="1-10">1-10 nhân viên</option>
+                      <option value="11-50">11-50 nhân viên</option>
+                      <option value="51-200">51-200 nhân viên</option>
+                      <option value="200+">200+ nhân viên</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Website
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.website}
+                      onChange={(e) => setFormData({...formData, website: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="https://example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ghi chú
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  rows={4}
-                  className="modern-input"
-                  placeholder="Nhập ghi chú về khách hàng..."
-                />
+              {/* Contact Information Section */}
+              <div className="bg-blue-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-200 pb-2">
+                  Thông tin liên hệ
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tên người liên hệ
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contact_name}
+                      onChange={(e) => setFormData({...formData, contact_name: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Nhập tên người liên hệ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email liên hệ
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={(e) => setFormData({...formData, contact_email: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="email@example.com"
+                    />
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      SĐT liên hệ
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.contact_phone}
+                      onChange={(e) => setFormData({...formData, contact_phone: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Nhập số điện thoại liên hệ"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              {/* Additional Information Section */}
+              <div className="bg-green-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-green-200 pb-2">
+                  Thông tin bổ sung
+                </h3>
+                
+                {/* Address */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Địa chỉ
+                  </label>
+                  <textarea
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                    placeholder="Nhập địa chỉ đầy đủ của khách hàng..."
+                  />
+                </div>
+
+                {/* Tags */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags
+                  </label>
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 mb-2">Chọn từ các tag có sẵn:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {availableTags.map(tag => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => addTag(tag)}
+                          className={`px-4 py-2 text-sm rounded-full border transition-all ${
+                            formData.tags.includes(tag)
+                              ? 'bg-blue-100 text-blue-800 border-blue-300 shadow-sm'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Tags đã chọn:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.tags.map(tag => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-4 py-2 text-sm bg-blue-100 text-blue-800 rounded-full border border-blue-200"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-2 text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ghi chú
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                    placeholder="Nhập ghi chú quan trọng về khách hàng, lịch sử hợp tác, yêu cầu đặc biệt..."
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     resetForm();
                   }}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  className="px-8 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
                 >
-                  {isEditing ? 'Cập nhật' : 'Thêm khách hàng'}
+                  {isEditing ? (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Cập nhật khách hàng
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Thêm khách hàng
+                    </>
+                  )}
                 </button>
               </div>
             </form>
