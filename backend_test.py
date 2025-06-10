@@ -1042,6 +1042,99 @@ def test_permission_management():
             role_matrix_success and users_success and user_matrix_success and 
             role_update_success and user_update_success)
 
+def test_specific_permission_endpoints():
+    """Test specific permission management API endpoints as requested"""
+    print("\n=== Testing Specific Permission Management API Endpoints ===")
+    
+    # 1. GET /api/permissions/roles - should return the list of roles for permission assignment
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/roles",
+        headers=get_headers()
+    )
+    
+    roles_success = print_test_result("GET /api/permissions/roles", response)
+    if roles_success:
+        roles = response.json()
+        print(f"Found {len(roles)} roles for permission assignment")
+        print(f"Sample roles: {[role['label'] for role in roles[:3]]}")
+    
+    # 2. GET /api/permissions/users - should return the list of users for permission assignment
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/users",
+        headers=get_headers()
+    )
+    
+    users_success = print_test_result("GET /api/permissions/users", response)
+    if users_success:
+        users = response.json()
+        print(f"Found {len(users)} users for permission assignment")
+        if len(users) > 0:
+            print(f"Sample users: {[user['label'] for user in users[:3]]}")
+    
+    # 3. GET /api/permissions/categories - should return permission categories that were initialized on startup
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/categories",
+        headers=get_headers()
+    )
+    
+    categories_success = print_test_result("GET /api/permissions/categories", response)
+    if categories_success:
+        categories = response.json()
+        print(f"Found {len(categories)} permission categories")
+        print(f"Sample categories: {[cat['display_name'] for cat in categories[:5]]}")
+    
+    # 4. GET /api/permissions/items - should return permission items that were initialized on startup
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/items",
+        headers=get_headers()
+    )
+    
+    items_success = print_test_result("GET /api/permissions/items", response)
+    if items_success:
+        items = response.json()
+        print(f"Found {len(items)} permission items")
+        print(f"Sample items: {[item['display_name'] for item in items[:5]]}")
+    
+    # 5. GET /api/permissions/matrix/role/admin - should return permission matrix for admin role
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/matrix/role/admin",
+        headers=get_headers()
+    )
+    
+    admin_matrix_success = print_test_result("GET /api/permissions/matrix/role/admin", response)
+    if admin_matrix_success:
+        matrix = response.json()
+        print(f"Admin role permission matrix:")
+        print(f"- Categories: {len(matrix.get('categories', []))} categories")
+        print(f"- Items: {len(matrix.get('items', []))} items")
+        print(f"- Current permissions: {len(matrix.get('current_permissions', []))} permissions")
+    
+    # 6. GET /api/permissions/matrix/user/{user_id} - should return permission matrix for a specific user
+    # First, get a user ID to test with
+    user_id = None
+    if users_success and len(users) > 0:
+        user_id = users[0]["id"]
+        
+        response = requests.get(
+            f"{BACKEND_URL}/permissions/matrix/user/{user_id}",
+            headers=get_headers()
+        )
+        
+        user_matrix_success = print_test_result(f"GET /api/permissions/matrix/user/{user_id}", response)
+        if user_matrix_success:
+            matrix = response.json()
+            print(f"User permission matrix for user {users[0]['label']}:")
+            print(f"- Categories: {len(matrix.get('categories', []))} categories")
+            print(f"- Items: {len(matrix.get('items', []))} items")
+            print(f"- Current permissions: {len(matrix.get('current_permissions', []))} permissions")
+    else:
+        user_matrix_success = False
+        print("❌ Could not test user permission matrix - no users found")
+    
+    return (roles_success and users_success and categories_success and 
+            items_success and admin_matrix_success and 
+            (user_matrix_success if user_id else True))
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
@@ -1051,7 +1144,10 @@ def main():
         print("Failed to authenticate. Exiting tests.")
         return
     
-    # Test permission management endpoints
+    # Test specific permission management endpoints as requested
+    specific_permission_success = test_specific_permission_endpoints()
+    
+    # Test permission management endpoints (full test)
     permission_management_success = test_permission_management()
     
     # Test team management endpoints
@@ -1064,7 +1160,8 @@ def main():
     internal_task_success = test_internal_task_management()
     
     print("\n=== Test Results ===")
-    print(f"Permission Management API: {'✅' if permission_management_success else '❌'}")
+    print(f"Specific Permission Management API Endpoints: {'✅' if specific_permission_success else '❌'}")
+    print(f"Permission Management API (Full Test): {'✅' if permission_management_success else '❌'}")
     print(f"Team Management API: {'✅' if team_management_success else '❌'}")
     print(f"Performance API: {'✅' if performance_success else '❌'}")
     print(f"Internal Task Management API: {'✅' if internal_task_success else '❌'}")
