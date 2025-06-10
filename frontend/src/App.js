@@ -1870,7 +1870,13 @@ const TaskRow = React.memo(({
           <input
             type="checkbox"
             checked={selectedTasks.includes(task.id)}
-            onChange={() => toggleTaskSelection(task.id)}
+            onChange={() => {
+              if (selectedTasks.includes(task.id)) {
+                setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+              } else {
+                setSelectedTasks([...selectedTasks, task.id]);
+              }
+            }}
             className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
         </td>
