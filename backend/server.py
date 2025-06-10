@@ -3738,6 +3738,409 @@ async def calculate_user_performance(user_id: str, start_date: datetime, end_dat
         "productivity_rank": None  # Calculated in summary endpoint
     }
 
+# =================== PERMISSION MANAGEMENT ENDPOINTS ===================
+
+# Initialize default permissions on startup
+@api_router.on_event("startup")
+async def initialize_permissions():
+    """Initialize default permission categories and items"""
+    
+    # Check if permissions are already initialized
+    existing_categories = await db.permission_categories.count_documents({})
+    if existing_categories > 0:
+        return
+    
+    # Define permission categories and items
+    permission_structure = {
+        "dashboard": {
+            "name": "dashboard",
+            "display_name": "Dashboard",
+            "description": "Trang tổng quan và thống kê",
+            "items": [
+                {"name": "dashboard_view", "display_name": "Xem Dashboard", "description": "Xem trang tổng quan và thống kê"}
+            ]
+        },
+        "clients": {
+            "name": "clients", 
+            "display_name": "Quản lý Khách hàng",
+            "description": "Quản lý thông tin khách hàng",
+            "items": [
+                {"name": "clients_view", "display_name": "Xem danh sách khách hàng", "description": "Xem danh sách và thông tin khách hàng"},
+                {"name": "clients_create", "display_name": "Thêm khách hàng", "description": "Tạo khách hàng mới"},
+                {"name": "clients_edit", "display_name": "Sửa thông tin khách hàng", "description": "Chỉnh sửa thông tin khách hàng"},
+                {"name": "clients_delete", "display_name": "Xóa khách hàng", "description": "Xóa khách hàng khỏi hệ thống"},
+                {"name": "clients_archive", "display_name": "Lưu trữ khách hàng", "description": "Lưu trữ/khôi phục khách hàng"}
+            ]
+        },
+        "leads": {
+            "name": "leads",
+            "display_name": "Quản lý Lead", 
+            "description": "Quản lý tiềm năng khách hàng",
+            "items": [
+                {"name": "leads_view", "display_name": "Xem danh sách Lead", "description": "Xem danh sách Lead"},
+                {"name": "leads_create", "display_name": "Thêm Lead", "description": "Tạo Lead mới"},
+                {"name": "leads_edit", "display_name": "Sửa thông tin Lead", "description": "Chỉnh sửa thông tin Lead"},
+                {"name": "leads_delete", "display_name": "Xóa Lead", "description": "Xóa Lead khỏi hệ thống"}
+            ]
+        },
+        "projects": {
+            "name": "projects",
+            "display_name": "Quản lý Dự án",
+            "description": "Quản lý dự án và chiến dịch",
+            "items": [
+                {"name": "projects_view", "display_name": "Xem danh sách dự án", "description": "Xem danh sách dự án"},
+                {"name": "projects_create", "display_name": "Thêm dự án", "description": "Tạo dự án mới"},
+                {"name": "projects_edit", "display_name": "Sửa thông tin dự án", "description": "Chỉnh sửa thông tin dự án"},
+                {"name": "projects_delete", "display_name": "Xóa dự án", "description": "Xóa dự án"},
+                {"name": "projects_assign", "display_name": "Phân công nhân sự", "description": "Phân công nhân sự cho dự án"}
+            ]
+        },
+        "campaigns": {
+            "name": "campaigns",
+            "display_name": "Quản lý Chiến dịch",
+            "description": "Quản lý chiến dịch marketing",
+            "items": [
+                {"name": "campaigns_view", "display_name": "Xem chiến dịch", "description": "Xem danh sách chiến dịch"},
+                {"name": "campaigns_create", "display_name": "Thêm chiến dịch", "description": "Tạo chiến dịch mới"},
+                {"name": "campaigns_edit", "display_name": "Sửa chiến dịch", "description": "Chỉnh sửa chiến dịch"},
+                {"name": "campaigns_delete", "display_name": "Xóa chiến dịch", "description": "Xóa chiến dịch"}
+            ]
+        },
+        "services": {
+            "name": "services",
+            "display_name": "Quản lý Dịch vụ",
+            "description": "Quản lý dịch vụ trong chiến dịch",
+            "items": [
+                {"name": "services_view", "display_name": "Xem dịch vụ", "description": "Xem dịch vụ trong chiến dịch"},
+                {"name": "services_create", "display_name": "Thêm dịch vụ", "description": "Tạo dịch vụ mới"},
+                {"name": "services_edit", "display_name": "Sửa dịch vụ", "description": "Chỉnh sửa dịch vụ"},
+                {"name": "services_delete", "display_name": "Xóa dịch vụ", "description": "Xóa dịch vụ"}
+            ]
+        },
+        "tasks": {
+            "name": "tasks",
+            "display_name": "Quản lý Công việc",
+            "description": "Quản lý công việc và nhiệm vụ",
+            "items": [
+                {"name": "tasks_view", "display_name": "Xem công việc", "description": "Xem danh sách công việc"},
+                {"name": "tasks_create", "display_name": "Thêm công việc", "description": "Tạo công việc mới"},
+                {"name": "tasks_edit", "display_name": "Sửa công việc", "description": "Chỉnh sửa công việc"},
+                {"name": "tasks_delete", "display_name": "Xóa công việc", "description": "Xóa công việc"},
+                {"name": "tasks_assign", "display_name": "Phân công công việc", "description": "Phân công công việc cho nhân sự"}
+            ]
+        },
+        "internal_tasks": {
+            "name": "internal_tasks",
+            "display_name": "Nhiệm vụ Nội bộ",
+            "description": "Quản lý nhiệm vụ nội bộ",
+            "items": [
+                {"name": "internal_tasks_view", "display_name": "Xem nhiệm vụ nội bộ", "description": "Xem danh sách nhiệm vụ nội bộ"},
+                {"name": "internal_tasks_create", "display_name": "Thêm nhiệm vụ", "description": "Tạo nhiệm vụ nội bộ mới"},
+                {"name": "internal_tasks_edit", "display_name": "Sửa nhiệm vụ", "description": "Chỉnh sửa nhiệm vụ nội bộ"},
+                {"name": "internal_tasks_delete", "display_name": "Xóa nhiệm vụ", "description": "Xóa nhiệm vụ nội bộ"}
+            ]
+        },
+        "contracts": {
+            "name": "contracts",
+            "display_name": "Quản lý Hợp đồng",
+            "description": "Quản lý hợp đồng với khách hàng",
+            "items": [
+                {"name": "contracts_view", "display_name": "Xem hợp đồng", "description": "Xem danh sách hợp đồng"},
+                {"name": "contracts_create", "display_name": "Thêm hợp đồng", "description": "Tạo hợp đồng mới"},
+                {"name": "contracts_edit", "display_name": "Sửa hợp đồng", "description": "Chỉnh sửa hợp đồng"},
+                {"name": "contracts_delete", "display_name": "Xóa hợp đồng", "description": "Xóa hợp đồng"}
+            ]
+        },
+        "invoices": {
+            "name": "invoices",
+            "display_name": "Quản lý Hóa đơn",
+            "description": "Quản lý hóa đơn và thanh toán",
+            "items": [
+                {"name": "invoices_view", "display_name": "Xem hóa đơn", "description": "Xem danh sách hóa đơn"},
+                {"name": "invoices_create", "display_name": "Thêm hóa đơn", "description": "Tạo hóa đơn mới"},
+                {"name": "invoices_edit", "display_name": "Sửa hóa đơn", "description": "Chỉnh sửa hóa đơn"},
+                {"name": "invoices_delete", "display_name": "Xóa hóa đơn", "description": "Xóa hóa đơn"}
+            ]
+        },
+        "expenses": {
+            "name": "expenses",
+            "display_name": "Quản lý Chi phí",
+            "description": "Quản lý chi phí và báo cáo",
+            "items": [
+                {"name": "expenses_view", "display_name": "Xem chi phí", "description": "Xem danh sách chi phí"},
+                {"name": "expenses_create", "display_name": "Thêm chi phí", "description": "Tạo chi phí mới"},
+                {"name": "expenses_edit", "display_name": "Sửa chi phí", "description": "Chỉnh sửa chi phí"},
+                {"name": "expenses_delete", "display_name": "Xóa chi phí", "description": "Xóa chi phí"},
+                {"name": "expenses_approve", "display_name": "Duyệt chi phí", "description": "Duyệt/từ chối chi phí"}
+            ]
+        },
+        "documents": {
+            "name": "documents",
+            "display_name": "Quản lý Tài liệu",
+            "description": "Quản lý tài liệu và thư mục",
+            "items": [
+                {"name": "documents_view", "display_name": "Xem tài liệu", "description": "Xem tài liệu"},
+                {"name": "documents_create", "display_name": "Thêm tài liệu", "description": "Tạo tài liệu mới"},
+                {"name": "documents_edit", "display_name": "Sửa tài liệu", "description": "Chỉnh sửa tài liệu"},
+                {"name": "documents_delete", "display_name": "Xóa tài liệu", "description": "Xóa tài liệu"},
+                {"name": "folders_manage", "display_name": "Quản lý thư mục", "description": "Tạo/sửa/xóa thư mục"}
+            ]
+        },
+        "templates": {
+            "name": "templates",
+            "display_name": "Quản lý Template",
+            "description": "Quản lý template dịch vụ",
+            "items": [
+                {"name": "templates_view", "display_name": "Xem template", "description": "Xem danh sách template"},
+                {"name": "templates_create", "display_name": "Thêm template", "description": "Tạo template mới"},
+                {"name": "templates_edit", "display_name": "Sửa template", "description": "Chỉnh sửa template"},
+                {"name": "templates_delete", "display_name": "Xóa template", "description": "Xóa template"}
+            ]
+        },
+        "human_resources": {
+            "name": "human_resources",
+            "display_name": "Quản lý Nhân sự",
+            "description": "Quản lý nhân viên và team",
+            "items": [
+                {"name": "users_view", "display_name": "Xem nhân sự", "description": "Xem danh sách nhân sự"},
+                {"name": "users_create", "display_name": "Thêm nhân sự", "description": "Tạo tài khoản nhân sự mới"},
+                {"name": "users_edit", "display_name": "Sửa thông tin nhân sự", "description": "Chỉnh sửa thông tin nhân sự"},
+                {"name": "users_delete", "display_name": "Xóa nhân sự", "description": "Xóa tài khoản nhân sự"},
+                {"name": "teams_manage", "display_name": "Quản lý Team", "description": "Tạo/sửa/xóa team và phân công thành viên"},
+                {"name": "performance_view", "display_name": "Xem hiệu suất", "description": "Xem báo cáo hiệu suất nhân sự"},
+                {"name": "permissions_manage", "display_name": "Quản lý Phân quyền", "description": "Cấu hình phân quyền hệ thống"}
+            ]
+        },
+        "reports": {
+            "name": "reports",
+            "display_name": "Báo cáo",
+            "description": "Xem và tạo báo cáo",
+            "items": [
+                {"name": "reports_view", "display_name": "Xem báo cáo", "description": "Xem các báo cáo hệ thống"},
+                {"name": "reports_export", "display_name": "Xuất báo cáo", "description": "Xuất báo cáo ra file"},
+                {"name": "financial_reports", "display_name": "Báo cáo tài chính", "description": "Xem báo cáo tài chính"},
+                {"name": "sales_reports", "display_name": "Báo cáo bán hàng", "description": "Xem báo cáo bán hàng"}
+            ]
+        },
+        "settings": {
+            "name": "settings",
+            "display_name": "Cài đặt Hệ thống",
+            "description": "Cấu hình hệ thống",
+            "items": [
+                {"name": "settings_view", "display_name": "Xem cài đặt", "description": "Xem cài đặt hệ thống"},
+                {"name": "settings_edit", "display_name": "Sửa cài đặt", "description": "Chỉnh sửa cài đặt hệ thống"},
+                {"name": "system_manage", "display_name": "Quản lý hệ thống", "description": "Quản lý tổng thể hệ thống"}
+            ]
+        }
+    }
+    
+    # Insert permission categories and items
+    order = 0
+    for category_key, category_data in permission_structure.items():
+        # Create category
+        category = PermissionCategory(
+            id=category_key,
+            name=category_data["name"],
+            display_name=category_data["display_name"],
+            description=category_data["description"],
+            order=order
+        )
+        await db.permission_categories.insert_one(category.dict())
+        
+        # Create items for this category
+        item_order = 0
+        for item_data in category_data["items"]:
+            item = PermissionItem(
+                id=f"{category_key}_{item_data['name']}",
+                category_id=category_key,
+                name=item_data["name"],
+                display_name=item_data["display_name"],
+                description=item_data["description"],
+                order=item_order
+            )
+            await db.permission_items.insert_one(item.dict())
+            item_order += 1
+        
+        order += 1
+
+@api_router.get("/permissions/categories", response_model=List[PermissionCategory])
+async def get_permission_categories(current_user: User = Depends(get_current_active_user)):
+    """Lấy danh sách các nhóm quyền"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    categories = await db.permission_categories.find().sort("order", 1).to_list(length=100)
+    return categories
+
+@api_router.get("/permissions/items", response_model=List[PermissionItem])
+async def get_permission_items(
+    category_id: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách các quyền cụ thể"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    query = {}
+    if category_id:
+        query["category_id"] = category_id
+    
+    items = await db.permission_items.find(query).sort("order", 1).to_list(length=500)
+    return items
+
+@api_router.get("/permissions/matrix/{target_type}/{target_id}")
+async def get_permission_matrix(
+    target_type: str,  # "role" or "user"
+    target_id: str,    # role name or user_id
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy ma trận phân quyền cho role hoặc user"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    if target_type not in ["role", "user"]:
+        raise HTTPException(status_code=400, detail="Invalid target_type")
+    
+    # Get categories and items
+    categories = await db.permission_categories.find().sort("order", 1).to_list(length=100)
+    items = await db.permission_items.find().sort("order", 1).to_list(length=500)
+    
+    # Get current permissions
+    current_permissions = []
+    
+    if target_type == "role":
+        # Get role permissions
+        role_perms = await db.role_permissions.find({"role": target_id}).to_list(length=500)
+        current_permissions = [
+            {
+                "permission_id": perm["permission_id"],
+                "can_view": perm["can_view"],
+                "can_edit": perm["can_edit"],
+                "can_delete": perm["can_delete"]
+            }
+            for perm in role_perms
+        ]
+    else:
+        # Get user permissions
+        user_perms = await db.user_permissions.find({"user_id": target_id}).to_list(length=500)
+        current_permissions = [
+            {
+                "permission_id": perm["permission_id"],
+                "can_view": perm["can_view"],
+                "can_edit": perm["can_edit"],
+                "can_delete": perm["can_delete"],
+                "override_role": perm["override_role"]
+            }
+            for perm in user_perms
+        ]
+    
+    return PermissionMatrix(
+        categories=categories,
+        items=items,
+        current_permissions=current_permissions
+    )
+
+@api_router.post("/permissions/role/{role}/update")
+async def update_role_permissions(
+    role: str,
+    permissions: List[RolePermissionCreate],
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật phân quyền cho role"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Validate role
+    valid_roles = ["admin", "account", "creative", "staff", "manager", "content", "design", "editor", "sale"]
+    if role not in valid_roles:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    # Delete existing role permissions
+    await db.role_permissions.delete_many({"role": role})
+    
+    # Insert new permissions
+    for perm in permissions:
+        role_perm = RolePermission(
+            role=role,
+            permission_id=perm.permission_id,
+            can_view=perm.can_view,
+            can_edit=perm.can_edit,
+            can_delete=perm.can_delete,
+            created_by=current_user.id
+        )
+        await db.role_permissions.insert_one(role_perm.dict())
+    
+    return {"detail": f"Updated permissions for role {role}"}
+
+@api_router.post("/permissions/user/{user_id}/update")
+async def update_user_permissions(
+    user_id: str,
+    permissions: List[UserPermissionCreate],
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật phân quyền cho user cụ thể"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Validate user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete existing user permissions
+    await db.user_permissions.delete_many({"user_id": user_id})
+    
+    # Insert new permissions
+    for perm in permissions:
+        user_perm = UserPermission(
+            user_id=user_id,
+            permission_id=perm.permission_id,
+            can_view=perm.can_view,
+            can_edit=perm.can_edit,
+            can_delete=perm.can_delete,
+            override_role=perm.override_role,
+            created_by=current_user.id
+        )
+        await db.user_permissions.insert_one(user_perm.dict())
+    
+    return {"detail": f"Updated permissions for user {user_id}"}
+
+@api_router.get("/permissions/roles", response_model=List[dict])
+async def get_roles_list(current_user: User = Depends(get_current_active_user)):
+    """Lấy danh sách các role để phân quyền"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    roles = [
+        {"value": "admin", "label": "Quản trị viên", "color": "red"},
+        {"value": "account", "label": "Account Manager", "color": "blue"},
+        {"value": "manager", "label": "Quản lý dự án", "color": "purple"},
+        {"value": "creative", "label": "Creative Director", "color": "indigo"},
+        {"value": "content", "label": "Content Creator", "color": "green"},
+        {"value": "design", "label": "Designer", "color": "pink"},
+        {"value": "editor", "label": "Editor", "color": "orange"},
+        {"value": "sale", "label": "Sales", "color": "yellow"},
+        {"value": "staff", "label": "Nhân viên", "color": "gray"}
+    ]
+    return roles
+
+@api_router.get("/permissions/users", response_model=List[dict])
+async def get_users_for_permission(current_user: User = Depends(get_current_active_user)):
+    """Lấy danh sách users để phân quyền riêng"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    users = await db.users.find({"is_active": True}).to_list(length=100)
+    return [
+        {
+            "id": user["id"],
+            "full_name": user["full_name"],
+            "email": user["email"],
+            "role": user["role"]
+        }
+        for user in users
+    ]
+
 # Root endpoint
 @api_router.get("/")
 async def root():
