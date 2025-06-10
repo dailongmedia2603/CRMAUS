@@ -1700,4 +1700,357 @@ const PerformanceTracking = ({ user }) => {
   );
 };
 
+// Permission Management Tab  
+const PermissionManagement = ({ user }) => {
+  const [loading, setLoading] = useState(true);
+  const [permissionMode, setPermissionMode] = useState('role'); // 'role' or 'user'
+  const [selectedTarget, setSelectedTarget] = useState('');
+  const [roles, setRoles] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [permissionMatrix, setPermissionMatrix] = useState(null);
+  const [permissions, setPermissions] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedTarget) {
+      fetchPermissionMatrix();
+    }
+  }, [permissionMode, selectedTarget]);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      const [rolesResponse, usersResponse] = await Promise.all([
+        axios.get(`${API}/api/permissions/roles`),
+        axios.get(`${API}/api/permissions/users`)
+      ]);
+      
+      setRoles(rolesResponse.data);
+      setUsers(usersResponse.data);
+      
+      // Set default selection
+      if (rolesResponse.data.length > 0) {
+        setSelectedTarget(rolesResponse.data[0].value);
+      }
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      toast.error('Không thể tải dữ liệu phân quyền');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPermissionMatrix = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/api/permissions/matrix/${permissionMode}/${selectedTarget}`);
+      setPermissionMatrix(response.data);
+      
+      // Initialize permissions state
+      const initialPermissions = {};
+      response.data.current_permissions.forEach(perm => {
+        initialPermissions[perm.permission_id] = {
+          can_view: perm.can_view,
+          can_edit: perm.can_edit,
+          can_delete: perm.can_delete,
+          override_role: perm.override_role || false
+        };
+      });
+      setPermissions(initialPermissions);
+    } catch (error) {
+      console.error('Error fetching permission matrix:', error);
+      toast.error('Không thể tải ma trận phân quyền');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePermissionChange = (permissionId, permissionType, value) => {
+    setPermissions(prev => ({
+      ...prev,
+      [permissionId]: {
+        ...prev[permissionId],
+        [permissionType]: value
+      }
+    }));
+  };
+
+  const handleSavePermissions = async () => {
+    try {
+      setSaving(true);
+      
+      // Convert permissions to API format
+      const permissionList = Object.entries(permissions).map(([permissionId, perms]) => ({
+        permission_id: permissionId,
+        can_view: perms.can_view || false,
+        can_edit: perms.can_edit || false,
+        can_delete: perms.can_delete || false,
+        ...(permissionMode === 'user' && { override_role: perms.override_role || false })
+      }));
+
+      const endpoint = permissionMode === 'role' 
+        ? `/api/permissions/role/${selectedTarget}/update`
+        : `/api/permissions/user/${selectedTarget}/update`;
+
+      await axios.post(`${API}${endpoint}`, permissionList);
+      toast.success('Cập nhật phân quyền thành công!');
+    } catch (error) {
+      console.error('Error saving permissions:', error);
+      toast.error('Không thể lưu phân quyền');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getPermissionValue = (permissionId, permissionType) => {
+    return permissions[permissionId]?.[permissionType] || false;
+  };
+
+  const getSelectedTargetName = () => {
+    if (permissionMode === 'role') {
+      const role = roles.find(r => r.value === selectedTarget);
+      return role?.label || selectedTarget;
+    } else {
+      const user = users.find(u => u.id === selectedTarget);
+      return user?.full_name || selectedTarget;
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-10">Đang tải dữ liệu phân quyền...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Quản lý Phân quyền</h3>
+          <p className="text-gray-600">Cấu hình quyền truy cập cho từng vị trí và nhân sự</p>
+        </div>
+        {selectedTarget && (
+          <button
+            onClick={handleSavePermissions}
+            disabled={saving}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+          >
+            {saving ? (
+              <>
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Đang lưu...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Lưu phân quyền
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Mode Selection */}
+      <div className="bg-white rounded-lg border p-6">
+        <h4 className="text-md font-semibold text-gray-900 mb-4">Chế độ phân quyền</h4>
+        
+        <div className="flex space-x-4 mb-6">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              value="role"
+              checked={permissionMode === 'role'}
+              onChange={(e) => {
+                setPermissionMode(e.target.value);
+                setSelectedTarget(roles[0]?.value || '');
+              }}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium">Phân quyền theo vị trí</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              value="user"
+              checked={permissionMode === 'user'}
+              onChange={(e) => {
+                setPermissionMode(e.target.value);
+                setSelectedTarget(users[0]?.id || '');
+              }}
+              className="mr-2"
+            />
+            <span className="text-sm font-medium">Phân quyền theo nhân sự</span>
+          </label>
+        </div>
+
+        {/* Target Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {permissionMode === 'role' ? 'Chọn vị trí' : 'Chọn nhân sự'}
+          </label>
+          <select
+            value={selectedTarget}
+            onChange={(e) => setSelectedTarget(e.target.value)}
+            className="w-full max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">-- Chọn --</option>
+            {(permissionMode === 'role' ? roles : users).map(item => (
+              <option key={permissionMode === 'role' ? item.value : item.id} value={permissionMode === 'role' ? item.value : item.id}>
+                {permissionMode === 'role' ? item.label : `${item.full_name} (${item.email})`}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Permission Matrix */}
+      {selectedTarget && permissionMatrix && (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h4 className="text-md font-semibold text-gray-900">
+              Phân quyền cho: <span className="text-indigo-600">{getSelectedTargetName()}</span>
+            </h4>
+            <p className="text-sm text-gray-600 mt-1">
+              Tích chọn các quyền tương ứng cho từng hạng mục
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">
+                    Hạng mục
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                    Xem
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                    Sửa
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
+                    Xóa
+                  </th>
+                  {permissionMode === 'user' && (
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ghi đè Role
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {permissionMatrix.categories.map(category => {
+                  const categoryItems = permissionMatrix.items.filter(item => item.category_id === category.id);
+                  
+                  return (
+                    <React.Fragment key={category.id}>
+                      {/* Category Header */}
+                      <tr className="bg-blue-50">
+                        <td colSpan={permissionMode === 'user' ? 5 : 4} className="px-6 py-3">
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V9a2 2 0 00-2-2H5z" />
+                            </svg>
+                            <span className="font-semibold text-blue-900">{category.display_name}</span>
+                            {category.description && (
+                              <span className="ml-2 text-sm text-blue-700">({category.description})</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      
+                      {/* Category Items */}
+                      {categoryItems.map(item => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900">{item.display_name}</div>
+                            {item.description && (
+                              <div className="text-xs text-gray-500">{item.description}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={getPermissionValue(item.id, 'can_view')}
+                              onChange={(e) => handlePermissionChange(item.id, 'can_view', e.target.checked)}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={getPermissionValue(item.id, 'can_edit')}
+                              onChange={(e) => handlePermissionChange(item.id, 'can_edit', e.target.checked)}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={getPermissionValue(item.id, 'can_delete')}
+                              onChange={(e) => handlePermissionChange(item.id, 'can_delete', e.target.checked)}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </td>
+                          {permissionMode === 'user' && (
+                            <td className="px-6 py-4 text-center">
+                              <input
+                                type="checkbox"
+                                checked={getPermissionValue(item.id, 'override_role')}
+                                onChange={(e) => handlePermissionChange(item.id, 'override_role', e.target.checked)}
+                                className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                title="Ghi đè quyền từ vị trí"
+                              />
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Legend */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs text-gray-600">
+              <div className="space-y-1">
+                <div>• <strong>Xem:</strong> Quyền xem và truy cập</div>
+                <div>• <strong>Sửa:</strong> Quyền chỉnh sửa và cập nhật</div>
+                <div>• <strong>Xóa:</strong> Quyền xóa và loại bỏ</div>
+              </div>
+              {permissionMode === 'user' && (
+                <div className="text-right">
+                  <div className="text-red-600">• <strong>Ghi đè Role:</strong> Ưu tiên quyền cá nhân hơn quyền vị trí</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!selectedTarget && (
+        <div className="bg-white rounded-lg border p-12 text-center">
+          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Chọn đối tượng phân quyền</h3>
+          <p className="text-gray-600">
+            Vui lòng chọn vị trí hoặc nhân sự để cấu hình phân quyền
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default HumanResources;
