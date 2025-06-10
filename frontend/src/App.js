@@ -709,7 +709,6 @@ const SidebarContent = ({ user, logout }) => {
       </div>
     );
   }
-  });
 
   const toggleSubmenu = (menu) => {
     setOpenSubmenus(prev => ({
