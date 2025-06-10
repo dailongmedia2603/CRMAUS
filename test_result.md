@@ -120,11 +120,11 @@
         
   - task: "Task Completion Popup"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
@@ -141,6 +141,9 @@
       - working: false
         agent: "testing"
         comment: "Retested the task completion popup functionality. We were able to successfully log in and navigate to the Task module. We found tasks with 'Đang làm' (in_progress) status and 'Hoàn thành' (Complete) buttons. However, when we tried to click the 'Hoàn thành' button, the modal popup did not appear as expected. Upon code review, we found that there are two identical modal implementations in the code (lines 1728-1810 and lines 1813-1850+). This duplicate modal implementation is likely causing issues with the modal functionality. The modal is properly implemented with the correct title, input field, and buttons, but it's not appearing when the button is clicked in the UI. This needs to be fixed by removing the duplicate modal implementation."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Successfully fixed the task completion modal by removing the duplicate implementation in the TaskRow component. The issue was that there were two separate implementations of the modal functionality - one in the main Task component and another in the TaskRow component. This was causing conflicts when trying to show the modal. After removing the duplicate code (submitCompletion and handleCloseModal functions) from the TaskRow component, the modal now appears correctly as an overlay when clicking the 'Hoàn thành' button. The form validation works properly, requiring a report link before submission, and the task is successfully completed when a valid URL is provided. All functionality is now working as expected."
 
   - task: "User Management API"
     implemented: true
