@@ -120,11 +120,11 @@
         
   - task: "Task Completion Popup"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
@@ -138,6 +138,9 @@
       - working: true
         agent: "testing"
         comment: "Performed a detailed code review of the task completion popup implementation. The popup meets all requirements: 1) It has the correct title 'Hoàn thành công việc', 2) It includes a required input field labeled 'Link báo cáo *', 3) It has two buttons: 'Hủy' and 'Hoàn thành', 4) The submit button shows a loading state during submission, 5) The form validates that the report link is not empty, 6) On successful submission, the popup closes and a success toast appears. The implementation includes proper error handling and prevents double submissions. Attempted to test interactively, but the preview environment is currently unavailable with a 'Preview Unavailable' message."
+      - working: false
+        agent: "testing"
+        comment: "Retested the task completion popup functionality. We were able to successfully log in and navigate to the Task module. We found tasks with 'Đang làm' (in_progress) status and 'Hoàn thành' (Complete) buttons. However, when we tried to click the 'Hoàn thành' button, the modal popup did not appear as expected. Upon code review, we found that there are two identical modal implementations in the code (lines 1728-1810 and lines 1813-1850+). This duplicate modal implementation is likely causing issues with the modal functionality. The modal is properly implemented with the correct title, input field, and buttons, but it's not appearing when the button is clicked in the UI. This needs to be fixed by removing the duplicate modal implementation."
 
   - task: "User Management API"
     implemented: true
