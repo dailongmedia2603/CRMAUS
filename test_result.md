@@ -417,13 +417,9 @@ ui_enhancements:
 
 test_plan:
   current_focus:
-    - "User Management API"
-    - "UI Improvements"
-    - "Expense Management Tab Navigation"
-    - "Sidebar Menu Improvements"
-    - "Team Management API"
-    - "Performance API"
-  stuck_tasks: []
+    - "Task Completion Popup"
+  stuck_tasks: 
+    - "Task Completion Popup"
   test_all: false
   test_priority: "high_first"
 
