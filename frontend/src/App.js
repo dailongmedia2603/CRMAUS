@@ -527,12 +527,188 @@ const Dashboard = () => {
 
 // SidebarContent Component  
 const SidebarContent = ({ user, logout }) => {
+  const { hasPermission, loading } = usePermissions();
+  const location = useLocation();
   const navigate = useNavigate();
-  const location = useLocation().pathname;
-  const [openSubmenus, setOpenSubmenus] = useState({
-    project: false,
-    finance: false,
-    sales: false
+  
+  const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
+  const [isFinanceMenuOpen, setIsFinanceMenuOpen] = useState(false);
+  const [isSalesMenuOpen, setIsSalesMenuOpen] = useState(false);
+
+  // Permission-based menu items
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      path: '/',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+        </svg>
+      ),
+      permission: 'dashboard_dashboard_view'
+    },
+    {
+      id: 'clients',
+      label: 'Client',
+      path: '/clients',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      permission: 'clients_clients_view'
+    },
+    {
+      id: 'task',
+      label: 'Task',
+      path: '/task',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      permission: 'internal_tasks_internal_tasks_view'
+    }
+  ];
+
+  const projectSubmenu = [
+    {
+      id: 'projects',
+      label: 'Danh sách dự án',
+      path: '/projects',
+      permission: 'projects_projects_view'
+    },
+    {
+      id: 'campaigns',
+      label: 'Chiến dịch',
+      path: '/campaigns',
+      permission: 'campaigns_campaigns_view'
+    },
+    {
+      id: 'templates',
+      label: 'Template dịch vụ',
+      path: '/task-templates',
+      permission: 'templates_templates_view'
+    }
+  ];
+
+  const financeSubmenu = [
+    {
+      id: 'invoices',
+      label: 'Hóa đơn',
+      path: '/invoices',
+      permission: 'invoices_invoices_view'
+    },
+    {
+      id: 'contracts',
+      label: 'Hợp đồng',
+      path: '/contracts',
+      permission: 'contracts_contracts_view'
+    },
+    {
+      id: 'expenses',
+      label: 'Quản lý chi phí',
+      path: '/expenses',
+      permission: 'expenses_expenses_view'
+    },
+    {
+      id: 'financial-reports',
+      label: 'Báo cáo tài chính',
+      path: '/financial-reports',
+      permission: 'reports_financial_reports'
+    }
+  ];
+
+  const salesSubmenu = [
+    {
+      id: 'leads',
+      label: 'Lead',
+      path: '/leads',
+      permission: 'leads_leads_view'
+    },
+    {
+      id: 'opportunities',
+      label: 'Cơ hội',
+      path: '/opportunities',
+      permission: 'reports_reports_view' // Assuming opportunities are part of reports
+    },
+    {
+      id: 'sales-reports',
+      label: 'Báo cáo',
+      path: '/sales-reports',
+      permission: 'reports_sales_reports'
+    }
+  ];
+
+  const otherMenuItems = [
+    {
+      id: 'documents',
+      label: 'Tài liệu',
+      path: '/documents',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      permission: 'documents_documents_view'
+    },
+    {
+      id: 'reports',
+      label: 'Báo cáo',
+      path: '/reports',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      permission: 'reports_reports_view'
+    },
+    {
+      id: 'human-resources',
+      label: 'Nhân sự',
+      path: '/human-resources',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      permission: 'human_resources_users_view'
+    },
+    {
+      id: 'account',
+      label: 'Tài khoản',
+      path: '/account',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+      permission: null // Always visible
+    }
+  ];
+
+  // Check if user has permission for any items in a submenu
+  const hasAnyPermissionInSubmenu = (submenu) => {
+    return submenu.some(item => !item.permission || hasPermission(item.permission));
+  };
+
+  // Check if user has permission for a menu item
+  const canAccessMenuItem = (item) => {
+    return !item.permission || hasPermission(item.permission);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-full">
+        <div className="flex flex-col w-64 bg-white border-r border-gray-200">
+          <div className="flex items-center justify-center h-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   });
 
   const toggleSubmenu = (menu) => {
