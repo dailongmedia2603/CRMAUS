@@ -469,9 +469,28 @@ ui_enhancements:
 test_plan:
   current_focus:
     - "Permission Management UI"
+    - "CRM AUS Frontend Runtime Error Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+  - task: "CRM AUS Frontend Runtime Error Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the CRM AUS frontend application to ensure it's working properly after fixing the runtime error 'location.startsWith is not a function'."
+      - working: false
+        agent: "testing"
+        comment: "Found two runtime errors: 1) 'location.startsWith is not a function' caused by using 'location === '/' instead of 'location.pathname === '/' in the Dashboard button's className. 2) 'openSubmenus is not defined' error in the SidebarContent component because the state variable was not defined."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Successfully fixed both runtime errors. 1) Changed 'location === '/' to 'location.pathname === '/' in the Dashboard button's className. 2) Replaced three separate state variables (isProjectMenuOpen, isFinanceMenuOpen, isSalesMenuOpen) with a single 'openSubmenus' state object. All navigation menu items now work correctly, and the application loads without runtime errors. The sidebar navigation works properly, and all pages load successfully."
 
 agent_communication:
   - agent: "testing"
