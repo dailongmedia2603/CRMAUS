@@ -4141,6 +4141,121 @@ async def get_users_for_permission(current_user: User = Depends(get_current_acti
         for user in users
     ]
 
+@api_router.get("/permissions/my-permissions")
+async def get_my_permissions(current_user: User = Depends(get_current_active_user)):
+    """Lấy tất cả quyền của user hiện tại (kết hợp role và user permissions)"""
+    
+    # Get all permission items
+    all_items = await db.permission_items.find().to_list(length=500)
+    
+    # Get role permissions
+    role_permissions = await db.role_permissions.find({"role": current_user.role}).to_list(length=500)
+    role_perms_dict = {
+        perm["permission_id"]: {
+            "can_view": perm["can_view"],
+            "can_edit": perm["can_edit"], 
+            "can_delete": perm["can_delete"]
+        }
+        for perm in role_permissions
+    }
+    
+    # Get user-specific permissions
+    user_permissions = await db.user_permissions.find({"user_id": current_user.id}).to_list(length=500)
+    user_perms_dict = {
+        perm["permission_id"]: {
+            "can_view": perm["can_view"],
+            "can_edit": perm["can_edit"],
+            "can_delete": perm["can_delete"],
+            "override_role": perm["override_role"]
+        }
+        for perm in user_permissions
+    }
+    
+    # Combine permissions (user permissions override role permissions when override_role is True)
+    final_permissions = {}
+    
+    for item in all_items:
+        permission_id = item["id"]
+        
+        # Start with role permissions
+        role_perm = role_perms_dict.get(permission_id, {
+            "can_view": False,
+            "can_edit": False,
+            "can_delete": False
+        })
+        
+        # Check if user has specific permissions that override role
+        user_perm = user_perms_dict.get(permission_id)
+        
+        if user_perm and user_perm.get("override_role", False):
+            # Use user permissions
+            final_permissions[permission_id] = {
+                "can_view": user_perm["can_view"],
+                "can_edit": user_perm["can_edit"],
+                "can_delete": user_perm["can_delete"],
+                "source": "user_override"
+            }
+        else:
+            # Use role permissions
+            final_permissions[permission_id] = {
+                "can_view": role_perm["can_view"],
+                "can_edit": role_perm["can_edit"],
+                "can_delete": role_perm["can_delete"],
+                "source": "role"
+            }
+    
+    return {
+        "user_id": current_user.id,
+        "user_role": current_user.role,
+        "permissions": final_permissions
+    }
+
+@api_router.get("/permissions/check/{permission_id}")
+async def check_permission(
+    permission_id: str,
+    action: str = "view",  # view, edit, delete
+    current_user: User = Depends(get_current_active_user)
+):
+    """Check if current user has specific permission"""
+    
+    # Admin has all permissions
+    if current_user.role == "admin":
+        return {"has_permission": True, "source": "admin"}
+    
+    if action not in ["view", "edit", "delete"]:
+        raise HTTPException(status_code=400, detail="Invalid action")
+    
+    # Get role permissions
+    role_perm = await db.role_permissions.find_one({
+        "role": current_user.role,
+        "permission_id": permission_id
+    })
+    
+    # Get user permissions
+    user_perm = await db.user_permissions.find_one({
+        "user_id": current_user.id,
+        "permission_id": permission_id
+    })
+    
+    has_permission = False
+    source = "none"
+    
+    if user_perm and user_perm.get("override_role", False):
+        # Use user permission
+        has_permission = user_perm.get(f"can_{action}", False)
+        source = "user_override"
+    elif role_perm:
+        # Use role permission
+        has_permission = role_perm.get(f"can_{action}", False)
+        source = "role"
+    
+    return {
+        "has_permission": has_permission,
+        "source": source,
+        "permission_id": permission_id,
+        "action": action
+    }
+
 # Root endpoint
 @api_router.get("/")
 async def root():
