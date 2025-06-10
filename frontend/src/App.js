@@ -108,7 +108,8 @@ function App() {
                 </svg>
                 <span className="text-gray-900 font-medium">
                   {window.location.pathname === "/" ? "Dashboard" : 
-                   window.location.pathname === "/clients" ? "Khách hàng" :
+                   window.location.pathname === "/clients" ? "Client" :
+                   window.location.pathname === "/leads" ? "Lead" :
                    window.location.pathname === "/task" ? "Nhiệm vụ" :
                    window.location.pathname === "/projects" ? "Dự án" :
                    window.location.pathname === "/contracts" ? "Hợp đồng" :
