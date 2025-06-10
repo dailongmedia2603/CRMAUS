@@ -109,6 +109,7 @@ function App() {
                 <span className="text-gray-900 font-medium">
                   {window.location.pathname === "/" ? "Dashboard" : 
                    window.location.pathname === "/clients" ? "Client" :
+                   window.location.pathname.startsWith("/clients/") ? "Client Detail" :
                    window.location.pathname === "/leads" ? "Lead" :
                    window.location.pathname === "/task" ? "Nhiệm vụ" :
                    window.location.pathname === "/projects" ? "Dự án" :
