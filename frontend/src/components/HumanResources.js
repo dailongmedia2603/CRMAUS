@@ -1803,7 +1803,9 @@ const PermissionManagement = ({ user }) => {
         ? `/api/permissions/role/${selectedTarget}/update`
         : `/api/permissions/user/${selectedTarget}/update`;
 
-      await axios.post(`${API}${endpoint}`, permissionList);
+      await axios.post(`${API}${endpoint}`, permissionList, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success('Cập nhật phân quyền thành công!');
     } catch (error) {
       console.error('Error saving permissions:', error);
