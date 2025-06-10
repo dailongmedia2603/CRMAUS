@@ -453,9 +453,7 @@ ui_enhancements:
 
 test_plan:
   current_focus:
-    - "Task Completion Popup"
-    - "Client Management UI Improvements"
-    - "Sidebar Menu Improvements"
+    - "Permission Management API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
