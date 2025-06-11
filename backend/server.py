@@ -1570,6 +1570,10 @@ async def get_internal_tasks(
     """Lấy danh sách công việc nội bộ với bộ lọc"""
     query_filter = {}
     
+    # ✅ NEW: Non-admin users chỉ thấy tasks được assign cho họ
+    if current_user.role != "admin":
+        query_filter["assigned_to"] = current_user.id
+    
     # Filter by status
     if status:
         query_filter["status"] = status
@@ -1578,8 +1582,8 @@ async def get_internal_tasks(
     if priority:
         query_filter["priority"] = priority
     
-    # Filter by assigned user
-    if assigned_to:
+    # Filter by assigned user (chỉ admin có thể filter theo user khác)
+    if assigned_to and current_user.role == "admin":
         query_filter["assigned_to"] = assigned_to
     
     # Date range filter
