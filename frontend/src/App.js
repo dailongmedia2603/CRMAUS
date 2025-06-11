@@ -3593,6 +3593,10 @@ const Settings = () => {
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-medium text-gray-900">Danh sách Chi phí Task</h2>
                   <button
+                    onClick={() => {
+                      setEditingRate(null);
+                      setShowRateModal(true);
+                    }}
                     disabled={user?.role !== 'admin'}
                     className={`px-4 py-2 rounded-md text-sm font-medium ${
                       user?.role !== 'admin'
@@ -3614,13 +3618,15 @@ const Settings = () => {
                     </div>
                     <input
                       type="text"
+                      value={rateSearchTerm}
+                      onChange={(e) => setRateSearchTerm(e.target.value)}
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Tìm kiếm chi phí task..."
                     />
                   </div>
                 </div>
 
-                {/* Placeholder Table */}
+                {/* Task Cost Rates Table */}
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -3632,6 +3638,9 @@ const Settings = () => {
                           Chi phí / Giờ
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Trạng thái
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Ngày tạo
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -3640,11 +3649,70 @@ const Settings = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      <tr>
-                        <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                          Tính năng đang được phát triển...
-                        </td>
-                      </tr>
+                      {loading ? (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+                              Đang tải...
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredRates.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                            {rateSearchTerm ? 'Không tìm thấy chi phí task nào' : 'Chưa có chi phí task nào'}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredRates.map((rate) => (
+                          <tr key={rate.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {rate.task_type_name || 'Unknown'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {formatCurrency(rate.hourly_rate)}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                rate.is_active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {rate.is_active ? 'Hoạt động' : 'Tạm dừng'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {rate.created_at ? format(new Date(rate.created_at), 'dd/MM/yyyy') : 'N/A'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingRate(rate);
+                                    setShowRateModal(true);
+                                  }}
+                                  disabled={user?.role !== 'admin'}
+                                  className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
+                                >
+                                  Sửa
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRate(rate.id)}
+                                  disabled={user?.role !== 'admin'}
+                                  className="text-red-600 hover:text-red-900 disabled:text-gray-400"
+                                >
+                                  Xóa
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
