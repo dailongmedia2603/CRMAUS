@@ -528,6 +528,20 @@ test_plan:
   test_priority: "high_first"
 
 frontend:
+  - task: "Internal Tasks Column Order"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the corrected column order in the Internal Tasks list to ensure all columns display the correct data."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Internal Tasks list column order and content mapping. Verified that all columns are in the correct order: 1) Checkbox, 2) 'CÔNG VIỆC' with task name and status icon, 3) 'MÔ TẢ' with 'Chi tiết' button, 4) 'DEADLINE' with date/time format, 5) 'ƯU TIÊN' with priority level, 6) 'NHÂN SỰ' with assignment info, 7) 'FEEDBACK' with count, 8) 'TRẠNG THÁI' with status, 9) 'REPORT' with link or 'Chưa có', 10) 'ACTION' with action buttons. Confirmed that the 'Chi tiết' button opens a task details modal showing all task information including name, description, deadline, priority, assignment details, and status. The column order and content mapping are correctly implemented as specified in the requirements."
   - task: "Permission-based Sidebar Menu"
     implemented: true
     working: true
