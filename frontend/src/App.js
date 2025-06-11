@@ -57,20 +57,6 @@ const PermissionProvider = ({ children, user, token }) => {
   useEffect(() => {
     if (user && token) {
       fetchUserPermissions();
-      
-      // Set up periodic permission refresh for non-admin users
-      let permissionRefreshInterval;
-      if (user.role !== 'admin') {
-        permissionRefreshInterval = setInterval(() => {
-          fetchUserPermissions();
-        }, 30000); // Refresh every 30 seconds
-      }
-      
-      return () => {
-        if (permissionRefreshInterval) {
-          clearInterval(permissionRefreshInterval);
-        }
-      };
     } else {
       setPermissions(null);
       setLoading(false);
@@ -91,17 +77,7 @@ const PermissionProvider = ({ children, user, token }) => {
       const response = await axios.get(`${API}/api/permissions/my-permissions`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      // Check if permissions have changed
-      const newPermissions = response.data.permissions;
-      const currentPermissionsString = JSON.stringify(permissions);
-      const newPermissionsString = JSON.stringify(newPermissions);
-      
-      if (currentPermissionsString !== newPermissionsString && permissions !== null) {
-        console.log('Permissions changed! Refreshing...');
-      }
-      
-      setPermissions(newPermissions);
+      setPermissions(response.data.permissions);
       console.log('User permissions loaded:', response.data);
     } catch (error) {
       console.error('Error fetching permissions:', error);
@@ -306,7 +282,11 @@ function App() {
                     <ClientDetailComponent user={user} />
                   </ProtectedRoute>
                 } />
-                <Route path="/task" element={<Task />} />
+                <Route path="/task" element={
+                  <ProtectedRoute requiredPermission="internal_tasks_internal_tasks_view">
+                    <Task />
+                  </ProtectedRoute>
+                } />
                 <Route path="/projects" element={
                   <ProtectedRoute requiredPermission="projects_projects_view">
                     <ProjectsComponent user={user} />
@@ -367,7 +347,11 @@ function App() {
                     <SalesReports />
                   </ProtectedRoute>
                 } />
-                <Route path="/documents" element={<DocumentsComponent user={user} />} />
+                <Route path="/documents" element={
+                  <ProtectedRoute requiredPermission="documents_documents_view">
+                    <DocumentsComponent user={user} />
+                  </ProtectedRoute>
+                } />
                 <Route path="/reports" element={
                   <ProtectedRoute requiredPermission="reports_reports_view">
                     <Reports />
@@ -878,7 +862,6 @@ const SidebarContent = ({ user, logout }) => {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {/* Dashboard */}
-        {hasPermission('dashboard_dashboard_view') && (
         <button
           onClick={() => navigate("/")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -891,10 +874,8 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Dashboard
         </button>
-        )}
 
         {/* Client */}
-        {hasPermission('clients_clients_view') && (
         <button
           onClick={() => navigate("/clients")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -906,9 +887,8 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Client
         </button>
-        )}
 
-        {/* Task - Tất cả users đều có quyền truy cập */}
+        {/* Task */}
         <button
           onClick={() => navigate("/task")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -922,7 +902,6 @@ const SidebarContent = ({ user, logout }) => {
         </button>
 
         {/* Dự án Section */}
-        {(hasPermission('projects_projects_view') || hasPermission('campaigns_campaigns_view') || hasPermission('templates_templates_view')) && (
         <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('project')}
@@ -944,7 +923,6 @@ const SidebarContent = ({ user, logout }) => {
           
           {openSubmenus.project && (
             <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
-              {hasPermission('projects_projects_view') && (
               <button
                 onClick={() => navigate("/projects")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -956,8 +934,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Danh sách dự án
               </button>
-              )}
-              {hasPermission('campaigns_campaigns_view') && (
               <button
                 onClick={() => navigate("/campaigns")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -969,8 +945,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Chiến dịch
               </button>
-              )}
-              {hasPermission('templates_templates_view') && (
               <button
                 onClick={() => navigate("/task-templates")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -982,14 +956,11 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Template dịch vụ
               </button>
-              )}
             </div>
           )}
         </div>
-        )}
 
         {/* Tài chính Section */}
-        {(hasPermission('invoices_invoices_view') || hasPermission('contracts_contracts_view') || hasPermission('expenses_expenses_view') || hasPermission('reports_financial_reports')) && (
         <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('finance')}
@@ -1011,7 +982,6 @@ const SidebarContent = ({ user, logout }) => {
           
           {openSubmenus.finance && (
             <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
-              {hasPermission('invoices_invoices_view') && (
               <button
                 onClick={() => navigate("/invoices")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1023,8 +993,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Hóa đơn
               </button>
-              )}
-              {hasPermission('contracts_contracts_view') && (
               <button
                 onClick={() => navigate("/contracts")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1036,8 +1004,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Hợp đồng
               </button>
-              )}
-              {hasPermission('expenses_expenses_view') && (
               <button
                 onClick={() => navigate("/expenses")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1049,8 +1015,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Quản lý chi phí
               </button>
-              )}
-              {hasPermission('reports_financial_reports') && (
               <button
                 onClick={() => navigate("/financial-reports")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1062,14 +1026,11 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Báo cáo tài chính
               </button>
-              )}
             </div>
           )}
         </div>
-        )}
 
         {/* Bán hàng Section */}
-        {(hasPermission('leads_leads_view') || hasPermission('reports_reports_view') || hasPermission('reports_sales_reports')) && (
         <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('sales')}
@@ -1091,7 +1052,6 @@ const SidebarContent = ({ user, logout }) => {
           
           {openSubmenus.sales && (
             <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
-              {hasPermission('leads_leads_view') && (
               <button
                 onClick={() => navigate("/leads")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1103,8 +1063,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Lead
               </button>
-              )}
-              {hasPermission('reports_reports_view') && (
               <button
                 onClick={() => navigate("/opportunities")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1116,8 +1074,6 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Cơ hội
               </button>
-              )}
-              {hasPermission('reports_sales_reports') && (
               <button
                 onClick={() => navigate("/sales-reports")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1129,13 +1085,11 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Báo cáo
               </button>
-              )}
             </div>
           )}
         </div>
-        )}
 
-        {/* Tài liệu - Tất cả users đều có quyền truy cập */}
+        {/* Tài liệu */}
         <button
           onClick={() => navigate("/documents")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1149,7 +1103,6 @@ const SidebarContent = ({ user, logout }) => {
         </button>
 
         {/* Báo cáo */}
-        {hasPermission('reports_reports_view') && (
         <button
           onClick={() => navigate("/reports")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1161,10 +1114,8 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Báo cáo
         </button>
-        )}
 
         {/* Nhân sự */}
-        {hasPermission('human_resources_users_view') && (
         <button
           onClick={() => navigate("/human-resources")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1176,7 +1127,6 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Nhân sự
         </button>
-        )}
 
         {/* Tài khoản */}
         <button
@@ -2054,9 +2004,6 @@ const Task = () => {
                   Ưu tiên
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nhân sự
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Feedback
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -2076,7 +2023,7 @@ const Task = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="11" className="px-6 py-4 text-center">
+                  <td colSpan="10" className="px-6 py-4 text-center">
                     <div className="spinner mx-auto"></div>
                   </td>
                 </tr>
@@ -2107,7 +2054,6 @@ const Task = () => {
                     getPriorityColor={getPriorityColor}
                     getPriorityLabel={getPriorityLabel}
                     getStatusLabel={getStatusLabel}
-                    user={user} // Pass user prop
                   />
                 ))
               )}
@@ -2266,8 +2212,7 @@ const TaskRow = React.memo(({
   getStatusIcon,
   getPriorityColor,
   getPriorityLabel,
-  getStatusLabel,
-  user // Add user prop
+  getStatusLabel
 }) => {
 
   const handleStatusUpdate = async (newStatus) => {
@@ -2344,23 +2289,6 @@ const TaskRow = React.memo(({
           </span>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
-            {task.assigned_by_name && (
-              <div className="text-xs text-gray-600 mb-1">
-                <span className="font-medium">Người giao:</span> {task.assigned_by_name}
-              </div>
-            )}
-            {task.assigned_to_name && (
-              <div className="text-xs text-gray-600">
-                <span className="font-medium">Người nhận:</span> {task.assigned_to_name}
-              </div>
-            )}
-            {!task.assigned_by_name && !task.assigned_to_name && (
-              <span className="text-xs text-gray-400">Chưa phân công</span>
-            )}
-          </div>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
           <button
             onClick={() => onFeedback(task)}
             className={`text-sm px-3 py-1 rounded hover:bg-gray-200 transition-colors ${
@@ -2411,8 +2339,6 @@ const TaskRow = React.memo(({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            {/* Chỉ admin mới thấy delete button */}
-            {user?.role === 'admin' && (
             <button
               onClick={() => onDelete(task.id)}
               className="text-red-600 hover:text-red-800"
@@ -2421,7 +2347,6 @@ const TaskRow = React.memo(({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
-            )}
           </div>
         </td>
       </tr>
@@ -3453,832 +3378,18 @@ const Account = () => {
 };
 // ==================== MODULE-TAI-KHOAN END ====================
 
-const Settings = () => {
-  const { user, token } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('task-cost');
-  const [taskCostSubTab, setTaskCostSubTab] = useState('list'); // 'list' or 'config'
-  
-  // Original task cost settings (keep for backward compatibility)
-  const [taskCostSettings, setTaskCostSettings] = useState({
-    cost_per_hour: 0,
-    is_enabled: true
-  });
-  
-  // New task cost management states
-  const [taskCostTypes, setTaskCostTypes] = useState([]);
-  const [taskCostRates, setTaskCostRates] = useState([]);
-  const [filteredRates, setFilteredRates] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Modal states
-  const [showAddRateModal, setShowAddRateModal] = useState(false);
-  const [showAddTypeModal, setShowAddTypeModal] = useState(false);
-  const [editingRate, setEditingRate] = useState(null);
-  const [editingType, setEditingType] = useState(null);
-  
-  // Form states
-  const [newRate, setNewRate] = useState({
-    task_type_id: '',
-    cost_per_hour: 0
-  });
-  const [newType, setNewType] = useState({
-    name: '',
-    description: ''
-  });
-  
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  // Load data
-  useEffect(() => {
-    if (taskCostSubTab === 'list') {
-      fetchTaskCostTypes();
-      fetchTaskCostRates();
-    } else if (taskCostSubTab === 'config') {
-      fetchTaskCostTypes();
-    }
-  }, [taskCostSubTab]);
-
-  // Filter rates based on search
-  useEffect(() => {
-    if (!searchTerm) {
-      setFilteredRates(taskCostRates);
-    } else {
-      const filtered = taskCostRates.filter(rate =>
-        rate.task_type_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rate.cost_per_hour?.toString().includes(searchTerm)
-      );
-      setFilteredRates(filtered);
-    }
-  }, [taskCostRates, searchTerm]);
-
-  const fetchTaskCostTypes = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/api/task-cost-types/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTaskCostTypes(response.data);
-    } catch (error) {
-      console.error('Error fetching task cost types:', error);
-      toast.error('Không thể tải loại chi phí task');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTaskCostRates = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/api/task-cost-rates/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTaskCostRates(response.data);
-    } catch (error) {
-      console.error('Error fetching task cost rates:', error);
-      toast.error('Không thể tải chi phí task');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTaskCostSettings = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API}/api/task-cost-settings/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setTaskCostSettings({
-        cost_per_hour: response.data.cost_per_hour || 0,
-        is_enabled: response.data.is_enabled !== false
-      });
-    } catch (error) {
-      console.error('Error fetching task cost settings:', error);
-      toast.error('Không thể tải cấu hình chi phí task');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveTaskCostSettings = async () => {
-    try {
-      setSaving(true);
-      
-      await axios.put(`${API}/api/task-cost-settings/`, {
-        cost_per_hour: parseFloat(taskCostSettings.cost_per_hour) || 0,
-        is_enabled: taskCostSettings.is_enabled
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Cập nhật cấu hình chi phí task thành công!');
-    } catch (error) {
-      console.error('Error saving task cost settings:', error);
-      if (error.response?.status === 403) {
-        toast.error('Chỉ admin mới có thể cập nhật cấu hình này');
-      } else {
-        toast.error('Không thể lưu cấu hình chi phí task');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN').format(value);
-  };
-
-  // ================= TASK COST TYPE FUNCTIONS =================
-  
-  const handleAddType = async () => {
-    try {
-      setSaving(true);
-      
-      await axios.post(`${API}/api/task-cost-types/`, newType, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Thêm loại chi phí task thành công!');
-      setShowAddTypeModal(false);
-      setNewType({ name: '', description: '' });
-      fetchTaskCostTypes();
-    } catch (error) {
-      console.error('Error adding task cost type:', error);
-      if (error.response?.status === 403) {
-        toast.error('Chỉ admin mới có thể thêm loại chi phí task');
-      } else if (error.response?.status === 400) {
-        toast.error('Tên loại chi phí task đã tồn tại');
-      } else {
-        toast.error('Không thể thêm loại chi phí task');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEditType = async () => {
-    try {
-      setSaving(true);
-      
-      await axios.put(`${API}/api/task-cost-types/${editingType.id}`, newType, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Cập nhật loại chi phí task thành công!');
-      setEditingType(null);
-      setShowAddTypeModal(false);
-      setNewType({ name: '', description: '' });
-      fetchTaskCostTypes();
-    } catch (error) {
-      console.error('Error updating task cost type:', error);
-      if (error.response?.status === 403) {
-        toast.error('Chỉ admin mới có thể cập nhật loại chi phí task');
-      } else if (error.response?.status === 400) {
-        toast.error('Tên loại chi phí task đã tồn tại');
-      } else {
-        toast.error('Không thể cập nhật loại chi phí task');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteType = async (typeId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa loại chi phí task này?')) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API}/api/task-cost-types/${typeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Xóa loại chi phí task thành công!');
-      fetchTaskCostTypes();
-    } catch (error) {
-      console.error('Error deleting task cost type:', error);
-      if (error.response?.status === 400) {
-        toast.error('Không thể xóa loại chi phí task đang được sử dụng');
-      } else {
-        toast.error('Không thể xóa loại chi phí task');
-      }
-    }
-  };
-
-  // ================= TASK COST RATE FUNCTIONS =================
-  
-  const handleAddRate = async () => {
-    try {
-      setSaving(true);
-      
-      await axios.post(`${API}/api/task-cost-rates/`, newRate, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Thêm chi phí task thành công!');
-      setShowAddRateModal(false);
-      setNewRate({ task_type_id: '', cost_per_hour: 0 });
-      fetchTaskCostRates();
-    } catch (error) {
-      console.error('Error adding task cost rate:', error);
-      if (error.response?.status === 403) {
-        toast.error('Chỉ admin mới có thể thêm chi phí task');
-      } else if (error.response?.status === 400) {
-        toast.error('Chi phí cho loại task này đã tồn tại');
-      } else {
-        toast.error('Không thể thêm chi phí task');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEditRate = async () => {
-    try {
-      setSaving(true);
-      
-      await axios.put(`${API}/api/task-cost-rates/${editingRate.id}`, newRate, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Cập nhật chi phí task thành công!');
-      setEditingRate(null);
-      setShowAddRateModal(false);
-      setNewRate({ task_type_id: '', cost_per_hour: 0 });
-      fetchTaskCostRates();
-    } catch (error) {
-      console.error('Error updating task cost rate:', error);
-      if (error.response?.status === 403) {
-        toast.error('Chỉ admin mới có thể cập nhật chi phí task');
-      } else {
-        toast.error('Không thể cập nhật chi phí task');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteRate = async (rateId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa chi phí task này?')) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API}/api/task-cost-rates/${rateId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Xóa chi phí task thành công!');
-      fetchTaskCostRates();
-    } catch (error) {
-      console.error('Error deleting task cost rate:', error);
-      toast.error('Không thể xóa chi phí task');
-    }
-  };
-
-  const openAddRateModal = () => {
-    setNewRate({ task_type_id: '', cost_per_hour: 0 });
-    setEditingRate(null);
-    setShowAddRateModal(true);
-  };
-
-  const openEditRateModal = (rate) => {
-    setNewRate({
-      task_type_id: rate.task_type_id,
-      cost_per_hour: rate.cost_per_hour
-    });
-    setEditingRate(rate);
-    setShowAddRateModal(true);
-  };
-
-  const openAddTypeModal = () => {
-    setNewType({ name: '', description: '' });
-    setEditingType(null);
-    setShowAddTypeModal(true);
-  };
-
-  const openEditTypeModal = (type) => {
-    setNewType({
-      name: type.name,
-      description: type.description || ''
-    });
-    setEditingType(type);
-    setShowAddTypeModal(true);
-  };
-
-  const tabs = [
-    { id: 'task-cost', name: 'Chi phí Task', icon: '💰' },
-    { id: 'other', name: 'Khác', icon: '⚙️' }
-  ];
-
-  const taskCostSubTabs = [
-    { id: 'list', name: 'Danh sách', icon: '📋' },
-    { id: 'config', name: 'Cấu hình', icon: '⚙️' }
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
-        <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
-      </div>
-
-      {/* Main Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.name}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      <div className="modern-card p-6">
-        {activeTab === 'task-cost' && (
-          <div className="space-y-6">
-            {/* Sub Tab Navigation for Task Cost */}
-            <div className="border-b border-gray-100">
-              <nav className="-mb-px flex space-x-6">
-                {taskCostSubTabs.map((subTab) => (
-                  <button
-                    key={subTab.id}
-                    onClick={() => setTaskCostSubTab(subTab.id)}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      taskCostSubTab === subTab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <span className="mr-2">{subTab.icon}</span>
-                    {subTab.name}
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            {/* Sub Tab Content */}
-            {taskCostSubTab === 'list' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-medium text-gray-900">Danh sách Chi phí Task</h2>
-                  <button
-                    onClick={openAddRateModal}
-                    disabled={user?.role !== 'admin'}
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${
-                      user?.role !== 'admin'
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    } transition-colors`}
-                  >
-                    + Thêm chi phí Task
-                  </button>
-                </div>
-
-                {/* Search */}
-                <div className="max-w-md">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Tìm kiếm chi phí task..."
-                    />
-                  </div>
-                </div>
-
-                {/* Task Cost Rates Table */}
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Loại Task
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Chi phí / Giờ
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Ngày tạo
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Hành động
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredRates.map((rate) => (
-                          <tr key={rate.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {rate.task_type_name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatCurrency(rate.cost_per_hour)} VND
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(rate.created_at).toLocaleDateString('vi-VN')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div className="flex space-x-2">
-                                {user?.role === 'admin' && (
-                                  <>
-                                    <button
-                                      onClick={() => openEditRateModal(rate)}
-                                      className="text-blue-600 hover:text-blue-800"
-                                      title="Sửa"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteRate(rate.id)}
-                                      className="text-red-600 hover:text-red-800"
-                                      title="Xóa"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                      </svg>
-                                    </button>
-                                  </>
-                                )}
-                                {user?.role !== 'admin' && (
-                                  <span className="text-gray-400 text-xs">Chỉ admin</span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {filteredRates.length === 0 && (
-                          <tr>
-                            <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                              {searchTerm ? 'Không tìm thấy chi phí task nào' : 'Chưa có chi phí task nào'}
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-2">Cấu hình Chi phí Task</h2>
-              <p className="text-gray-600 text-sm">
-                Thiết lập giá tiền/giờ để tính toán chi phí tự động khi hoàn thành task
-              </p>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Enable/Disable Toggle */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Bật tính toán chi phí task</h3>
-                    <p className="text-sm text-gray-500">Tự động tính chi phí dựa trên thời gian thực hiện task</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={taskCostSettings.is_enabled}
-                      onChange={(e) => setTaskCostSettings({
-                        ...taskCostSettings,
-                        is_enabled: e.target.checked
-                      })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                  </label>
-                </div>
-
-                {/* Cost Per Hour Input */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Giá tiền / giờ (VND)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={taskCostSettings.cost_per_hour}
-                      onChange={(e) => setTaskCostSettings({
-                        ...taskCostSettings,
-                        cost_per_hour: e.target.value
-                      })}
-                      className="block w-full pr-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      placeholder="0"
-                      min="0"
-                      step="1000"
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 text-sm">VND</span>
-                    </div>
-                  </div>
-                  {taskCostSettings.cost_per_hour > 0 && (
-                    <p className="text-sm text-gray-500">
-                      Hiển thị: {formatCurrency(taskCostSettings.cost_per_hour)} VND/giờ
-                    </p>
-                  )}
-                </div>
-
-                {/* Example Calculation */}
-                {taskCostSettings.is_enabled && taskCostSettings.cost_per_hour > 0 && (
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-indigo-900 mb-2">Ví dụ tính toán:</h4>
-                    <div className="text-sm text-indigo-700 space-y-1">
-                      <p>• Task bắt đầu lúc 9:00 AM, hoàn thành lúc 12:00 PM</p>
-                      <p>• Thời gian thực hiện: 3 giờ</p>
-                      <p>• Chi phí: {formatCurrency(taskCostSettings.cost_per_hour * 3)} VND</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Save Button */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveTaskCostSettings}
-                    disabled={saving || user?.role !== 'admin'}
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${
-                      user?.role !== 'admin'
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : saving
-                        ? 'bg-indigo-400 text-white cursor-not-allowed'
-                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    } transition-colors`}
-                  >
-                    {saving ? 'Đang lưu...' : 'Lưu cấu hình'}
-                  </button>
-                </div>
-
-                {user?.role !== 'admin' && (
-                  <p className="text-sm text-red-600 text-center">
-                    Chỉ admin mới có thể thay đổi cấu hình này
-                  </p>
-                )}
-              </div>
-            )}
-
-            {taskCostSubTab === 'config' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-medium text-gray-900">Cấu hình Loại Task</h2>
-                  <button
-                    onClick={openAddTypeModal}
-                    disabled={user?.role !== 'admin'}
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${
-                      user?.role !== 'admin'
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-green-600 text-white hover:bg-green-700'
-                    } transition-colors`}
-                  >
-                    + Thêm loại Task
-                  </button>
-                </div>
-
-                {/* Task Types Table */}
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tên loại Task
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Mô tả
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Ngày tạo
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Hành động
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {taskCostTypes.map((type) => (
-                          <tr key={type.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {type.name}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-900">
-                              {type.description || '-'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(type.created_at).toLocaleDateString('vi-VN')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div className="flex space-x-2">
-                                {user?.role === 'admin' && (
-                                  <>
-                                    <button
-                                      onClick={() => openEditTypeModal(type)}
-                                      className="text-blue-600 hover:text-blue-800"
-                                      title="Sửa"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteType(type.id)}
-                                      className="text-red-600 hover:text-red-800"
-                                      title="Xóa"
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                      </svg>
-                                    </button>
-                                  </>
-                                )}
-                                {user?.role !== 'admin' && (
-                                  <span className="text-gray-400 text-xs">Chỉ admin</span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {taskCostTypes.length === 0 && (
-                          <tr>
-                            <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                              Chưa có loại task nào
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {taskCostSubTab === 'config' && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">⚙️</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Các cài đặt khác</h3>
-            <p className="text-gray-500">Chức năng này sẽ được phát triển trong tương lai</p>
-          </div>
-        )}
-      </div>
-
-      {/* Add/Edit Rate Modal */}
-      {showAddRateModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editingRate ? 'Sửa chi phí Task' : 'Thêm chi phí Task'}
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Loại Task
-                  </label>
-                  <select
-                    value={newRate.task_type_id}
-                    onChange={(e) => setNewRate({ ...newRate, task_type_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">Chọn loại task</option>
-                    {taskCostTypes.filter(type => type.is_active).map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Chi phí / Giờ (VND)
-                  </label>
-                  <input
-                    type="number"
-                    value={newRate.cost_per_hour}
-                    onChange={(e) => setNewRate({ ...newRate, cost_per_hour: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                    min="0"
-                    step="1000"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => setShowAddRateModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={editingRate ? handleEditRate : handleAddRate}
-                  disabled={saving || !newRate.task_type_id || newRate.cost_per_hour <= 0}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-                >
-                  {saving ? 'Đang lưu...' : (editingRate ? 'Cập nhật' : 'Thêm')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Type Modal */}
-      {showAddTypeModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editingType ? 'Sửa loại Task' : 'Thêm loại Task'}
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên loại Task
-                  </label>
-                  <input
-                    type="text"
-                    value={newType.name}
-                    onChange={(e) => setNewType({ ...newType, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="VD: Content Writing, Design, Development"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mô tả (tùy chọn)
-                  </label>
-                  <textarea
-                    value={newType.description}
-                    onChange={(e) => setNewType({ ...newType, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    rows="3"
-                    placeholder="Mô tả chi tiết về loại task này..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => setShowAddTypeModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={editingType ? handleEditType : handleAddType}
-                  disabled={saving || !newType.name.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400"
-                >
-                  {saving ? 'Đang lưu...' : (editingType ? 'Cập nhật' : 'Thêm')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+const Settings = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+      <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
     </div>
-  );
-};
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">User Management</h2>
+      <p className="text-gray-600">Quản lý người dùng và phân quyền.</p>
+    </div>
+  </div>
+);
 
 // LeadsComponent - Simple placeholder for Lead management
 const LeadsComponent = ({ user }) => (
