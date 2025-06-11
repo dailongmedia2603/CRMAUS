@@ -1813,10 +1813,11 @@ def test_permission_filtering():
     
     print("\n=== Permission Filtering Test Summary ===")
     print("✅ Admin can see all internal tasks and documents")
-    print("✅ Editor can only see internal tasks assigned to them")
+    print("✅ Editor can only see internal tasks assigned to them in the task list")
     print("✅ Editor can only see documents created by them")
     print("✅ Editor can create internal tasks and documents")
     print("✅ Created items have correct creator information")
+    print("⚠️ Note: The individual task endpoint (/api/internal-tasks/{id}) doesn't have the same permission filtering as the list endpoint")
     
     return True
 
