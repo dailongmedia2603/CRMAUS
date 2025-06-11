@@ -3456,17 +3456,91 @@ const Account = () => {
 const Settings = () => {
   const { user, token } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('task-cost');
+  const [taskCostSubTab, setTaskCostSubTab] = useState('list'); // 'list' or 'config'
+  
+  // Original task cost settings (keep for backward compatibility)
   const [taskCostSettings, setTaskCostSettings] = useState({
     cost_per_hour: 0,
     is_enabled: true
   });
+  
+  // New task cost management states
+  const [taskCostTypes, setTaskCostTypes] = useState([]);
+  const [taskCostRates, setTaskCostRates] = useState([]);
+  const [filteredRates, setFilteredRates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal states
+  const [showAddRateModal, setShowAddRateModal] = useState(false);
+  const [showAddTypeModal, setShowAddTypeModal] = useState(false);
+  const [editingRate, setEditingRate] = useState(null);
+  const [editingType, setEditingType] = useState(null);
+  
+  // Form states
+  const [newRate, setNewRate] = useState({
+    task_type_id: '',
+    cost_per_hour: 0
+  });
+  const [newType, setNewType] = useState({
+    name: '',
+    description: ''
+  });
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Load task cost settings
+  // Load data
   useEffect(() => {
-    fetchTaskCostSettings();
-  }, []);
+    if (taskCostSubTab === 'list') {
+      fetchTaskCostTypes();
+      fetchTaskCostRates();
+    } else if (taskCostSubTab === 'config') {
+      fetchTaskCostTypes();
+    }
+  }, [taskCostSubTab]);
+
+  // Filter rates based on search
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredRates(taskCostRates);
+    } else {
+      const filtered = taskCostRates.filter(rate =>
+        rate.task_type_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rate.cost_per_hour?.toString().includes(searchTerm)
+      );
+      setFilteredRates(filtered);
+    }
+  }, [taskCostRates, searchTerm]);
+
+  const fetchTaskCostTypes = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/api/task-cost-types/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTaskCostTypes(response.data);
+    } catch (error) {
+      console.error('Error fetching task cost types:', error);
+      toast.error('Không thể tải loại chi phí task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTaskCostRates = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/api/task-cost-rates/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTaskCostRates(response.data);
+    } catch (error) {
+      console.error('Error fetching task cost rates:', error);
+      toast.error('Không thể tải chi phí task');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchTaskCostSettings = async () => {
     try {
