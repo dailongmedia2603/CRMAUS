@@ -1632,14 +1632,11 @@ def test_comprehensive_permission_system():
     print("\n--- Testing Permission Checking API ---")
     
     # Test checking a granted permission
-    check_data = {
-        "permission_id": "clients_clients_view"
-    }
+    permission_id = "clients_clients_view"
     
-    response = requests.post(
-        f"{BACKEND_URL}/permissions/check",
-        headers=kieu_headers,
-        json=check_data
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/check/{permission_id}",
+        headers=kieu_headers
     )
     
     check_granted_success = print_test_result("Check Granted Permission", response)
@@ -1656,14 +1653,11 @@ def test_comprehensive_permission_system():
     
     # Test checking a denied permission (assuming there's a permission the user doesn't have)
     # For this test, we'll use a permission that's likely to be denied for an editor
-    check_data = {
-        "permission_id": "users_users_delete"  # Assuming editor can't delete users
-    }
+    denied_permission_id = "users_users_delete"  # Assuming editor can't delete users
     
-    response = requests.post(
-        f"{BACKEND_URL}/permissions/check",
-        headers=kieu_headers,
-        json=check_data
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/check/{denied_permission_id}",
+        headers=kieu_headers
     )
     
     check_denied_success = print_test_result("Check Denied Permission", response)
