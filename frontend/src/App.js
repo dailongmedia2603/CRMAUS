@@ -3384,6 +3384,21 @@ const Settings = () => {
   const [taskCostSubTab, setTaskCostSubTab] = useState('list');
   const [loading, setLoading] = useState(false);
 
+  // Task Cost States
+  const [taskCostRates, setTaskCostRates] = useState([]);
+  const [taskCostTypes, setTaskCostTypes] = useState([]);
+  const [taskCostSettings, setTaskCostSettings] = useState(null);
+  
+  // Search states
+  const [rateSearchTerm, setRateSearchTerm] = useState('');
+  const [typeSearchTerm, setTypeSearchTerm] = useState('');
+  
+  // Modal states
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [showTypeModal, setShowTypeModal] = useState(false);
+  const [editingRate, setEditingRate] = useState(null);
+  const [editingType, setEditingType] = useState(null);
+
   const tabs = [
     { id: 'task-cost', name: 'Chi phí Task', icon: '💰' },
     { id: 'other', name: 'Khác', icon: '⚙️' }
@@ -3393,6 +3408,133 @@ const Settings = () => {
     { id: 'list', name: 'Danh sách', icon: '📋' },
     { id: 'config', name: 'Cấu hình', icon: '⚙️' }
   ];
+
+  // Load data when component mounts or tab changes
+  useEffect(() => {
+    if (activeTab === 'task-cost') {
+      loadTaskCostData();
+    }
+  }, [activeTab, taskCostSubTab]);
+
+  const loadTaskCostData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load task cost rates
+      const ratesResponse = await axios.get(`${API}/api/task-cost-rates/`);
+      setTaskCostRates(ratesResponse.data);
+      
+      // Load task cost types
+      const typesResponse = await axios.get(`${API}/api/task-cost-types/`);
+      setTaskCostTypes(typesResponse.data);
+      
+      // Load task cost settings
+      const settingsResponse = await axios.get(`${API}/api/task-cost-settings/`);
+      setTaskCostSettings(settingsResponse.data);
+      
+    } catch (error) {
+      console.error('Error loading task cost data:', error);
+      toast.error('Lỗi khi tải dữ liệu chi phí task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Task Cost Rate functions
+  const handleCreateRate = async (rateData) => {
+    try {
+      const response = await axios.post(`${API}/api/task-cost-rates/`, rateData);
+      setTaskCostRates([response.data, ...taskCostRates]);
+      setShowRateModal(false);
+      toast.success('Tạo chi phí task thành công!');
+    } catch (error) {
+      console.error('Error creating rate:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi khi tạo chi phí task');
+    }
+  };
+
+  const handleUpdateRate = async (rateId, rateData) => {
+    try {
+      const response = await axios.put(`${API}/api/task-cost-rates/${rateId}`, rateData);
+      setTaskCostRates(taskCostRates.map(rate => rate.id === rateId ? response.data : rate));
+      setShowRateModal(false);
+      setEditingRate(null);
+      toast.success('Cập nhật chi phí task thành công!');
+    } catch (error) {
+      console.error('Error updating rate:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi khi cập nhật chi phí task');
+    }
+  };
+
+  const handleDeleteRate = async (rateId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa chi phí task này?')) return;
+    
+    try {
+      await axios.delete(`${API}/api/task-cost-rates/${rateId}`);
+      setTaskCostRates(taskCostRates.filter(rate => rate.id !== rateId));
+      toast.success('Xóa chi phí task thành công!');
+    } catch (error) {
+      console.error('Error deleting rate:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi khi xóa chi phí task');
+    }
+  };
+
+  // Task Cost Type functions
+  const handleCreateType = async (typeData) => {
+    try {
+      const response = await axios.post(`${API}/api/task-cost-types/`, typeData);
+      setTaskCostTypes([response.data, ...taskCostTypes]);
+      setShowTypeModal(false);
+      toast.success('Tạo loại task thành công!');
+    } catch (error) {
+      console.error('Error creating type:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi khi tạo loại task');
+    }
+  };
+
+  const handleUpdateType = async (typeId, typeData) => {
+    try {
+      const response = await axios.put(`${API}/api/task-cost-types/${typeId}`, typeData);
+      setTaskCostTypes(taskCostTypes.map(type => type.id === typeId ? response.data : type));
+      setShowTypeModal(false);
+      setEditingType(null);
+      toast.success('Cập nhật loại task thành công!');
+    } catch (error) {
+      console.error('Error updating type:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi khi cập nhật loại task');
+    }
+  };
+
+  const handleDeleteType = async (typeId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa loại task này?')) return;
+    
+    try {
+      await axios.delete(`${API}/api/task-cost-types/${typeId}`);
+      setTaskCostTypes(taskCostTypes.filter(type => type.id !== typeId));
+      toast.success('Xóa loại task thành công!');
+    } catch (error) {
+      console.error('Error deleting type:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi khi xóa loại task');
+    }
+  };
+
+  // Filter functions
+  const filteredRates = taskCostRates.filter(rate => 
+    rate.task_type_name?.toLowerCase().includes(rateSearchTerm.toLowerCase()) ||
+    rate.hourly_rate?.toString().includes(rateSearchTerm)
+  );
+
+  const filteredTypes = taskCostTypes.filter(type => 
+    type.name?.toLowerCase().includes(typeSearchTerm.toLowerCase()) ||
+    type.description?.toLowerCase().includes(typeSearchTerm.toLowerCase())
+  );
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+  };
 
   return (
     <div className="space-y-6">
