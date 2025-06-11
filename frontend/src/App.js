@@ -908,6 +908,7 @@ const SidebarContent = ({ user, logout }) => {
         )}
 
         {/* Dự án Section */}
+        {(hasPermission('projects_projects_view') || hasPermission('campaigns_campaigns_view') || hasPermission('templates_templates_view')) && (
         <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('project')}
@@ -929,6 +930,7 @@ const SidebarContent = ({ user, logout }) => {
           
           {openSubmenus.project && (
             <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
+              {hasPermission('projects_projects_view') && (
               <button
                 onClick={() => navigate("/projects")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -940,6 +942,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Danh sách dự án
               </button>
+              )}
+              {hasPermission('campaigns_campaigns_view') && (
               <button
                 onClick={() => navigate("/campaigns")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -951,6 +955,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Chiến dịch
               </button>
+              )}
+              {hasPermission('templates_templates_view') && (
               <button
                 onClick={() => navigate("/task-templates")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -962,9 +968,11 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Template dịch vụ
               </button>
+              )}
             </div>
           )}
         </div>
+        )}
 
         {/* Tài chính Section */}
         <div className="space-y-1">
