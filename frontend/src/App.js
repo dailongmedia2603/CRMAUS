@@ -3453,18 +3453,216 @@ const Account = () => {
 };
 // ==================== MODULE-TAI-KHOAN END ====================
 
-const Settings = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
-      <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
+const Settings = () => {
+  const { user, token } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('task-cost');
+  const [taskCostSettings, setTaskCostSettings] = useState({
+    cost_per_hour: 0,
+    is_enabled: true
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Load task cost settings
+  useEffect(() => {
+    fetchTaskCostSettings();
+  }, []);
+
+  const fetchTaskCostSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/api/task-cost-settings/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setTaskCostSettings({
+        cost_per_hour: response.data.cost_per_hour || 0,
+        is_enabled: response.data.is_enabled !== false
+      });
+    } catch (error) {
+      console.error('Error fetching task cost settings:', error);
+      toast.error('Không thể tải cấu hình chi phí task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveTaskCostSettings = async () => {
+    try {
+      setSaving(true);
+      
+      await axios.put(`${API}/api/task-cost-settings/`, {
+        cost_per_hour: parseFloat(taskCostSettings.cost_per_hour) || 0,
+        is_enabled: taskCostSettings.is_enabled
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Cập nhật cấu hình chi phí task thành công!');
+    } catch (error) {
+      console.error('Error saving task cost settings:', error);
+      if (error.response?.status === 403) {
+        toast.error('Chỉ admin mới có thể cập nhật cấu hình này');
+      } else {
+        toast.error('Không thể lưu cấu hình chi phí task');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('vi-VN').format(value);
+  };
+
+  const tabs = [
+    { id: 'task-cost', name: 'Chi phí Task', icon: '💰' },
+    { id: 'other', name: 'Khác', icon: '⚙️' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+        <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.id
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.name}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="modern-card p-6">
+        {activeTab === 'task-cost' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 mb-2">Cấu hình Chi phí Task</h2>
+              <p className="text-gray-600 text-sm">
+                Thiết lập giá tiền/giờ để tính toán chi phí tự động khi hoàn thành task
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Enable/Disable Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Bật tính toán chi phí task</h3>
+                    <p className="text-sm text-gray-500">Tự động tính chi phí dựa trên thời gian thực hiện task</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={taskCostSettings.is_enabled}
+                      onChange={(e) => setTaskCostSettings({
+                        ...taskCostSettings,
+                        is_enabled: e.target.checked
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                {/* Cost Per Hour Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Giá tiền / giờ (VND)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={taskCostSettings.cost_per_hour}
+                      onChange={(e) => setTaskCostSettings({
+                        ...taskCostSettings,
+                        cost_per_hour: e.target.value
+                      })}
+                      className="block w-full pr-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      placeholder="0"
+                      min="0"
+                      step="1000"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 text-sm">VND</span>
+                    </div>
+                  </div>
+                  {taskCostSettings.cost_per_hour > 0 && (
+                    <p className="text-sm text-gray-500">
+                      Hiển thị: {formatCurrency(taskCostSettings.cost_per_hour)} VND/giờ
+                    </p>
+                  )}
+                </div>
+
+                {/* Example Calculation */}
+                {taskCostSettings.is_enabled && taskCostSettings.cost_per_hour > 0 && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-indigo-900 mb-2">Ví dụ tính toán:</h4>
+                    <div className="text-sm text-indigo-700 space-y-1">
+                      <p>• Task bắt đầu lúc 9:00 AM, hoàn thành lúc 12:00 PM</p>
+                      <p>• Thời gian thực hiện: 3 giờ</p>
+                      <p>• Chi phí: {formatCurrency(taskCostSettings.cost_per_hour * 3)} VND</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Save Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSaveTaskCostSettings}
+                    disabled={saving || user?.role !== 'admin'}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                      user?.role !== 'admin'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : saving
+                        ? 'bg-indigo-400 text-white cursor-not-allowed'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    } transition-colors`}
+                  >
+                    {saving ? 'Đang lưu...' : 'Lưu cấu hình'}
+                  </button>
+                </div>
+
+                {user?.role !== 'admin' && (
+                  <p className="text-sm text-red-600 text-center">
+                    Chỉ admin mới có thể thay đổi cấu hình này
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'other' && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">⚙️</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Các cài đặt khác</h3>
+            <p className="text-gray-500">Chức năng này sẽ được phát triển trong tương lai</p>
+          </div>
+        )}
+      </div>
     </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">User Management</h2>
-      <p className="text-gray-600">Quản lý người dùng và phân quyền.</p>
-    </div>
-  </div>
-);
+  );
+};
 
 // LeadsComponent - Simple placeholder for Lead management
 const LeadsComponent = ({ user }) => (
