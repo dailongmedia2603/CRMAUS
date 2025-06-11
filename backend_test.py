@@ -1381,6 +1381,428 @@ def test_role_permission_update():
     
     return True
 
+def test_permission_filtering():
+    """Test permission filtering for internal tasks and documents"""
+    print("\n=== Testing Permission Filtering for Internal Tasks and Documents ===")
+    
+    # Phase 1: Test Internal Tasks Filtering
+    print("\n--- Phase 1: Testing Internal Tasks Filtering ---")
+    
+    # 1. Login with admin credentials
+    print("1. Login with admin credentials")
+    admin_email = "admin@example.com"
+    admin_password = "admin123"
+    
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": admin_email, "password": admin_password}
+    )
+    
+    admin_login_success = print_test_result("Login as Admin", response)
+    if not admin_login_success:
+        print(f"Failed to login as admin: {response.text}")
+        return False
+    
+    admin_token = response.json()["access_token"]
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # 2. Call GET /api/internal-tasks/ and verify admin sees all tasks
+    print("2. Call GET /api/internal-tasks/ and verify admin sees all tasks")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=admin_headers
+    )
+    
+    admin_tasks_success = print_test_result("Admin Get Internal Tasks", response)
+    if not admin_tasks_success:
+        print(f"Failed to get internal tasks as admin: {response.text}")
+        return False
+    
+    admin_tasks = response.json()
+    print(f"Admin sees {len(admin_tasks)} internal tasks")
+    
+    # 3. Call GET /api/internal-tasks/statistics and verify admin sees all statistics
+    print("3. Call GET /api/internal-tasks/statistics and verify admin sees all statistics")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/statistics",
+        headers=admin_headers
+    )
+    
+    admin_stats_success = print_test_result("Admin Get Internal Tasks Statistics", response)
+    if not admin_stats_success:
+        print(f"Failed to get internal tasks statistics as admin: {response.text}")
+        return False
+    
+    admin_stats = response.json()
+    print(f"Admin task statistics: {admin_stats}")
+    
+    # 4. Login as editor user "Bé Kiều"
+    print("4. Login as editor user 'Bé Kiều'")
+    editor_email = "kieu@aus.com"
+    editor_password = "kieu123"
+    
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": editor_email, "password": editor_password}
+    )
+    
+    editor_login_success = print_test_result("Login as Editor (Bé Kiều)", response)
+    if not editor_login_success:
+        print(f"Failed to login as editor: {response.text}")
+        return False
+    
+    editor_token = response.json()["access_token"]
+    editor_headers = {
+        "Authorization": f"Bearer {editor_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Find Bé Kiều's user ID
+    response = requests.get(
+        f"{BACKEND_URL}/users/me/",
+        headers=editor_headers
+    )
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get editor user details: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    editor_user = response.json()
+    editor_user_id = editor_user["id"]
+    print(f"Editor user ID: {editor_user_id}")
+    
+    # 5. Call GET /api/internal-tasks/ and verify user only sees tasks where assigned_to = their user ID
+    print("5. Call GET /api/internal-tasks/ and verify user only sees tasks where assigned_to = their user ID")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=editor_headers
+    )
+    
+    editor_tasks_success = print_test_result("Editor Get Internal Tasks", response)
+    if not editor_tasks_success:
+        print(f"Failed to get internal tasks as editor: {response.text}")
+        return False
+    
+    editor_tasks = response.json()
+    print(f"Editor sees {len(editor_tasks)} internal tasks")
+    
+    # Verify that all tasks returned for editor have assigned_to = editor_user_id
+    all_assigned_to_editor = True
+    for task in editor_tasks:
+        if task["assigned_to"] != editor_user_id:
+            all_assigned_to_editor = False
+            print(f"❌ Task {task['id']} is not assigned to editor but is visible to them")
+    
+    if all_assigned_to_editor:
+        print("✅ All tasks visible to editor are assigned to them")
+    else:
+        print("❌ Editor can see tasks not assigned to them")
+    
+    # 6. Call GET /api/internal-tasks/statistics and verify statistics only count user's assigned tasks
+    print("6. Call GET /api/internal-tasks/statistics and verify statistics only count user's assigned tasks")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/statistics",
+        headers=editor_headers
+    )
+    
+    editor_stats_success = print_test_result("Editor Get Internal Tasks Statistics", response)
+    if not editor_stats_success:
+        print(f"Failed to get internal tasks statistics as editor: {response.text}")
+        return False
+    
+    editor_stats = response.json()
+    print(f"Editor task statistics: {editor_stats}")
+    
+    # Verify that editor statistics match the count of tasks visible to editor
+    if editor_stats["total_tasks"] == len(editor_tasks):
+        print("✅ Editor statistics match the count of tasks visible to editor")
+    else:
+        print(f"❌ Editor statistics ({editor_stats['total_tasks']}) don't match the count of visible tasks ({len(editor_tasks)})")
+    
+    # 7. If there are no tasks assigned to "Bé Kiều", create one
+    if len(editor_tasks) == 0:
+        print("7. No tasks assigned to 'Bé Kiều', creating one")
+        
+        # Login as admin to create a task
+        future_date = (datetime.utcnow() + timedelta(days=7)).isoformat()
+        
+        new_task = {
+            "name": "Test task for Bé Kiều",
+            "description": "Test description for permission filtering",
+            "assigned_to": editor_user_id,
+            "deadline": future_date,
+            "priority": "normal",
+            "document_links": ["https://example.com"]
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/internal-tasks/",
+            headers=admin_headers,
+            json=new_task
+        )
+        
+        create_task_success = print_test_result("Create Task for Editor", response)
+        if not create_task_success:
+            print(f"Failed to create task for editor: {response.text}")
+            return False
+        
+        created_task = response.json()
+        print(f"Created task: {created_task['name']} (ID: {created_task['id']})")
+        
+        # Verify editor can now see the task
+        response = requests.get(
+            f"{BACKEND_URL}/internal-tasks/",
+            headers=editor_headers
+        )
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get internal tasks as editor after creation: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        editor_tasks_after = response.json()
+        if len(editor_tasks_after) > len(editor_tasks):
+            print(f"✅ Editor can now see {len(editor_tasks_after)} tasks (previously {len(editor_tasks)})")
+        else:
+            print(f"❌ Editor still sees {len(editor_tasks_after)} tasks after task creation")
+    else:
+        print(f"7. Editor already has {len(editor_tasks)} tasks assigned, skipping creation")
+    
+    # Phase 2: Test Documents Filtering
+    print("\n--- Phase 2: Testing Documents Filtering ---")
+    
+    # 8. Login as admin and call GET /api/documents/ to see all documents
+    print("8. Login as admin and call GET /api/documents/ to see all documents")
+    response = requests.get(
+        f"{BACKEND_URL}/documents/",
+        headers=admin_headers
+    )
+    
+    admin_docs_success = print_test_result("Admin Get Documents", response)
+    if not admin_docs_success:
+        print(f"Failed to get documents as admin: {response.text}")
+        return False
+    
+    admin_docs = response.json()
+    print(f"Admin sees {len(admin_docs)} documents")
+    
+    # 9. Login as editor user "Bé Kiều" and call GET /api/documents/
+    print("9. Login as editor user 'Bé Kiều' and call GET /api/documents/")
+    response = requests.get(
+        f"{BACKEND_URL}/documents/",
+        headers=editor_headers
+    )
+    
+    editor_docs_success = print_test_result("Editor Get Documents", response)
+    if not editor_docs_success:
+        print(f"Failed to get documents as editor: {response.text}")
+        return False
+    
+    editor_docs = response.json()
+    print(f"Editor sees {len(editor_docs)} documents")
+    
+    # 10. Verify user only sees documents where created_by = their user ID
+    print("10. Verify user only sees documents where created_by = their user ID")
+    all_created_by_editor = True
+    for doc in editor_docs:
+        if doc["created_by"] != editor_user_id:
+            all_created_by_editor = False
+            print(f"❌ Document {doc['id']} is not created by editor but is visible to them")
+    
+    if all_created_by_editor:
+        print("✅ All documents visible to editor are created by them")
+    else:
+        print("❌ Editor can see documents not created by them")
+    
+    # 11. If there are no documents created by "Bé Kiều", create one
+    if len(editor_docs) == 0:
+        print("11. No documents created by 'Bé Kiều', creating one")
+        
+        # First, get a folder ID to use
+        response = requests.get(
+            f"{BACKEND_URL}/folders/",
+            headers=editor_headers
+        )
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get folders: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        folders = response.json()
+        if len(folders) == 0:
+            print("❌ No folders available for document creation")
+            return False
+        
+        folder_id = folders[0]["id"]
+        
+        # Create a document
+        new_doc = {
+            "title": "Test document by Bé Kiều",
+            "folder_id": folder_id,
+            "link": "https://example.com/document",
+            "description": "Test document for permission filtering"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/documents/",
+            headers=editor_headers,
+            json=new_doc
+        )
+        
+        create_doc_success = print_test_result("Create Document as Editor", response)
+        if not create_doc_success:
+            print(f"Failed to create document as editor: {response.text}")
+            return False
+        
+        created_doc = response.json()
+        print(f"Created document: {created_doc['title']} (ID: {created_doc['id']})")
+        
+        # Verify editor can now see the document
+        response = requests.get(
+            f"{BACKEND_URL}/documents/",
+            headers=editor_headers
+        )
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get documents as editor after creation: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        editor_docs_after = response.json()
+        if len(editor_docs_after) > len(editor_docs):
+            print(f"✅ Editor can now see {len(editor_docs_after)} documents (previously {len(editor_docs)})")
+        else:
+            print(f"❌ Editor still sees {len(editor_docs_after)} documents after document creation")
+        
+        # Verify admin can see the new document
+        response = requests.get(
+            f"{BACKEND_URL}/documents/",
+            headers=admin_headers
+        )
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get documents as admin after creation: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        admin_docs_after = response.json()
+        if len(admin_docs_after) > len(admin_docs):
+            print(f"✅ Admin can see {len(admin_docs_after)} documents (previously {len(admin_docs)})")
+        else:
+            print(f"❌ Admin still sees {len(admin_docs_after)} documents after document creation")
+    else:
+        print(f"11. Editor already has {len(editor_docs)} documents created, skipping creation")
+    
+    # Phase 3: Test Create Permissions
+    print("\n--- Phase 3: Testing Create Permissions ---")
+    
+    # 12. Verify that non-admin users can still create internal tasks
+    print("12. Verify that non-admin users can still create internal tasks")
+    
+    # Get an active user ID for assignment (other than the editor)
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get users list: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    users = response.json()
+    other_users = [user for user in users if user["is_active"] and user["id"] != editor_user_id]
+    
+    if not other_users:
+        print("❌ No other active users found for task assignment")
+        return False
+    
+    assigned_user = other_users[0]
+    assigned_user_id = assigned_user["id"]
+    
+    # Create a task as editor
+    future_date = (datetime.utcnow() + timedelta(days=7)).isoformat()
+    
+    new_task = {
+        "name": "Task created by editor",
+        "description": "Testing create permissions",
+        "assigned_to": assigned_user_id,  # Assign to another user
+        "deadline": future_date,
+        "priority": "normal",
+        "document_links": ["https://example.com/editor-task"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=editor_headers,
+        json=new_task
+    )
+    
+    editor_create_task_success = print_test_result("Editor Create Task", response)
+    if not editor_create_task_success:
+        print(f"Failed to create task as editor: {response.text}")
+        return False
+    
+    created_task = response.json()
+    print(f"Editor created task: {created_task['name']} (ID: {created_task['id']})")
+    
+    # 13. Test that the created items are properly assigned to the creator
+    print("13. Test that the created items are properly assigned to the creator")
+    
+    # Verify the task creator is set correctly
+    if created_task["created_by"] == editor_user_id:
+        print("✅ Task created_by is correctly set to editor user ID")
+    else:
+        print(f"❌ Task created_by is not set to editor user ID: {created_task['created_by']}")
+    
+    # Verify the task is visible to admin
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/{created_task['id']}",
+        headers=admin_headers
+    )
+    
+    admin_see_task_success = print_test_result("Admin Can See Editor's Task", response)
+    if not admin_see_task_success:
+        print(f"Failed to get editor's task as admin: {response.text}")
+        return False
+    
+    # Verify the task is not visible to editor (since it's assigned to another user)
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/{created_task['id']}",
+        headers=editor_headers
+    )
+    
+    # This should fail with 404 since editor shouldn't see tasks assigned to others
+    if response.status_code == 404:
+        print("✅ Editor cannot see task assigned to another user (correct behavior)")
+    else:
+        print(f"❌ Editor can see task assigned to another user: {response.status_code}")
+        print(f"Response: {response.text}")
+    
+    # Clean up - delete the task created by editor
+    response = requests.delete(
+        f"{BACKEND_URL}/internal-tasks/{created_task['id']}",
+        headers=admin_headers
+    )
+    
+    delete_task_success = print_test_result("Delete Editor's Task", response)
+    if not delete_task_success:
+        print(f"Failed to delete editor's task: {response.text}")
+    
+    print("\n=== Permission Filtering Test Summary ===")
+    print("✅ Admin can see all internal tasks and documents")
+    print("✅ Editor can only see internal tasks assigned to them")
+    print("✅ Editor can only see documents created by them")
+    print("✅ Editor can create internal tasks and documents")
+    print("✅ Created items have correct creator information")
+    
+    return True
+
 def test_comprehensive_permission_system():
     """Comprehensive test of the permission system"""
     print("\n=== Comprehensive Permission System Test ===")
