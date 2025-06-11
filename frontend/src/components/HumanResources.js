@@ -1812,7 +1812,19 @@ const PermissionManagement = ({ user }) => {
       toast.success('Cập nhật phân quyền thành công!');
     } catch (error) {
       console.error('Error saving permissions:', error);
-      toast.error('Không thể lưu phân quyền');
+      let errorMessage = 'Không thể lưu phân quyền';
+      
+      // Extract more detailed error message if available
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = `Không thể lưu phân quyền: ${error.response.data.detail}`;
+        } else if (Array.isArray(error.response.data.detail)) {
+          const details = error.response.data.detail.map(err => err.msg || JSON.stringify(err)).join(', ');
+          errorMessage = `Không thể lưu phân quyền: ${details}`;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
