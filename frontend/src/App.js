@@ -3419,19 +3419,25 @@ const Settings = () => {
   const loadTaskCostData = async () => {
     try {
       setLoading(true);
+      console.log('Loading task cost data...');
       
       // Load task cost rates - only active ones
+      console.log('Fetching task cost rates with URL:', `${API}/api/task-cost-rates/?is_active=true`);
       const ratesResponse = await axios.get(`${API}/api/task-cost-rates/?is_active=true`);
+      console.log('Task cost rates response:', ratesResponse.data);
       setTaskCostRates(ratesResponse.data);
       
       // Load task cost types - only active ones  
+      console.log('Fetching task cost types with URL:', `${API}/api/task-cost-types/?is_active=true`);
       const typesResponse = await axios.get(`${API}/api/task-cost-types/?is_active=true`);
+      console.log('Task cost types response:', typesResponse.data);
       setTaskCostTypes(typesResponse.data);
       
       // Load task cost settings
       const settingsResponse = await axios.get(`${API}/api/task-cost-settings/`);
       setTaskCostSettings(settingsResponse.data);
       
+      console.log('Task cost data loaded successfully');
     } catch (error) {
       console.error('Error loading task cost data:', error);
       toast.error('Lỗi khi tải dữ liệu chi phí task');
