@@ -1381,15 +1381,315 @@ def test_role_permission_update():
     
     return True
 
+def test_comprehensive_permission_system():
+    """Comprehensive test of the permission system"""
+    print("\n=== Comprehensive Permission System Test ===")
+    
+    # 1. Login with admin credentials
+    if not get_token():
+        print("Failed to authenticate as admin. Exiting test.")
+        return False
+    
+    print("✅ Successfully logged in with admin credentials")
+    
+    # 2. Test role-based permission updates
+    print("\n--- Testing Role-Based Permission Updates ---")
+    
+    # Get permission items
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/items",
+        headers=get_headers()
+    )
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get permission items: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    items = response.json()
+    print(f"Found {len(items)} permission items")
+    
+    # Find specific permission items for our test
+    clients_view_item = next((item for item in items if item["id"] == "clients_clients_view"), None)
+    documents_view_item = next((item for item in items if item["id"] == "documents_documents_view"), None)
+    
+    if not clients_view_item or not documents_view_item:
+        print("❌ Could not find required permission items")
+        print(f"Clients view: {clients_view_item}")
+        print(f"Documents view: {documents_view_item}")
+        return False
+    
+    # Update editor role to remove "clients_clients_view" permission
+    # and add "documents_documents_view" permission
+    permissions_data = [
+        {
+            "role": "editor",
+            "permission_id": "clients_clients_view",
+            "can_view": False,  # Remove this permission
+            "can_edit": False,
+            "can_delete": False
+        },
+        {
+            "role": "editor", 
+            "permission_id": "documents_documents_view",
+            "can_view": True,   # Add this permission
+            "can_edit": False,
+            "can_delete": False
+        }
+    ]
+    
+    response = requests.post(
+        f"{BACKEND_URL}/permissions/role/editor/update",
+        headers=get_headers(),
+        json=permissions_data
+    )
+    
+    role_update_success = print_test_result("Update Editor Role Permissions", response)
+    if not role_update_success:
+        print(f"Failed to update role permissions: {response.text}")
+        return False
+    
+    print("✅ Successfully updated editor role permissions")
+    
+    # Verify the role permissions were updated correctly
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/matrix/role/editor",
+        headers=get_headers()
+    )
+    
+    verify_role_success = print_test_result("Verify Editor Role Permissions", response)
+    if not verify_role_success:
+        print(f"Failed to verify role permissions: {response.text}")
+        return False
+    
+    matrix = response.json()
+    current_permissions = matrix.get("current_permissions", [])
+    
+    clients_perm = next((p for p in current_permissions if p["permission_id"] == "clients_clients_view"), None)
+    documents_perm = next((p for p in current_permissions if p["permission_id"] == "documents_documents_view"), None)
+    
+    if not clients_perm or not documents_perm:
+        print("❌ Could not find updated permissions in the response")
+        return False
+    
+    clients_correct = clients_perm["can_view"] == False
+    documents_correct = documents_perm["can_view"] == True
+    
+    if clients_correct and documents_correct:
+        print("✅ Role permissions were correctly updated:")
+        print(f"  - clients_clients_view: can_view = {clients_perm['can_view']}")
+        print(f"  - documents_documents_view: can_view = {documents_perm['can_view']}")
+    else:
+        print("❌ Role permissions were not correctly updated")
+        print(f"  - clients_clients_view: can_view = {clients_perm['can_view']} (expected False)")
+        print(f"  - documents_documents_view: can_view = {documents_perm['can_view']} (expected True)")
+        return False
+    
+    # 3. Test user-based permission overrides
+    print("\n--- Testing User-Based Permission Overrides ---")
+    
+    # Find user "Bé Kiều" ID
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers()
+    )
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get users list: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    users = response.json()
+    be_kieu_user = next((user for user in users if user.get("full_name") == "Bé Kiều"), None)
+    
+    if not be_kieu_user:
+        print("❌ Could not find 'Bé Kiều' user")
+        return False
+    
+    be_kieu_id = be_kieu_user["id"]
+    print(f"✅ Found 'Bé Kiều' user with ID: {be_kieu_id}")
+    
+    # Add a user-specific permission override
+    user_permissions_data = [
+        {
+            "user_id": be_kieu_id,
+            "permission_id": "clients_clients_view",
+            "can_view": True,   # Override role permission (which is False)
+            "can_edit": False,
+            "can_delete": False,
+            "override_role": True  # Explicitly override role
+        }
+    ]
+    
+    response = requests.post(
+        f"{BACKEND_URL}/permissions/user/{be_kieu_id}/update",
+        headers=get_headers(),
+        json=user_permissions_data
+    )
+    
+    user_update_success = print_test_result("Update User-Specific Permissions", response)
+    if not user_update_success:
+        print(f"Failed to update user permissions: {response.text}")
+        return False
+    
+    print("✅ Successfully updated user-specific permissions")
+    
+    # Verify the user permissions were updated correctly
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/matrix/user/{be_kieu_id}",
+        headers=get_headers()
+    )
+    
+    verify_user_success = print_test_result("Verify User-Specific Permissions", response)
+    if not verify_user_success:
+        print(f"Failed to verify user permissions: {response.text}")
+        return False
+    
+    user_matrix = response.json()
+    user_permissions = user_matrix.get("current_permissions", [])
+    
+    user_clients_perm = next((p for p in user_permissions if p["permission_id"] == "clients_clients_view"), None)
+    
+    if not user_clients_perm:
+        print("❌ Could not find updated user permission in the response")
+        return False
+    
+    user_perm_correct = (user_clients_perm["can_view"] == True and 
+                         user_clients_perm["override_role"] == True)
+    
+    if user_perm_correct:
+        print("✅ User permission override was correctly set:")
+        print(f"  - clients_clients_view: can_view = {user_clients_perm['can_view']}, override_role = {user_clients_perm['override_role']}")
+    else:
+        print("❌ User permission override was not correctly set")
+        print(f"  - clients_clients_view: can_view = {user_clients_perm['can_view']} (expected True), override_role = {user_clients_perm['override_role']} (expected True)")
+        return False
+    
+    # 4. Test permission inheritance
+    print("\n--- Testing Permission Inheritance ---")
+    
+    # Login as "Bé Kiều" user
+    kieu_email = be_kieu_user.get('email', 'kieu@aus.com')
+    kieu_password = "kieu123"  # This should be the password we reset earlier
+    
+    print(f"Logging in as 'Bé Kiều' user with credentials: {kieu_email} / {kieu_password}")
+    
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": kieu_email, "password": kieu_password}
+    )
+    
+    kieu_login_success = print_test_result("Login as 'Bé Kiều' User", response)
+    if not kieu_login_success:
+        print(f"Failed to login as 'Bé Kiều' user: {response.text}")
+        return False
+    
+    kieu_token = response.json()["access_token"]
+    print("✅ Successfully logged in as 'Bé Kiều' user")
+    
+    # Get user's permissions
+    kieu_headers = {
+        "Authorization": f"Bearer {kieu_token}",
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/my-permissions",
+        headers=kieu_headers
+    )
+    
+    my_permissions_success = print_test_result("Get 'Bé Kiều' User Permissions", response)
+    if not my_permissions_success:
+        print(f"Failed to get 'Bé Kiều' user permissions: {response.text}")
+        return False
+    
+    permissions_data = response.json()
+    permissions = permissions_data.get('permissions', {})
+    
+    # Check if the user has the correct permissions
+    clients_view_permission = permissions.get("clients_clients_view", {})
+    documents_view_permission = permissions.get("documents_documents_view", {})
+    
+    if not clients_view_permission or not documents_view_permission:
+        print("❌ Could not find expected permissions in the response")
+        return False
+    
+    # Verify permission inheritance and overrides
+    clients_view_correct = clients_view_permission.get("can_view") == True
+    documents_view_correct = documents_view_permission.get("can_view") == True
+    
+    if clients_view_correct and documents_view_correct:
+        print("✅ Permission inheritance and overrides working correctly:")
+        print(f"  - clients_clients_view: can_view = {clients_view_permission.get('can_view')} (from user override)")
+        print(f"  - documents_documents_view: can_view = {documents_view_permission.get('can_view')} (from role)")
+    else:
+        print("❌ Permission inheritance or overrides not working correctly")
+        print(f"  - clients_clients_view: can_view = {clients_view_permission.get('can_view')} (expected True from user override)")
+        print(f"  - documents_documents_view: can_view = {documents_view_permission.get('can_view')} (expected True from role)")
+        return False
+    
+    # 5. Test permission checking
+    print("\n--- Testing Permission Checking API ---")
+    
+    # Test checking a granted permission
+    check_data = {
+        "permission_id": "clients_clients_view"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/permissions/check",
+        headers=kieu_headers,
+        json=check_data
+    )
+    
+    check_granted_success = print_test_result("Check Granted Permission", response)
+    if not check_granted_success:
+        print(f"Failed to check granted permission: {response.text}")
+        return False
+    
+    check_result = response.json()
+    if check_result.get("has_permission") == True:
+        print("✅ Permission check correctly returned True for granted permission")
+    else:
+        print("❌ Permission check incorrectly returned False for granted permission")
+        return False
+    
+    # Test checking a denied permission (assuming there's a permission the user doesn't have)
+    # For this test, we'll use a permission that's likely to be denied for an editor
+    check_data = {
+        "permission_id": "users_users_delete"  # Assuming editor can't delete users
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/permissions/check",
+        headers=kieu_headers,
+        json=check_data
+    )
+    
+    check_denied_success = print_test_result("Check Denied Permission", response)
+    if not check_denied_success:
+        print(f"Failed to check denied permission: {response.text}")
+        return False
+    
+    check_result = response.json()
+    if check_result.get("has_permission") == False:
+        print("✅ Permission check correctly returned False for denied permission")
+    else:
+        print("❌ Permission check incorrectly returned True for denied permission")
+        return False
+    
+    print("\n✅ Comprehensive permission system test completed successfully!")
+    return True
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
     
-    # Test role-based permission update functionality
-    role_permission_update_success = test_role_permission_update()
+    # Test comprehensive permission system
+    permission_system_success = test_comprehensive_permission_system()
     
     print("\n=== Test Results ===")
-    print(f"Role-Based Permission Update: {'✅' if role_permission_update_success else '❌'}")
+    print(f"Comprehensive Permission System: {'✅' if permission_system_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
