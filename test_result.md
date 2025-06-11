@@ -371,11 +371,20 @@ backend:
         agent: "testing"
         comment: "Successfully tested the real-time permission system. The system works correctly with the following workflow: 1) When logged in as admin, navigated to Human Resources > Phân quyền tab and disabled the 'internal_tasks_internal_tasks_view' permission for the 'editor' role. 2) When logged in as 'Bé Kiều' (kieu@aus.com) who has the 'editor' role, the 'Công việc' menu was not visible in the sidebar. 3) When the admin enabled the 'internal_tasks_internal_tasks_view' permission, the 'Công việc' menu appeared automatically in the user's sidebar within 30 seconds without requiring a manual page refresh. 4) When the admin disabled the permission again, the 'Công việc' menu disappeared automatically from the user's sidebar within 30 seconds. The permission changes were applied in real-time as expected, and the UI updated automatically to reflect the changes. This confirms that the real-time permission system is working correctly."
 
-metadata:
-  created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 3
-  run_ui: false
+  - task: "Permission System Comprehensive Test"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to perform a comprehensive test of the permission system to ensure everything is working correctly, including role-based permission updates, user-based permission overrides, permission inheritance, and permission checking."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the comprehensive permission system. 1) Role-based permission updates: Successfully updated the editor role to remove 'clients_clients_view' permission and add 'documents_documents_view' permission. 2) User-based permission overrides: Successfully found user 'Bé Kiều' with ID 0c493072-a864-4ff8-8736-ce8bd0548f34 and added a user-specific permission override for 'clients_clients_view' that overrides the role permission. 3) Permission inheritance: Successfully logged in as 'Bé Kiều' user (kieu@aus.com/kieu123) and verified that the user has the correct permissions - 'clients_clients_view' from user override and 'documents_documents_view' from role. 4) Permission checking: Successfully tested the permission checking API with both granted and denied permissions. The permission system is working correctly with proper inheritance, overrides, and real-time updates."
 
 metadata:
   created_by: "testing_agent"
