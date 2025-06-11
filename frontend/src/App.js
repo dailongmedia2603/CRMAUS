@@ -2338,6 +2338,23 @@ const TaskRow = React.memo(({
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
+          <div className="text-sm text-gray-900">
+            {task.assigned_by_name && (
+              <div className="text-xs text-gray-600 mb-1">
+                <span className="font-medium">Người giao:</span> {task.assigned_by_name}
+              </div>
+            )}
+            {task.assigned_to_name && (
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">Người nhận:</span> {task.assigned_to_name}
+              </div>
+            )}
+            {!task.assigned_by_name && !task.assigned_to_name && (
+              <span className="text-xs text-gray-400">Chưa phân công</span>
+            )}
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
           <button
             onClick={() => onView(task)}
             className="text-sm text-blue-600 hover:text-blue-800"
