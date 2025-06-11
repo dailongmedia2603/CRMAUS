@@ -2056,6 +2056,13 @@ async def read_documents(skip: int = 0, limit: int = 100, archived: bool = False
     # Get accessible folders first
     if current_user.role == "admin":
         accessible_folders = await db.folders.find().to_list(length=1000)
+        folder_ids = [folder["id"] for folder in accessible_folders]
+        
+        # Admin thấy tất cả documents
+        documents = await db.documents.find({
+            "folder_id": {"$in": folder_ids},
+            "archived": archived
+        }).skip(skip).limit(limit).to_list(length=limit)
     else:
         accessible_folders = await db.folders.find({
             "$or": [
@@ -2063,13 +2070,15 @@ async def read_documents(skip: int = 0, limit: int = 100, archived: bool = False
                 {"permissions": current_user.role}
             ]
         }).to_list(length=1000)
-    
-    folder_ids = [folder["id"] for folder in accessible_folders]
-    
-    documents = await db.documents.find({
-        "folder_id": {"$in": folder_ids},
-        "archived": archived
-    }).skip(skip).limit(limit).to_list(length=limit)
+        
+        folder_ids = [folder["id"] for folder in accessible_folders]
+        
+        # ✅ NEW: Non-admin users chỉ thấy documents do họ tạo
+        documents = await db.documents.find({
+            "folder_id": {"$in": folder_ids},
+            "archived": archived,
+            "created_by": current_user.id  # Chỉ documents của user hiện tại
+        }).skip(skip).limit(limit).to_list(length=limit)
     
     return documents
 
