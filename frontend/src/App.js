@@ -1114,6 +1114,7 @@ const SidebarContent = ({ user, logout }) => {
         </div>
 
         {/* Tài liệu */}
+        {hasPermission('documents_documents_view') && (
         <button
           onClick={() => navigate("/documents")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1125,8 +1126,10 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Tài liệu
         </button>
+        )}
 
         {/* Báo cáo */}
+        {hasPermission('reports_reports_view') && (
         <button
           onClick={() => navigate("/reports")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
