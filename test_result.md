@@ -85,6 +85,20 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the Task Cost Management functionality in the Settings module. Navigation to the Settings page works correctly for admin users, showing the 'Cài đặt hệ thống' title. Both main tabs ('Chi phí Task' and 'Khác') are visible and 'Chi phí Task' is active by default. The sub-tabs 'Danh sách' and 'Cấu hình' work correctly, with 'Danh sách' being active by default. In the 'Cấu hình' tab, the 'Thêm loại Task' button is enabled for admin users and opens a modal with the correct fields (name, description, and 'Kích hoạt' checkbox which is checked by default). In the 'Danh sách' tab, the 'Thêm chi phí Task' button is enabled for admin users and opens a modal with the correct fields (task type dropdown, hourly rate input, and 'Kích hoạt' checkbox which is checked by default). The 'Khác' tab displays the placeholder content correctly with the message that the functionality will be developed in the future. Tab switching works correctly between all tabs and sub-tabs. The modals can be closed properly using the 'Hủy' button. The UI is responsive and all elements are properly aligned and styled. There were some issues with the toast notifications not appearing when submitting forms, which might indicate that the backend integration for creating/updating task types and rates needs further investigation."
+  - task: "Task Cost Rate Creation Functionality"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the 'Thêm chi phí Task' functionality that was fixed for field name mismatch."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Task Cost Rate creation functionality in the Settings module. The 'Thêm chi phí Task' button opens a modal with the correct fields: task type dropdown, cost per hour input, and 'Kích hoạt' checkbox. The dropdown correctly displays available task types (Viết content, Content Writing Test, Edit video). The 'Kích hoạt' checkbox is checked by default. When filling out the form with valid data (selecting a task type and entering 50000 for cost per hour) and clicking 'Tạo mới', the form successfully submits to the backend API. A POST request is made to the /api/task-cost-rates/ endpoint, and a success toast message appears ('Tạo chi phí task thành công!'). The modal closes automatically, and the new task cost rate appears in the table with the correct formatting (50.000 ₫). The field name mismatch issue (cost_per_hour vs hourly_rate) has been resolved, and the form submission now works correctly without any 422 Unprocessable Entity errors."
 
 metadata:
   created_by: "testing_agent"
