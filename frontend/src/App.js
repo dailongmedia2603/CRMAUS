@@ -306,11 +306,7 @@ function App() {
                     <ClientDetailComponent user={user} />
                   </ProtectedRoute>
                 } />
-                <Route path="/task" element={
-                  <ProtectedRoute requiredPermission="internal_tasks_internal_tasks_view">
-                    <Task />
-                  </ProtectedRoute>
-                } />
+                <Route path="/task" element={<Task />} />
                 <Route path="/projects" element={
                   <ProtectedRoute requiredPermission="projects_projects_view">
                     <ProjectsComponent user={user} />
