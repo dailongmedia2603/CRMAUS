@@ -3471,7 +3471,8 @@ const Settings = () => {
     
     try {
       await axios.delete(`${API}/api/task-cost-rates/${rateId}`);
-      setTaskCostRates(taskCostRates.filter(rate => rate.id !== rateId));
+      // Reload data from server to ensure consistency
+      await loadTaskCostData();
       toast.success('Xóa chi phí task thành công!');
     } catch (error) {
       console.error('Error deleting rate:', error);
