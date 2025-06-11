@@ -3902,7 +3902,7 @@ const TaskCostRateModal = ({ isOpen, onClose, onSubmit, editingData, taskTypes }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.task_type_id || !formData.hourly_rate) {
+    if (!formData.task_type_id || !formData.cost_per_hour) {
       toast.error('Vui lòng điền đầy đủ thông tin');
       return;
     }
@@ -3911,7 +3911,7 @@ const TaskCostRateModal = ({ isOpen, onClose, onSubmit, editingData, taskTypes }
     try {
       await onSubmit({
         ...formData,
-        hourly_rate: parseFloat(formData.hourly_rate)
+        cost_per_hour: parseFloat(formData.cost_per_hour)
       });
     } finally {
       setLoading(false);
