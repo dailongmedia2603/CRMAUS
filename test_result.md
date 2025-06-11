@@ -475,8 +475,8 @@ ui_enhancements:
 test_plan:
   current_focus:
     - "Permission Management UI"
-    - "CRM AUS Frontend Runtime Error Fix"
-  stuck_tasks: []
+  stuck_tasks: 
+    - "Permission Management UI"
   test_all: false
   test_priority: "high_first"
 
