@@ -50,18 +50,18 @@ const hasAnyPermission = (permissions, permissionIds, action = 'view') => {
 };
 
 // Permission Provider Component
-const PermissionProvider = ({ children, user }) => {
+const PermissionProvider = ({ children, user, token }) => {
   const [permissions, setPermissions] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (user && token) {
       fetchUserPermissions();
     } else {
       setPermissions(null);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, token]);
 
   const fetchUserPermissions = async () => {
     try {
@@ -74,8 +74,11 @@ const PermissionProvider = ({ children, user }) => {
         return;
       }
 
-      const response = await axios.get(`${API}/api/permissions/my-permissions`);
+      const response = await axios.get(`${API}/api/permissions/my-permissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPermissions(response.data.permissions);
+      console.log('User permissions loaded:', response.data);
     } catch (error) {
       console.error('Error fetching permissions:', error);
       setPermissions({});
