@@ -480,8 +480,6 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-
-  - task: "CRM AUS Frontend Runtime Error Fix"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
