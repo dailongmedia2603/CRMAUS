@@ -56,30 +56,35 @@ def configure_editor_role_permissions():
     # 2. Set up basic permissions for the editor role
     permissions = [
         {
+            "role": "editor",
             "permission_id": "dashboard_dashboard_view",
             "can_view": True,
             "can_edit": False,
             "can_delete": False
         },
         {
+            "role": "editor",
             "permission_id": "clients_clients_view", 
             "can_view": True,
             "can_edit": False,
             "can_delete": False
         },
         {
+            "role": "editor",
             "permission_id": "internal_tasks_internal_tasks_view",
             "can_view": True,
             "can_edit": True,
             "can_delete": False
         },
         {
+            "role": "editor",
             "permission_id": "documents_documents_view",
             "can_view": True,
             "can_edit": False,
             "can_delete": False
         },
         {
+            "role": "editor",
             "permission_id": "templates_templates_view",
             "can_view": True,
             "can_edit": False,
