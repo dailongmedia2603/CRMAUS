@@ -1635,6 +1635,10 @@ async def get_internal_tasks_statistics(
     """Lấy thống kê công việc nội bộ"""
     query_filter = {}
     
+    # ✅ NEW: Non-admin users chỉ thấy statistics của tasks được assign cho họ
+    if current_user.role != "admin":
+        query_filter["assigned_to"] = current_user.id
+    
     # Date range filter
     if start_date or end_date:
         date_filter = {}
