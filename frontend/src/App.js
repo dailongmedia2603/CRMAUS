@@ -178,7 +178,7 @@ function App() {
   // Main app layout
   return (
     <AuthContext.Provider value={{ user, token, logout }}>
-      <PermissionProvider user={user}>
+      <PermissionProvider user={user} token={token}>
         <div className="min-h-screen bg-gray-50 flex">
           {/* Static sidebar for desktop */}
           <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
