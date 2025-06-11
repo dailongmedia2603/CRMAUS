@@ -1812,7 +1812,19 @@ const PermissionManagement = ({ user }) => {
       await axios.post(`${API}${endpoint}`, permissionList, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       toast.success('Cập nhật phân quyền thành công!');
+      
+      // Show additional info for real-time updates
+      if (permissionMode === 'role') {
+        toast.info(`Thay đổi phân quyền cho vai trò "${selectedTarget}" sẽ có hiệu lực trong vòng 30 giây cho tất cả người dùng.`, {
+          autoClose: 5000
+        });
+      } else {
+        toast.info('Người dùng sẽ thấy thay đổi phân quyền trong vòng 30 giây.', {
+          autoClose: 5000
+        });
+      }
     } catch (error) {
       console.error('Error saving permissions:', error);
       let errorMessage = 'Không thể lưu phân quyền';
