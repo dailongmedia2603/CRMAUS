@@ -105,7 +105,7 @@ frontend:
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
@@ -113,6 +113,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "Tested the delete functionality in Settings module Task Cost management with mixed results. Task Cost Type deletion works correctly - deleted types disappear from the UI immediately and remain gone after page refresh. The success toast message 'Xóa loại task thành công!' appears when a type is deleted. However, Task Cost Rate deletion is not working properly - when attempting to delete a rate, it remains visible in the UI and no success toast appears. The fix to add '?is_active=true' parameter to API calls is working for task cost types but not for task cost rates. The issue appears to be in the frontend implementation of the handleDeleteRate function, which might not be correctly updating the UI after deletion."
+      - working: false
+        agent: "testing"
+        comment: "Re-tested the Task Cost Management Delete functionality after the fix to call loadTaskCostData() after deletion. The Task Cost Type deletion continues to work correctly - when deleting a type, it disappears from the UI immediately and remains gone after page refresh. However, the Task Cost Rate deletion is still not working properly. When attempting to delete a rate, it remains visible in the UI immediately after deletion, and no success toast appears. After refreshing the page, the rates list is empty, suggesting that the deletion is happening on the backend but the UI is not being updated correctly. The issue appears to be that while loadTaskCostData() is being called in the handleDeleteRate function, it's not properly updating the UI state or the API call is not returning the expected data."
 
 metadata:
   created_by: "testing_agent"
