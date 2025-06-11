@@ -216,4 +216,9 @@ def configure_editor_role_permissions():
     return update_success and verify_success and user_verify_success
 
 if __name__ == "__main__":
-    configure_editor_role_permissions()
+    # First ensure the editor user exists
+    if ensure_editor_user_exists():
+        # Then configure permissions
+        configure_editor_role_permissions()
+    else:
+        print("Failed to ensure editor user exists. Exiting.")
