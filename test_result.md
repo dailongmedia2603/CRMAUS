@@ -315,11 +315,11 @@
         
   - task: "Permission Management UI"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/components/HumanResources.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
@@ -327,6 +327,9 @@
       - working: true
         agent: "testing"
         comment: "Based on code review, the Permission Management tab is properly implemented. The Human Resources module has 4 tabs including 'Phân quyền' (only visible to admin users). The tab supports both role-based ('Phân quyền theo vị trí') and user-based ('Phân quyền theo nhân sự') permission modes with appropriate dropdown lists. The permission matrix displays with blue category headers and checkboxes for View/Edit/Delete permissions. In user mode, there's an additional 'Ghi đè Role' column. The implementation includes proper permission management with a 'Lưu phân quyền' button and success messages. The UI is responsive with proper styling and transitions. All requirements specified in the test scenarios are met."
+      - working: false
+        agent: "testing"
+        comment: "Found a bug in the permission save functionality when using 'Phân quyền theo nhân sự' (user-based permissions) mode. When trying to save permissions, the API returns a 422 Unprocessable Entity error with the message: 'Field required' for 'user_id'. The issue is in the handleSavePermissions function in HumanResources.js where the frontend is not including the user_id field in each permission object when in user mode. The backend API expects this field as defined in the UserPermissionBase model. The fix would be to modify the permission object creation to include the user_id field when in user mode."
 
 metadata:
   created_by: "testing_agent"
