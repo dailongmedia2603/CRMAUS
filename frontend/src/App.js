@@ -862,6 +862,7 @@ const SidebarContent = ({ user, logout }) => {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {/* Dashboard */}
+        {hasPermission('dashboard_dashboard_view') && (
         <button
           onClick={() => navigate("/")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -874,8 +875,10 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Dashboard
         </button>
+        )}
 
         {/* Client */}
+        {hasPermission('clients_clients_view') && (
         <button
           onClick={() => navigate("/clients")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -887,6 +890,7 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Client
         </button>
+        )}
 
         {/* Task */}
         <button
