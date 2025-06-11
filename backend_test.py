@@ -2101,11 +2101,11 @@ def main():
     """Main test function"""
     print("=== Starting API Tests ===")
     
-    # Test comprehensive permission system
-    permission_system_success = test_comprehensive_permission_system()
+    # Test permission filtering for internal tasks and documents
+    permission_filtering_success = test_permission_filtering()
     
     print("\n=== Test Results ===")
-    print(f"Comprehensive Permission System: {'✅' if permission_system_success else '❌'}")
+    print(f"Permission Filtering: {'✅' if permission_filtering_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
