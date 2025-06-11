@@ -57,6 +57,20 @@ const PermissionProvider = ({ children, user, token }) => {
   useEffect(() => {
     if (user && token) {
       fetchUserPermissions();
+      
+      // Set up periodic permission refresh for non-admin users
+      let permissionRefreshInterval;
+      if (user.role !== 'admin') {
+        permissionRefreshInterval = setInterval(() => {
+          fetchUserPermissions();
+        }, 30000); // Refresh every 30 seconds
+      }
+      
+      return () => {
+        if (permissionRefreshInterval) {
+          clearInterval(permissionRefreshInterval);
+        }
+      };
     } else {
       setPermissions(null);
       setLoading(false);
@@ -77,7 +91,17 @@ const PermissionProvider = ({ children, user, token }) => {
       const response = await axios.get(`${API}/api/permissions/my-permissions`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPermissions(response.data.permissions);
+      
+      // Check if permissions have changed
+      const newPermissions = response.data.permissions;
+      const currentPermissionsString = JSON.stringify(permissions);
+      const newPermissionsString = JSON.stringify(newPermissions);
+      
+      if (currentPermissionsString !== newPermissionsString && permissions !== null) {
+        console.log('Permissions changed! Refreshing...');
+      }
+      
+      setPermissions(newPermissions);
       console.log('User permissions loaded:', response.data);
     } catch (error) {
       console.error('Error fetching permissions:', error);
