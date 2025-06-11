@@ -1796,6 +1796,9 @@ const PermissionManagement = ({ user }) => {
         can_view: perms.can_view || false,
         can_edit: perms.can_edit || false,
         can_delete: perms.can_delete || false,
+        ...(permissionMode === 'role' && { 
+          role: selectedTarget // Add role field for role-based permissions
+        }),
         ...(permissionMode === 'user' && { 
           override_role: perms.override_role || false,
           user_id: selectedTarget // Add user_id field for user-based permissions
