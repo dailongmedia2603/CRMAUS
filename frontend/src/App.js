@@ -3511,7 +3511,8 @@ const Settings = () => {
     
     try {
       await axios.delete(`${API}/api/task-cost-types/${typeId}`);
-      setTaskCostTypes(taskCostTypes.filter(type => type.id !== typeId));
+      // Reload data from server to ensure consistency  
+      await loadTaskCostData();
       toast.success('Xóa loại task thành công!');
     } catch (error) {
       console.error('Error deleting type:', error);
