@@ -352,6 +352,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ FIXED: Successfully fixed the permission save functionality in the Human Resources module. The issue was that when saving user-based permissions, the frontend wasn't including the required 'user_id' field in each permission object. Modified the handleSavePermissions function to include the user_id field when in user mode. Also improved the error handling to display more detailed error messages. Tested the fix by selecting a user, changing permissions, and saving - the permissions were successfully saved with a 200 OK response from the server and a success toast message was displayed."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the role-based permission management functionality. Logged in as admin, navigated to Human Resources > Phân quyền tab, selected 'Phân quyền theo vị trí' mode, and chose the 'editor' role. Made changes to permissions (enabled some View and Edit permissions, disabled some existing permissions) and clicked 'Lưu phân quyền'. The changes were saved successfully with a success toast message 'Cập nhật phân quyền thành công!' displayed. No 'Field required' errors appeared in the UI or console logs. Refreshed the page and verified that the changes were saved correctly. Also tested with the 'content' role and confirmed that the permission management works for all roles. The 'role' field is now correctly included in each permission object when saving role-based permissions."
 
 metadata:
   created_by: "testing_agent"
