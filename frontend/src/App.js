@@ -975,6 +975,7 @@ const SidebarContent = ({ user, logout }) => {
         )}
 
         {/* Tài chính Section */}
+        {(hasPermission('invoices_invoices_view') || hasPermission('contracts_contracts_view') || hasPermission('expenses_expenses_view') || hasPermission('reports_financial_reports')) && (
         <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('finance')}
@@ -996,6 +997,7 @@ const SidebarContent = ({ user, logout }) => {
           
           {openSubmenus.finance && (
             <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
+              {hasPermission('invoices_invoices_view') && (
               <button
                 onClick={() => navigate("/invoices")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1007,6 +1009,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Hóa đơn
               </button>
+              )}
+              {hasPermission('contracts_contracts_view') && (
               <button
                 onClick={() => navigate("/contracts")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1018,6 +1022,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Hợp đồng
               </button>
+              )}
+              {hasPermission('expenses_expenses_view') && (
               <button
                 onClick={() => navigate("/expenses")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1029,6 +1035,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Quản lý chi phí
               </button>
+              )}
+              {hasPermission('reports_financial_reports') && (
               <button
                 onClick={() => navigate("/financial-reports")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1040,9 +1048,11 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Báo cáo tài chính
               </button>
+              )}
             </div>
           )}
         </div>
+        )}
 
         {/* Bán hàng Section */}
         <div className="space-y-1">
