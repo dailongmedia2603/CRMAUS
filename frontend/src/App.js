@@ -3420,12 +3420,12 @@ const Settings = () => {
     try {
       setLoading(true);
       
-      // Load task cost rates
-      const ratesResponse = await axios.get(`${API}/api/task-cost-rates/`);
+      // Load task cost rates - only active ones
+      const ratesResponse = await axios.get(`${API}/api/task-cost-rates/?is_active=true`);
       setTaskCostRates(ratesResponse.data);
       
-      // Load task cost types
-      const typesResponse = await axios.get(`${API}/api/task-cost-types/`);
+      // Load task cost types - only active ones  
+      const typesResponse = await axios.get(`${API}/api/task-cost-types/?is_active=true`);
       setTaskCostTypes(typesResponse.data);
       
       // Load task cost settings
