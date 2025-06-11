@@ -3879,7 +3879,7 @@ const Settings = () => {
 const TaskCostRateModal = ({ isOpen, onClose, onSubmit, editingData, taskTypes }) => {
   const [formData, setFormData] = useState({
     task_type_id: '',
-    hourly_rate: '',
+    cost_per_hour: '',
     is_active: true
   });
   const [loading, setLoading] = useState(false);
