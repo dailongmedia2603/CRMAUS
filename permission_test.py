@@ -1,36 +1,27 @@
 import requests
 import json
-from pprint import pprint
 
 # Backend URL
 BACKEND_URL = "http://localhost:8001/api"
 
-def get_admin_token():
-    """Get authentication token for admin user"""
-    response = requests.post(
-        f"{BACKEND_URL}/token",
-        data={"username": "admin@example.com", "password": "admin123"}
-    )
-    if response.status_code == 200:
-        token = response.json()["access_token"]
-        print(f"✅ Successfully logged in as admin")
-        return token
-    else:
-        print(f"❌ Failed to get admin token: {response.status_code} - {response.text}")
-        return None
+# Admin credentials
+ADMIN_EMAIL = "admin@example.com"
+ADMIN_PASSWORD = "admin123"
 
-def get_user_token(email, password):
-    """Get authentication token for a specific user"""
+# Editor user credentials
+EDITOR_EMAIL = "be.kieu@example.com"
+EDITOR_PASSWORD = "password123"
+
+def get_token(email, password):
+    """Get authentication token"""
     response = requests.post(
         f"{BACKEND_URL}/token",
         data={"username": email, "password": password}
     )
     if response.status_code == 200:
-        token = response.json()["access_token"]
-        print(f"✅ Successfully logged in as {email}")
-        return token
+        return response.json()["access_token"]
     else:
-        print(f"❌ Failed to get token for {email}: {response.status_code} - {response.text}")
+        print(f"Failed to get token: {response.status_code} - {response.text}")
         return None
 
 def get_headers(token):
@@ -40,184 +31,148 @@ def get_headers(token):
         "Content-Type": "application/json"
     }
 
-def get_users_list(admin_token):
-    """Get list of users to find Bé Kiều's user ID"""
+def print_test_result(test_name, response, expected_status=200):
+    """Print test result"""
+    if response.status_code == expected_status:
+        print(f"✅ {test_name} - Status: {response.status_code}")
+        return True
+    else:
+        print(f"❌ {test_name} - Status: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+
+def configure_editor_role_permissions():
+    """Configure permissions for the editor role"""
+    print("\n=== Configuring Editor Role Permissions ===")
+    
+    # 1. Login with admin credentials
+    admin_token = get_token(ADMIN_EMAIL, ADMIN_PASSWORD)
+    if not admin_token:
+        print("Failed to login as admin. Exiting.")
+        return False
+    
+    print("✅ Successfully logged in as admin")
+    
+    # 2. Set up basic permissions for the editor role
+    permissions = [
+        {
+            "permission_id": "dashboard_dashboard_view",
+            "can_view": True,
+            "can_edit": False,
+            "can_delete": False
+        },
+        {
+            "permission_id": "clients_clients_view", 
+            "can_view": True,
+            "can_edit": False,
+            "can_delete": False
+        },
+        {
+            "permission_id": "internal_tasks_internal_tasks_view",
+            "can_view": True,
+            "can_edit": True,
+            "can_delete": False
+        },
+        {
+            "permission_id": "documents_documents_view",
+            "can_view": True,
+            "can_edit": False,
+            "can_delete": False
+        },
+        {
+            "permission_id": "templates_templates_view",
+            "can_view": True,
+            "can_edit": False,
+            "can_delete": False
+        }
+    ]
+    
+    # 3. Send the request to update editor role permissions
+    response = requests.post(
+        f"{BACKEND_URL}/permissions/role/editor/update",
+        headers=get_headers(admin_token),
+        json=permissions
+    )
+    
+    update_success = print_test_result("Update Editor Role Permissions", response)
+    if update_success:
+        print("Successfully configured editor role permissions")
+    
+    # 4. Verify by calling GET /api/permissions/matrix/role/editor
     response = requests.get(
-        f"{BACKEND_URL}/users/",
+        f"{BACKEND_URL}/permissions/matrix/role/editor",
         headers=get_headers(admin_token)
     )
     
-    if response.status_code == 200:
-        users = response.json()
-        print(f"✅ Successfully retrieved users list. Found {len(users)} users.")
-        return users
-    else:
-        print(f"❌ Failed to get users list: {response.status_code} - {response.text}")
-        return []
-
-def find_user_by_name(users, name):
-    """Find a user by name in the users list"""
-    for user in users:
-        if user.get("full_name") == name:
-            print(f"✅ Found user '{name}' with ID: {user['id']}")
-            return user
-    print(f"❌ User '{name}' not found in users list")
-    return None
-
-def get_user_permissions(user_token):
-    """Get permissions for the current user"""
+    verify_success = print_test_result("Verify Editor Role Permissions", response)
+    if verify_success:
+        matrix = response.json()
+        current_permissions = matrix.get("current_permissions", [])
+        
+        print(f"Found {len(current_permissions)} permissions for editor role")
+        
+        # Check if our configured permissions are in the matrix
+        configured_permission_ids = [p["permission_id"] for p in permissions]
+        found_permission_ids = [p["permission_id"] for p in current_permissions]
+        
+        all_found = all(pid in found_permission_ids for pid in configured_permission_ids)
+        if all_found:
+            print("✅ All configured permissions found in the matrix")
+            
+            # Verify specific permissions
+            for perm in permissions:
+                for current_perm in current_permissions:
+                    if current_perm["permission_id"] == perm["permission_id"]:
+                        if (current_perm["can_view"] == perm["can_view"] and
+                            current_perm["can_edit"] == perm["can_edit"] and
+                            current_perm["can_delete"] == perm["can_delete"]):
+                            print(f"✅ Permission {perm['permission_id']} configured correctly")
+                        else:
+                            print(f"❌ Permission {perm['permission_id']} not configured correctly")
+                            verify_success = False
+        else:
+            missing = [pid for pid in configured_permission_ids if pid not in found_permission_ids]
+            print(f"❌ Missing permissions in matrix: {missing}")
+            verify_success = False
+    
+    # 5. Verify by calling GET /api/permissions/my-permissions as "Bé Kiều"
+    editor_token = get_token(EDITOR_EMAIL, EDITOR_PASSWORD)
+    if not editor_token:
+        print("Failed to login as editor user. Skipping final verification.")
+        return update_success and verify_success
+    
+    print("✅ Successfully logged in as editor user")
+    
     response = requests.get(
         f"{BACKEND_URL}/permissions/my-permissions",
-        headers=get_headers(user_token)
+        headers=get_headers(editor_token)
     )
     
-    if response.status_code == 200:
-        permissions = response.json()
-        print(f"✅ Successfully retrieved user's permissions")
-        return permissions
-    else:
-        print(f"❌ Failed to get user's permissions: {response.status_code} - {response.text}")
-        return None
-
-def get_user_permission_matrix(admin_token, user_id):
-    """Get permission matrix for a specific user"""
-    response = requests.get(
-        f"{BACKEND_URL}/permissions/matrix/user/{user_id}",
-        headers=get_headers(admin_token)
-    )
-    
-    if response.status_code == 200:
-        matrix = response.json()
-        print(f"✅ Successfully retrieved permission matrix for user ID: {user_id}")
-        return matrix
-    else:
-        print(f"❌ Failed to get permission matrix: {response.status_code} - {response.text}")
-        return None
-
-def analyze_permissions(user_permissions, permission_matrix):
-    """Compare and analyze the user's permissions"""
-    if not user_permissions or not permission_matrix:
-        print("❌ Cannot analyze permissions - missing data")
-        return
-    
-    # Extract the permissions from both sources
-    my_permissions = user_permissions.get("permissions", {})
-    configured_permissions = {
-        perm["permission_id"]: perm 
-        for perm in permission_matrix.get("current_permissions", [])
-    }
-    
-    # Get all permission items for reference
-    permission_items = {
-        item["id"]: item
-        for item in permission_matrix.get("items", [])
-    }
-    
-    # Count permissions
-    total_permissions = len(permission_items)
-    configured_count = len(configured_permissions)
-    
-    print(f"\n=== Permission Analysis ===")
-    print(f"Total available permissions: {total_permissions}")
-    print(f"Specifically configured permissions: {configured_count}")
-    
-    # Check if user has any specific permissions configured
-    if configured_count == 0:
-        print("\n⚠️ User has no specific permissions configured - inheriting all from role")
-    else:
-        print(f"\n✅ User has {configured_count} specifically configured permissions")
+    user_verify_success = print_test_result("Verify Editor User Permissions", response)
+    if user_verify_success:
+        user_permissions = response.json()
+        permissions_dict = user_permissions.get("permissions", {})
         
-        # Sample of configured permissions
-        print("\nSample of configured permissions:")
-        sample_count = min(5, configured_count)
-        sample_perms = list(configured_permissions.items())[:sample_count]
+        print(f"User role: {user_permissions.get('user_role', 'N/A')}")
+        print(f"Found {len(permissions_dict)} permissions for editor user")
         
-        for perm_id, perm_data in sample_perms:
-            item_name = permission_items.get(perm_id, {}).get("display_name", perm_id)
-            print(f"- {item_name}: view={perm_data.get('can_view')}, edit={perm_data.get('can_edit')}, delete={perm_data.get('can_delete')}, override={perm_data.get('override_role', False)}")
+        # Check specific permissions
+        for perm in permissions:
+            perm_id = perm["permission_id"]
+            if perm_id in permissions_dict:
+                user_perm = permissions_dict[perm_id]
+                if (user_perm["can_view"] == perm["can_view"] and
+                    user_perm["can_edit"] == perm["can_edit"] and
+                    user_perm["can_delete"] == perm["can_delete"]):
+                    print(f"✅ User permission {perm_id} matches role configuration")
+                else:
+                    print(f"❌ User permission {perm_id} does not match role configuration")
+                    user_verify_success = False
+            else:
+                print(f"❌ Permission {perm_id} not found in user permissions")
+                user_verify_success = False
     
-    # Check for permissions that are in my-permissions but not in matrix
-    print("\nChecking for permission mismatches...")
-    
-    # Count permissions by source
-    role_permissions = sum(1 for perm in my_permissions.values() if perm.get("source") == "role")
-    user_override_permissions = sum(1 for perm in my_permissions.values() if perm.get("source") == "user_override")
-    
-    print(f"Permissions from role: {role_permissions}")
-    print(f"Permissions overridden by user: {user_override_permissions}")
-    
-    # Check for full access permissions
-    full_access_count = sum(
-        1 for perm in my_permissions.values() 
-        if perm.get("can_view") and perm.get("can_edit") and perm.get("can_delete")
-    )
-    
-    if full_access_count > 0:
-        print(f"\n⚠️ User has full access (view+edit+delete) to {full_access_count} permissions")
-        
-        # List some of the full access permissions
-        print("\nSample of full access permissions:")
-        full_access_perms = [
-            (perm_id, perm_data) 
-            for perm_id, perm_data in my_permissions.items() 
-            if perm_data.get("can_view") and perm_data.get("can_edit") and perm_data.get("can_delete")
-        ]
-        
-        sample_count = min(5, len(full_access_perms))
-        for perm_id, perm_data in full_access_perms[:sample_count]:
-            item_name = permission_items.get(perm_id, {}).get("display_name", perm_id)
-            print(f"- {item_name} (source: {perm_data.get('source')})")
-
-def main():
-    print("=== Testing Permissions for 'Bé Kiều' ===\n")
-    
-    # Step 1: Login with admin credentials
-    admin_token = get_admin_token()
-    if not admin_token:
-        print("Cannot proceed without admin access")
-        return
-    
-    # Step 2: Get the list of users to find "Bé Kiều"
-    users = get_users_list(admin_token)
-    if not users:
-        print("Cannot proceed without users list")
-        return
-    
-    # Find "Bé Kiều" user
-    kieu_user = find_user_by_name(users, "Bé Kiều")
-    if not kieu_user:
-        print("Cannot proceed without finding 'Bé Kiều' user")
-        return
-    
-    kieu_user_id = kieu_user["id"]
-    kieu_email = kieu_user["email"]
-    print(f"Bé Kiều's email: {kieu_email}")
-    
-    # Step 3: Try to login as "Bé Kiều" with different password options
-    passwords_to_try = ["kieu123", "password", "123456", "kieuaus", "kieu@aus.com"]
-    kieu_token = None
-    
-    for password in passwords_to_try:
-        print(f"\nTrying to login with password: {password}")
-        token = get_user_token(kieu_email, password)
-        if token:
-            kieu_token = token
-            print(f"Successfully logged in as 'Bé Kiều' with password: {password}")
-            break
-    
-    if not kieu_token:
-        print("\n❌ Failed to login as 'Bé Kiều' with any of the common passwords")
-        print("Cannot proceed with testing user's actual permissions")
-        return
-    
-    # Step 4: Get "Bé Kiều"'s permissions
-    user_permissions = get_user_permissions(kieu_token)
-    
-    # Step 5: Get the configured permissions matrix for "Bé Kiều"
-    permission_matrix = get_user_permission_matrix(admin_token, kieu_user_id)
-    
-    # Step 6: Analyze and compare the permissions
-    analyze_permissions(user_permissions, permission_matrix)
+    return update_success and verify_success and user_verify_success
 
 if __name__ == "__main__":
-    main()
+    configure_editor_role_permissions()
