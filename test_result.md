@@ -1,3 +1,19 @@
+backend:
+  - task: "Reset Password for 'Bé Kiều' User"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test resetting the password for the 'Bé Kiều' user account, checking user details, confirming the email address, and testing login with the new credentials."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the password reset for 'Bé Kiều' user. Found the user with ID 0c493072-a864-4ff8-8736-ce8bd0548f34, email kieu@aus.com, role editor, and confirmed the user is active. Successfully reset the password to 'kieu123' using PUT /api/users/{user_id}/password. Successfully logged in with the new credentials (kieu@aus.com/kieu123) and retrieved the user's permissions. The user has 68 total permissions with 5 view permissions, 2 edit permissions, and 1 delete permission. The user's role is 'editor' and they have specific permissions for dashboard viewing, client viewing, and other operations. The password reset functionality is working correctly."
+
   - task: "Expense Categories API"
     implemented: true
     working: true
