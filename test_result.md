@@ -328,6 +328,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested all requested permission management API endpoints with admin credentials (admin@example.com/admin123). GET /api/permissions/roles returns 9 roles for permission assignment including admin, manager, and staff. GET /api/permissions/users returns 5 users for permission assignment. GET /api/permissions/categories returns 16 permission categories covering all major system modules. GET /api/permissions/items returns 68 permission items with view/edit/delete operations. GET /api/permissions/matrix/role/admin returns the permission matrix for admin role with all categories and items. GET /api/permissions/matrix/user/{user_id} returns the permission matrix for a specific user with proper structure. All endpoints are working correctly and return the expected data."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the role-based permission update functionality with the 'role' field included in each permission object. Logged in with admin credentials (admin@example.com/admin123) and sent a POST request to /api/permissions/role/editor/update with the correct format including the 'role' field in each permission object. The request was successful with a 200 OK response and no 'Field required' errors. Verified that the permissions were correctly saved by calling GET /api/permissions/matrix/role/editor and checking that the dashboard_dashboard_view, clients_clients_view, and internal_tasks_internal_tasks_view permissions were updated with the correct values. The role-based permission system is working correctly with the 'role' field included in each permission object."
         
   - task: "Permission Management UI"
     implemented: true
