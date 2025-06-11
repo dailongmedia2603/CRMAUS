@@ -893,6 +893,7 @@ const SidebarContent = ({ user, logout }) => {
         )}
 
         {/* Task */}
+        {hasPermission('internal_tasks_internal_tasks_view') && (
         <button
           onClick={() => navigate("/task")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -904,6 +905,7 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Công việc
         </button>
+        )}
 
         {/* Dự án Section */}
         <div className="space-y-1">
