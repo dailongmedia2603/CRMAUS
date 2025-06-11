@@ -2107,6 +2107,7 @@ const Task = () => {
                     getPriorityColor={getPriorityColor}
                     getPriorityLabel={getPriorityLabel}
                     getStatusLabel={getStatusLabel}
+                    user={user} // Pass user prop
                   />
                 ))
               )}
