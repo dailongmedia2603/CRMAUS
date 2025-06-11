@@ -43,11 +43,25 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the Task Cost Settings frontend functionality. The Settings page has a tab system with 'Chi phí Task' (💰) and 'Khác' (⚙️) tabs, with 'Chi phí Task' being the default active tab. The 'Chi phí Task' tab correctly displays the cost configuration interface with a toggle switch for enabling/disabling cost calculation, an input field for cost per hour (VND), and an example calculation section. The cost input field correctly formats the display (e.g., '50.000 VND/giờ') and the example calculation updates based on the input value. The toggle switch works as expected, showing/hiding the example calculation when enabled/disabled. The save button works correctly, showing a success toast message when clicked, and the values are persisted after page refresh. For non-admin users, the Settings page shows a permission denied message, preventing access to the configuration. The task cost calculation is integrated with the task time tracking system, showing the calculated cost for completed tasks based on the time spent."
+  - task: "Settings Component with Nested Tabs"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new Settings component with nested tabs to ensure it works correctly without any JSX errors."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Settings component with nested tabs. The component renders correctly with the main tabs: 'Chi phí Task' (💰) and 'Khác' (⚙️), with 'Chi phí Task' being active by default. Under 'Chi phí Task', the sub-tabs 'Danh sách' (📋) and 'Cấu hình' (⚙️) are displayed correctly, with 'Danh sách' being active by default. Tab navigation works as expected - clicking on 'Khác' main tab shows the placeholder content, clicking back to 'Chi phí Task' main tab works, clicking on 'Cấu hình' sub-tab shows the placeholder content, and clicking back to 'Danh sách' sub-tab shows the table placeholder. The interface elements are correctly displayed: 'Danh sách' tab shows the 'Thêm chi phí Task' button (enabled for admin), search box with placeholder text, table with expected headers, and placeholder row. 'Cấu hình' tab shows the 'Thêm loại Task' button (enabled for admin) and placeholder content with gear icon. For non-admin users, the Settings button is not visible in the sidebar, and attempting to access the Settings page directly shows a permission denied message. No JavaScript errors were found in the browser console, and the page loads completely without any rendering issues."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
@@ -63,3 +77,5 @@ agent_communication:
     message: "Successfully tested the Task Cost Settings functionality. All features are working correctly: admins can update settings while non-admin users can only view them; time tracking works when tasks are started and completed; cost calculation is accurate based on the time spent and the configured cost_per_hour; and the system correctly handles disabled cost calculation and edge cases. The implementation meets all the requirements specified in the test plan."
   - agent: "testing"
     message: "Successfully tested the Task Cost Settings frontend functionality. The tab system works correctly with 'Chi phí Task' and 'Khác' tabs. The cost configuration interface displays properly with toggle switch, cost input field, and example calculation. The interface correctly formats the cost display and updates the example calculation. The save functionality works and values persist after refresh. Non-admin users cannot access the Settings page, receiving a permission denied message. The task cost calculation is integrated with the task time tracking system."
+  - agent: "testing"
+    message: "Successfully tested the Settings component with nested tabs. The component renders correctly with the expected main tabs and sub-tabs, with proper default active tabs. Tab navigation works as expected between both main tabs and sub-tabs. All interface elements are displayed correctly in both sub-tabs, with buttons properly enabled for admin users. For non-admin users, the Settings button is not visible in the sidebar, and attempting to access the Settings page directly shows a permission denied message. No JavaScript errors were found, and the page loads completely without any rendering issues."
