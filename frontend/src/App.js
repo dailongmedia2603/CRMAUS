@@ -3378,18 +3378,175 @@ const Account = () => {
 };
 // ==================== MODULE-TAI-KHOAN END ====================
 
-const Settings = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
-      <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
+const Settings = () => {
+  const { user, token } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('task-cost');
+  const [taskCostSubTab, setTaskCostSubTab] = useState('list');
+  const [loading, setLoading] = useState(false);
+
+  const tabs = [
+    { id: 'task-cost', name: 'Chi phí Task', icon: '💰' },
+    { id: 'other', name: 'Khác', icon: '⚙️' }
+  ];
+
+  const taskCostSubTabs = [
+    { id: 'list', name: 'Danh sách', icon: '📋' },
+    { id: 'config', name: 'Cấu hình', icon: '⚙️' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+        <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
+      </div>
+
+      {/* Main Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.id
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.name}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="modern-card p-6">
+        {activeTab === 'task-cost' && (
+          <div className="space-y-6">
+            {/* Sub Tab Navigation for Task Cost */}
+            <div className="border-b border-gray-100">
+              <nav className="-mb-px flex space-x-6">
+                {taskCostSubTabs.map((subTab) => (
+                  <button
+                    key={subTab.id}
+                    onClick={() => setTaskCostSubTab(subTab.id)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      taskCostSubTab === subTab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="mr-2">{subTab.icon}</span>
+                    {subTab.name}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Sub Tab Content */}
+            {taskCostSubTab === 'list' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-medium text-gray-900">Danh sách Chi phí Task</h2>
+                  <button
+                    disabled={user?.role !== 'admin'}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                      user?.role !== 'admin'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } transition-colors`}
+                  >
+                    + Thêm chi phí Task
+                  </button>
+                </div>
+
+                {/* Search */}
+                <div className="max-w-md">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Tìm kiếm chi phí task..."
+                    />
+                  </div>
+                </div>
+
+                {/* Placeholder Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Loại Task
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Chi phí / Giờ
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ngày tạo
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Hành động
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      <tr>
+                        <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
+                          Tính năng đang được phát triển...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {taskCostSubTab === 'config' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-medium text-gray-900">Cấu hình Loại Task</h2>
+                  <button
+                    disabled={user?.role !== 'admin'}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                      user?.role !== 'admin'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    } transition-colors`}
+                  >
+                    + Thêm loại Task
+                  </button>
+                </div>
+
+                {/* Placeholder Content */}
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">⚙️</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Cấu hình loại Task</h3>
+                  <p className="text-gray-500">Tính năng đang được phát triển...</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'other' && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">⚙️</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Các cài đặt khác</h3>
+            <p className="text-gray-500">Chức năng này sẽ được phát triển trong tương lai</p>
+          </div>
+        )}
+      </div>
     </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">User Management</h2>
-      <p className="text-gray-600">Quản lý người dùng và phân quyền.</p>
-    </div>
-  </div>
-);
+  );
+};
 
 // LeadsComponent - Simple placeholder for Lead management
 const LeadsComponent = ({ user }) => (
