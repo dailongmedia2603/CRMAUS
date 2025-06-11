@@ -2092,10 +2092,18 @@ async def read_folder_documents(folder_id: str, archived: bool = False, current_
     if folder["permissions"] != "all" and folder["permissions"] != current_user.role and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
-    documents = await db.documents.find({
-        "folder_id": folder_id,
-        "archived": archived
-    }).to_list(length=100)
+    # ✅ NEW: Non-admin users chỉ thấy documents do họ tạo
+    if current_user.role == "admin":
+        documents = await db.documents.find({
+            "folder_id": folder_id,
+            "archived": archived
+        }).to_list(length=100)
+    else:
+        documents = await db.documents.find({
+            "folder_id": folder_id,
+            "archived": archived,
+            "created_by": current_user.id
+        }).to_list(length=100)
     
     return documents
 
