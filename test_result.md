@@ -389,7 +389,7 @@ backend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 4
   run_ui: false
 
 # =================== TEAM MANAGEMENT & PERFORMANCE TRACKING MODULE ===================
