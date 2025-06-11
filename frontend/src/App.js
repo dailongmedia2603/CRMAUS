@@ -3674,7 +3674,7 @@ const Settings = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-gray-900">
-                                {formatCurrency(rate.hourly_rate)}
+                                {formatCurrency(rate.cost_per_hour)}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
