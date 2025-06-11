@@ -3421,15 +3421,20 @@ const Settings = () => {
       setLoading(true);
       console.log('Loading task cost data...');
       
+      // Add cache busting parameter
+      const timestamp = Date.now();
+      
       // Load task cost rates - only active ones
-      console.log('Fetching task cost rates with URL:', `${API}/api/task-cost-rates/?is_active=true`);
-      const ratesResponse = await axios.get(`${API}/api/task-cost-rates/?is_active=true`);
+      const ratesUrl = `${API}/api/task-cost-rates/?is_active=true&_t=${timestamp}`;
+      console.log('Fetching task cost rates with URL:', ratesUrl);
+      const ratesResponse = await axios.get(ratesUrl);
       console.log('Task cost rates response:', ratesResponse.data);
       setTaskCostRates(ratesResponse.data);
       
       // Load task cost types - only active ones  
-      console.log('Fetching task cost types with URL:', `${API}/api/task-cost-types/?is_active=true`);
-      const typesResponse = await axios.get(`${API}/api/task-cost-types/?is_active=true`);
+      const typesUrl = `${API}/api/task-cost-types/?is_active=true&_t=${timestamp}`;
+      console.log('Fetching task cost types with URL:', typesUrl);
+      const typesResponse = await axios.get(typesUrl);
       console.log('Task cost types response:', typesResponse.data);
       setTaskCostTypes(typesResponse.data);
       
