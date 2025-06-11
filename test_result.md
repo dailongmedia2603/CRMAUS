@@ -496,8 +496,6 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-    implemented: true
-    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
