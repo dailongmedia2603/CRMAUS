@@ -1381,6 +1381,567 @@ def test_role_permission_update():
     
     return True
 
+def test_task_cost_settings():
+    """Test Task Cost Settings functionality"""
+    print("\n=== Testing Task Cost Settings Functionality ===")
+    
+    # Phase 1: Test Task Cost Settings API
+    print("\n--- Phase 1: Testing Task Cost Settings API ---")
+    
+    # 1. Login with admin credentials
+    print("1. Login with admin credentials")
+    admin_email = "admin@example.com"
+    admin_password = "admin123"
+    
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": admin_email, "password": admin_password}
+    )
+    
+    admin_login_success = print_test_result("Login as Admin", response)
+    if not admin_login_success:
+        print(f"Failed to login as admin: {response.text}")
+        return False
+    
+    admin_token = response.json()["access_token"]
+    admin_headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # 2. Test GET /api/task-cost-settings/ to get current settings
+    print("\n2. Test GET /api/task-cost-settings/ to get current settings")
+    response = requests.get(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=admin_headers
+    )
+    
+    get_settings_success = print_test_result("Get Task Cost Settings", response)
+    if not get_settings_success:
+        print(f"Failed to get task cost settings: {response.text}")
+        return False
+    
+    initial_settings = response.json()
+    print(f"Initial settings: cost_per_hour={initial_settings.get('cost_per_hour', 'N/A')}, is_enabled={initial_settings.get('is_enabled', 'N/A')}")
+    
+    # 3. Test PUT /api/task-cost-settings/ to update settings
+    print("\n3. Test PUT /api/task-cost-settings/ to update settings")
+    updated_settings = {
+        "cost_per_hour": 50000,  # 50,000 VND/hour
+        "is_enabled": True
+    }
+    
+    response = requests.put(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=admin_headers,
+        json=updated_settings
+    )
+    
+    update_settings_success = print_test_result("Update Task Cost Settings", response)
+    if not update_settings_success:
+        print(f"Failed to update task cost settings: {response.text}")
+        return False
+    
+    updated_settings_response = response.json()
+    print(f"Updated settings: cost_per_hour={updated_settings_response.get('cost_per_hour', 'N/A')}, is_enabled={updated_settings_response.get('is_enabled', 'N/A')}")
+    
+    # 4. Verify the settings are saved correctly by calling GET again
+    print("\n4. Verify the settings are saved correctly by calling GET again")
+    response = requests.get(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=admin_headers
+    )
+    
+    verify_settings_success = print_test_result("Verify Task Cost Settings", response)
+    if not verify_settings_success:
+        print(f"Failed to verify task cost settings: {response.text}")
+        return False
+    
+    verified_settings = response.json()
+    print(f"Verified settings: cost_per_hour={verified_settings.get('cost_per_hour', 'N/A')}, is_enabled={verified_settings.get('is_enabled', 'N/A')}")
+    
+    # Check if settings match what we set
+    if verified_settings.get('cost_per_hour') == updated_settings['cost_per_hour'] and verified_settings.get('is_enabled') == updated_settings['is_enabled']:
+        print("✅ Settings were updated correctly")
+    else:
+        print("❌ Settings were not updated correctly")
+        return False
+    
+    # 5. Test with non-admin user (kieu@aus.com / kieu123)
+    print("\n5. Test with non-admin user (kieu@aus.com / kieu123)")
+    editor_email = "kieu@aus.com"
+    editor_password = "kieu123"
+    
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": editor_email, "password": editor_password}
+    )
+    
+    editor_login_success = print_test_result("Login as Editor (Bé Kiều)", response)
+    if not editor_login_success:
+        print(f"Failed to login as editor: {response.text}")
+        return False
+    
+    editor_token = response.json()["access_token"]
+    editor_headers = {
+        "Authorization": f"Bearer {editor_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # 5a. Test GET /api/task-cost-settings/ as non-admin (should work)
+    print("\n5a. Test GET /api/task-cost-settings/ as non-admin (should work)")
+    response = requests.get(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=editor_headers
+    )
+    
+    editor_get_settings_success = print_test_result("Get Task Cost Settings as Editor", response)
+    if not editor_get_settings_success:
+        print(f"Failed to get task cost settings as editor: {response.text}")
+        return False
+    
+    editor_settings = response.json()
+    print(f"Editor sees settings: cost_per_hour={editor_settings.get('cost_per_hour', 'N/A')}, is_enabled={editor_settings.get('is_enabled', 'N/A')}")
+    
+    # 5b. Test PUT /api/task-cost-settings/ as non-admin (should fail with 403)
+    print("\n5b. Test PUT /api/task-cost-settings/ as non-admin (should fail with 403)")
+    editor_updated_settings = {
+        "cost_per_hour": 60000,  # 60,000 VND/hour
+        "is_enabled": True
+    }
+    
+    response = requests.put(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=editor_headers,
+        json=editor_updated_settings
+    )
+    
+    editor_update_settings_success = print_test_result("Update Task Cost Settings as Editor", response, expected_status=403)
+    if response.status_code != 403:
+        print("❌ Editor was able to update task cost settings, but should be forbidden")
+        return False
+    else:
+        print("✅ Editor was correctly forbidden from updating task cost settings")
+    
+    # Phase 2: Test Task Time Tracking and Cost Calculation
+    print("\n--- Phase 2: Test Task Time Tracking and Cost Calculation ---")
+    
+    # 6. Login as admin and create a new internal task assigned to "Bé Kiều"
+    print("\n6. Login as admin and create a new internal task assigned to 'Bé Kiều'")
+    
+    # Find Bé Kiều's user ID
+    response = requests.get(
+        f"{BACKEND_URL}/users/",
+        headers=admin_headers
+    )
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get users list: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    users = response.json()
+    be_kieu_user = None
+    for user in users:
+        if user.get("full_name") == "Bé Kiều":
+            be_kieu_user = user
+            break
+    
+    if not be_kieu_user:
+        print("❌ 'Bé Kiều' user not found in the users list")
+        return False
+    
+    be_kieu_user_id = be_kieu_user["id"]
+    print(f"✅ Found 'Bé Kiều' user with ID: {be_kieu_user_id}")
+    
+    # Create a new task assigned to Bé Kiều
+    future_date = (datetime.utcnow() + timedelta(days=7)).isoformat()
+    
+    new_task = {
+        "name": "Test task for cost calculation",
+        "description": "Testing time tracking and cost calculation",
+        "assigned_to": be_kieu_user_id,
+        "deadline": future_date,
+        "priority": "normal",
+        "document_links": ["https://example.com"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=admin_headers,
+        json=new_task
+    )
+    
+    create_task_success = print_test_result("Create Task for Cost Calculation", response)
+    if not create_task_success:
+        print(f"Failed to create task: {response.text}")
+        return False
+    
+    created_task = response.json()
+    task_id = created_task["id"]
+    print(f"Created task: {created_task['name']} (ID: {task_id})")
+    
+    # 7. Login as "Bé Kiều" and update the task status
+    print("\n7. Login as 'Bé Kiều' and update the task status")
+    
+    # 7a. First: Change status to "in_progress" (should set start_time)
+    print("\n7a. First: Change status to 'in_progress' (should set start_time)")
+    start_status_data = {
+        "status": "in_progress"
+    }
+    
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+        headers=editor_headers,
+        json=start_status_data
+    )
+    
+    start_task_success = print_test_result("Start Task (in_progress)", response)
+    if not start_task_success:
+        print(f"Failed to start task: {response.text}")
+        return False
+    
+    print("✅ Task status changed to 'in_progress'")
+    
+    # Wait a few seconds to accumulate some time
+    print("\nWaiting 5 seconds to accumulate task time...")
+    time.sleep(5)
+    
+    # 7b. Then: Change status to "completed" with report_link (should calculate cost)
+    print("\n7b. Then: Change status to 'completed' with report_link (should calculate cost)")
+    complete_status_data = {
+        "status": "completed",
+        "report_link": "https://example.com/report"
+    }
+    
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task_id}/status",
+        headers=editor_headers,
+        json=complete_status_data
+    )
+    
+    complete_task_success = print_test_result("Complete Task", response)
+    if not complete_task_success:
+        print(f"Failed to complete task: {response.text}")
+        return False
+    
+    print("✅ Task status changed to 'completed'")
+    
+    # 8. Verify the task now has time tracking and cost calculation fields
+    print("\n8. Verify the task now has time tracking and cost calculation fields")
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/{task_id}",
+        headers=editor_headers
+    )
+    
+    get_task_success = print_test_result("Get Task Details", response)
+    if not get_task_success:
+        print(f"Failed to get task details: {response.text}")
+        return False
+    
+    task = response.json()
+    print(f"Task details:")
+    print(f"- Status: {task.get('status', 'N/A')}")
+    print(f"- Start time: {task.get('start_time', 'N/A')}")
+    print(f"- Completion time: {task.get('completion_time', 'N/A')}")
+    print(f"- Actual hours: {task.get('actual_hours', 'N/A')}")
+    print(f"- Total cost: {task.get('total_cost', 'N/A')}")
+    
+    # Verify all required fields are present
+    if (task.get('start_time') and task.get('completion_time') and 
+        task.get('actual_hours') is not None and task.get('total_cost') is not None):
+        print("✅ Task has all required time tracking and cost calculation fields")
+    else:
+        print("❌ Task is missing some time tracking or cost calculation fields")
+        return False
+    
+    # Verify cost calculation is correct
+    expected_cost = task.get('actual_hours', 0) * verified_settings.get('cost_per_hour', 0)
+    actual_cost = task.get('total_cost', 0)
+    
+    # Allow for small rounding differences
+    if abs(expected_cost - actual_cost) < 1:
+        print(f"✅ Cost calculation is correct: {actual_cost} VND")
+    else:
+        print(f"❌ Cost calculation is incorrect: Expected ~{expected_cost} VND, got {actual_cost} VND")
+        return False
+    
+    # Phase 3: Test Cost Calculation Logic
+    print("\n--- Phase 3: Test Cost Calculation Logic ---")
+    
+    # 9. Create another task and test the time tracking
+    print("\n9. Create another task and test the time tracking")
+    
+    new_task2 = {
+        "name": "Second test task for cost calculation",
+        "description": "Testing time tracking and cost calculation with known interval",
+        "assigned_to": be_kieu_user_id,
+        "deadline": future_date,
+        "priority": "normal",
+        "document_links": ["https://example.com"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=admin_headers,
+        json=new_task2
+    )
+    
+    create_task2_success = print_test_result("Create Second Task for Cost Calculation", response)
+    if not create_task2_success:
+        print(f"Failed to create second task: {response.text}")
+        return False
+    
+    created_task2 = response.json()
+    task2_id = created_task2["id"]
+    print(f"Created second task: {created_task2['name']} (ID: {task2_id})")
+    
+    # Start the task
+    start_status_data = {
+        "status": "in_progress"
+    }
+    
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task2_id}/status",
+        headers=editor_headers,
+        json=start_status_data
+    )
+    
+    start_task2_success = print_test_result("Start Second Task (in_progress)", response)
+    if not start_task2_success:
+        print(f"Failed to start second task: {response.text}")
+        return False
+    
+    # Wait a known time interval (10 seconds)
+    wait_time_seconds = 10
+    print(f"\nWaiting {wait_time_seconds} seconds to accumulate task time...")
+    time.sleep(wait_time_seconds)
+    
+    # Complete the task
+    complete_status_data = {
+        "status": "completed",
+        "report_link": "https://example.com/report2"
+    }
+    
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task2_id}/status",
+        headers=editor_headers,
+        json=complete_status_data
+    )
+    
+    complete_task2_success = print_test_result("Complete Second Task", response)
+    if not complete_task2_success:
+        print(f"Failed to complete second task: {response.text}")
+        return False
+    
+    # Verify the hours and cost calculation is accurate
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/{task2_id}",
+        headers=editor_headers
+    )
+    
+    get_task2_success = print_test_result("Get Second Task Details", response)
+    if not get_task2_success:
+        print(f"Failed to get second task details: {response.text}")
+        return False
+    
+    task2 = response.json()
+    print(f"Second task details:")
+    print(f"- Actual hours: {task2.get('actual_hours', 'N/A')}")
+    print(f"- Total cost: {task2.get('total_cost', 'N/A')}")
+    
+    # Check if hours calculation is accurate (within reasonable margin)
+    expected_hours = wait_time_seconds / 3600  # Convert seconds to hours
+    actual_hours = task2.get('actual_hours', 0)
+    
+    # Allow for small timing differences
+    if abs(expected_hours - actual_hours) < 0.01:
+        print(f"✅ Hours calculation is accurate: {actual_hours} hours")
+    else:
+        print(f"❌ Hours calculation is inaccurate: Expected ~{expected_hours} hours, got {actual_hours} hours")
+        return False
+    
+    # Check if cost calculation is accurate
+    expected_cost = actual_hours * verified_settings.get('cost_per_hour', 0)
+    actual_cost = task2.get('total_cost', 0)
+    
+    # Allow for small rounding differences
+    if abs(expected_cost - actual_cost) < 1:
+        print(f"✅ Cost calculation is accurate: {actual_cost} VND")
+    else:
+        print(f"❌ Cost calculation is inaccurate: Expected ~{expected_cost} VND, got {actual_cost} VND")
+        return False
+    
+    # 10. Test with cost settings disabled
+    print("\n10. Test with cost settings disabled")
+    
+    # Update settings to disable cost calculation
+    disabled_settings = {
+        "is_enabled": False
+    }
+    
+    response = requests.put(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=admin_headers,
+        json=disabled_settings
+    )
+    
+    disable_settings_success = print_test_result("Disable Cost Settings", response)
+    if not disable_settings_success:
+        print(f"Failed to disable cost settings: {response.text}")
+        return False
+    
+    # Create a third task
+    new_task3 = {
+        "name": "Third test task with disabled cost calculation",
+        "description": "Testing time tracking with disabled cost calculation",
+        "assigned_to": be_kieu_user_id,
+        "deadline": future_date,
+        "priority": "normal",
+        "document_links": ["https://example.com"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=admin_headers,
+        json=new_task3
+    )
+    
+    create_task3_success = print_test_result("Create Third Task", response)
+    if not create_task3_success:
+        print(f"Failed to create third task: {response.text}")
+        return False
+    
+    created_task3 = response.json()
+    task3_id = created_task3["id"]
+    print(f"Created third task: {created_task3['name']} (ID: {task3_id})")
+    
+    # Start and complete the task
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task3_id}/status",
+        headers=editor_headers,
+        json={"status": "in_progress"}
+    )
+    
+    start_task3_success = print_test_result("Start Third Task", response)
+    if not start_task3_success:
+        print(f"Failed to start third task: {response.text}")
+        return False
+    
+    time.sleep(3)  # Wait a bit
+    
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task3_id}/status",
+        headers=editor_headers,
+        json={"status": "completed", "report_link": "https://example.com/report3"}
+    )
+    
+    complete_task3_success = print_test_result("Complete Third Task", response)
+    if not complete_task3_success:
+        print(f"Failed to complete third task: {response.text}")
+        return False
+    
+    # Verify cost is 0 when disabled
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/{task3_id}",
+        headers=editor_headers
+    )
+    
+    get_task3_success = print_test_result("Get Third Task Details", response)
+    if not get_task3_success:
+        print(f"Failed to get third task details: {response.text}")
+        return False
+    
+    task3 = response.json()
+    print(f"Third task details:")
+    print(f"- Actual hours: {task3.get('actual_hours', 'N/A')}")
+    print(f"- Total cost: {task3.get('total_cost', 'N/A')}")
+    
+    if task3.get('total_cost', None) == 0:
+        print("✅ Cost is correctly set to 0 when cost calculation is disabled")
+    else:
+        print(f"❌ Cost should be 0 when disabled, but got {task3.get('total_cost', 'N/A')}")
+        return False
+    
+    # 11. Test edge cases
+    print("\n11. Test edge cases")
+    
+    # 11a. Complete task without starting it (no start_time)
+    print("\n11a. Complete task without starting it (no start_time)")
+    
+    # Create a fourth task
+    new_task4 = {
+        "name": "Fourth test task for edge case",
+        "description": "Testing completing task without starting it",
+        "assigned_to": be_kieu_user_id,
+        "deadline": future_date,
+        "priority": "normal",
+        "document_links": ["https://example.com"]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/internal-tasks/",
+        headers=admin_headers,
+        json=new_task4
+    )
+    
+    create_task4_success = print_test_result("Create Fourth Task", response)
+    if not create_task4_success:
+        print(f"Failed to create fourth task: {response.text}")
+        return False
+    
+    created_task4 = response.json()
+    task4_id = created_task4["id"]
+    print(f"Created fourth task: {created_task4['name']} (ID: {task4_id})")
+    
+    # Try to complete the task without starting it
+    response = requests.patch(
+        f"{BACKEND_URL}/internal-tasks/{task4_id}/status",
+        headers=editor_headers,
+        json={"status": "completed", "report_link": "https://example.com/report4"}
+    )
+    
+    complete_task4_success = print_test_result("Complete Task Without Starting", response)
+    if not complete_task4_success:
+        print(f"Failed to complete fourth task: {response.text}")
+        return False
+    
+    # Verify the task was completed but has no cost calculation
+    response = requests.get(
+        f"{BACKEND_URL}/internal-tasks/{task4_id}",
+        headers=editor_headers
+    )
+    
+    get_task4_success = print_test_result("Get Fourth Task Details", response)
+    if not get_task4_success:
+        print(f"Failed to get fourth task details: {response.text}")
+        return False
+    
+    task4 = response.json()
+    print(f"Fourth task details:")
+    print(f"- Status: {task4.get('status', 'N/A')}")
+    print(f"- Start time: {task4.get('start_time', 'N/A')}")
+    print(f"- Completion time: {task4.get('completion_time', 'N/A')}")
+    print(f"- Actual hours: {task4.get('actual_hours', 'N/A')}")
+    print(f"- Total cost: {task4.get('total_cost', 'N/A')}")
+    
+    if task4.get('status') == 'completed' and task4.get('completion_time') and not task4.get('start_time'):
+        print("✅ Task was completed without start_time")
+    else:
+        print("❌ Task should be completed without start_time")
+        return False
+    
+    # Re-enable cost calculation for future tests
+    response = requests.put(
+        f"{BACKEND_URL}/task-cost-settings/",
+        headers=admin_headers,
+        json={"is_enabled": True}
+    )
+    
+    print_test_result("Re-enable Cost Settings", response)
+    
+    return True
+
 def test_permission_filtering():
     """Test permission filtering for internal tasks and documents"""
     print("\n=== Testing Permission Filtering for Internal Tasks and Documents ===")
