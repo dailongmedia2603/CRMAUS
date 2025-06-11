@@ -3838,6 +3838,39 @@ const Settings = () => {
           </div>
         )}
       </div>
+
+      {/* Task Cost Rate Modal */}
+      {showRateModal && (
+        <TaskCostRateModal
+          isOpen={showRateModal}
+          onClose={() => {
+            setShowRateModal(false);
+            setEditingRate(null);
+          }}
+          onSubmit={editingRate ? 
+            (data) => handleUpdateRate(editingRate.id, data) : 
+            handleCreateRate
+          }
+          editingData={editingRate}
+          taskTypes={taskCostTypes}
+        />
+      )}
+
+      {/* Task Cost Type Modal */}
+      {showTypeModal && (
+        <TaskCostTypeModal
+          isOpen={showTypeModal}
+          onClose={() => {
+            setShowTypeModal(false);
+            setEditingType(null);
+          }}
+          onSubmit={editingType ? 
+            (data) => handleUpdateType(editingType.id, data) : 
+            handleCreateType
+          }
+          editingData={editingType}
+        />
+      )}
     </div>
   );
 };
