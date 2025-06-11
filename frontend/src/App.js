@@ -1151,6 +1151,7 @@ const SidebarContent = ({ user, logout }) => {
         </button>
 
         {/* Nhân sự */}
+        {hasPermission('human_resources_users_view') && (
         <button
           onClick={() => navigate("/human-resources")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1162,6 +1163,7 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Nhân sự
         </button>
+        )}
 
         {/* Tài khoản */}
         <button
