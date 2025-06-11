@@ -2265,7 +2265,8 @@ const TaskRow = React.memo(({
   getStatusIcon,
   getPriorityColor,
   getPriorityLabel,
-  getStatusLabel
+  getStatusLabel,
+  user // Add user prop
 }) => {
 
   const handleStatusUpdate = async (newStatus) => {
