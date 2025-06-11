@@ -77,9 +77,9 @@ def ensure_editor_user_exists():
     
     return create_success
 
-def configure_editor_role_permissions():
-    """Configure permissions for the editor role"""
-    print("\n=== Configuring Editor Role Permissions ===")
+def test_editor_role_permissions():
+    """Test configuring editor role permissions"""
+    print("\n=== Testing Editor Role Permissions ===")
     
     # 1. Login with admin credentials
     admin_token = get_token(ADMIN_EMAIL, ADMIN_PASSWORD)
@@ -218,7 +218,7 @@ def configure_editor_role_permissions():
 if __name__ == "__main__":
     # First ensure the editor user exists
     if ensure_editor_user_exists():
-        # Then configure permissions
-        configure_editor_role_permissions()
+        # Then test permissions
+        test_editor_role_permissions()
     else:
         print("Failed to ensure editor user exists. Exiting.")
