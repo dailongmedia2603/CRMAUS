@@ -27,6 +27,20 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the Task Cost Settings functionality. The API endpoints work as expected: GET /api/task-cost-settings/ returns the current settings (creating default settings if none exist), and PUT /api/task-cost-settings/ allows admins to update the settings. Non-admin users can view the settings but receive a 403 error when trying to update them. The time tracking and cost calculation features work correctly: when a task is set to 'in_progress', the start_time is recorded; when it's set to 'completed', the completion_time is recorded, actual_hours is calculated, and total_cost is calculated based on the hours and cost_per_hour setting. When cost settings are disabled (is_enabled=false), the total_cost is set to 0. The system also handles edge cases properly, such as completing a task without starting it first."
+  - task: "Task Cost Management APIs"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the Task Cost Management APIs that were connected to the frontend Settings component."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested all Task Cost Management APIs. The Task Cost Types APIs work correctly: GET /api/task-cost-types/ returns the list of task cost types, POST /api/task-cost-types/ creates a new task cost type (admin only), PUT /api/task-cost-types/{id} updates a task cost type (admin only), and DELETE /api/task-cost-types/{id} deletes a task cost type (admin only). The Task Cost Rates APIs also work as expected: GET /api/task-cost-rates/ returns the list of task cost rates, POST /api/task-cost-rates/ creates a new task cost rate (admin only), PUT /api/task-cost-rates/{id} updates a task cost rate (admin only), and DELETE /api/task-cost-rates/{id} deletes a task cost rate (admin only). The Task Cost Settings APIs function properly: GET /api/task-cost-settings/ returns the current task cost settings and PUT /api/task-cost-settings/ updates the settings (admin only). All endpoints correctly enforce admin-only permissions for create/update/delete operations, returning 403 errors for non-admin users. The search functionality in the task cost rates endpoint works correctly. The system properly prevents deleting task types that are used in rates. All data validation and error handling work as expected."
 
 frontend:
   - task: "Task Cost Settings Frontend"
@@ -79,3 +93,5 @@ agent_communication:
     message: "Successfully tested the Task Cost Settings frontend functionality. The tab system works correctly with 'Chi phí Task' and 'Khác' tabs. The cost configuration interface displays properly with toggle switch, cost input field, and example calculation. The interface correctly formats the cost display and updates the example calculation. The save functionality works and values persist after refresh. Non-admin users cannot access the Settings page, receiving a permission denied message. The task cost calculation is integrated with the task time tracking system."
   - agent: "testing"
     message: "Successfully tested the Settings component with nested tabs. The component renders correctly with the expected main tabs and sub-tabs, with proper default active tabs. Tab navigation works as expected between both main tabs and sub-tabs. All interface elements are displayed correctly in both sub-tabs, with buttons properly enabled for admin users. For non-admin users, the Settings button is not visible in the sidebar, and attempting to access the Settings page directly shows a permission denied message. No JavaScript errors were found, and the page loads completely without any rendering issues."
+  - agent: "testing"
+    message: "Successfully tested all Task Cost Management APIs. All endpoints (GET, POST, PUT, DELETE) for task cost types, task cost rates, and task cost settings work correctly. Admin-only permissions are properly enforced for create/update/delete operations. The search functionality in the task cost rates endpoint works as expected. The system correctly prevents deleting task types that are used in rates. All data validation and error handling work properly. The implementation meets all the requirements specified in the test request."
