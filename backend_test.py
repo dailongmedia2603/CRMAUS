@@ -50,57 +50,159 @@ def print_test_result(test_name, response, expected_status=200):
         print(f"Response: {response.text}")
         return False
 
-def test_documents():
-    """Test Documents API endpoints"""
-    print("\n=== Testing Documents API ===")
+def test_be_kieu_user_password_reset():
+    """Test resetting password for 'Bé Kiều' user account"""
+    global be_kieu_user_id
+    print("\n=== Testing Password Reset for 'Bé Kiều' User ===")
     
-    # Test GET /api/folders/ - Get list of document folders (correct endpoint)
+    # 1. Login with admin credentials
+    if not get_token():
+        print("Failed to authenticate as admin. Exiting test.")
+        return False
+    
+    # 2. Call GET /api/users/ to get the list of all users and find the "Bé Kiều" user
     response = requests.get(
-        f"{BACKEND_URL}/folders/",
+        f"{BACKEND_URL}/users/",
         headers=get_headers()
     )
     
-    folders_success = print_test_result("Get Document Folders (/api/folders/)", response)
-    if folders_success:
-        folders = response.json()
-        print(f"Found {len(folders)} document folders")
+    users_success = print_test_result("Get Users List", response)
+    if not users_success:
+        print("Failed to get users list. Exiting test.")
+        return False
     
-    # Test GET /api/document-folders/ - This should fail as per the review request
-    response = requests.get(
-        f"{BACKEND_URL}/document-folders/",
-        headers=get_headers()
-    )
+    users = response.json()
+    print(f"Found {len(users)} users")
     
-    print_test_result("Get Document Folders (/api/document-folders/) - Should fail", response, expected_status=404)
-    print("Note: The /api/document-folders/ endpoint returns 404 as expected. The correct endpoint is /api/folders/")
+    # Find the "Bé Kiều" user
+    be_kieu_user = None
+    for user in users:
+        if user.get("full_name") == "Bé Kiều":
+            be_kieu_user = user
+            be_kieu_user_id = user["id"]
+            break
     
-    # Test GET /api/documents/ - Get list of documents
-    response = requests.get(
-        f"{BACKEND_URL}/documents/",
-        headers=get_headers()
-    )
+    if not be_kieu_user:
+        print("❌ 'Bé Kiều' user not found in the users list")
+        return False
     
-    docs_success = print_test_result("Get Documents List", response)
-    if docs_success:
-        documents = response.json()
-        print(f"Found {len(documents)} documents")
+    print(f"✅ Found 'Bé Kiều' user with ID: {be_kieu_user_id}")
     
-    # Get a single document for detailed testing
-    if docs_success and len(documents) > 0:
-        document_id = documents[0]["id"]
+    # 3. Check the user details and confirm the email address
+    print(f"User details:")
+    print(f"- Full Name: {be_kieu_user.get('full_name', 'N/A')}")
+    print(f"- Email: {be_kieu_user.get('email', 'N/A')}")
+    print(f"- Role: {be_kieu_user.get('role', 'N/A')}")
+    print(f"- Active: {be_kieu_user.get('is_active', 'N/A')}")
+    
+    # 4. Verify the user is active (not deactivated)
+    if not be_kieu_user.get('is_active', False):
+        print("❌ 'Bé Kiều' user is not active")
         
-        # Test GET /api/documents/{document_id} - Get document details
-        response = requests.get(
-            f"{BACKEND_URL}/documents/{document_id}",
-            headers=get_headers()
+        # Try to activate the user
+        response = requests.put(
+            f"{BACKEND_URL}/users/{be_kieu_user_id}/status",
+            headers=get_headers(),
+            json={"is_active": True}
         )
         
-        success = print_test_result("Get Document Details", response)
-        if success:
-            document = response.json()
-            print(f"Document details: {document['title']} - Folder ID: {document.get('folder_id', 'N/A')}")
+        activate_success = print_test_result("Activate 'Bé Kiều' User", response)
+        if not activate_success:
+            print("Failed to activate 'Bé Kiều' user. Exiting test.")
+            return False
+        
+        print("✅ Successfully activated 'Bé Kiều' user")
+    else:
+        print("✅ 'Bé Kiều' user is active")
     
-    return folders_success and docs_success
+    # 5. Reset the password for "Bé Kiều" user using PUT /api/users/{user_id}/password
+    new_password = "kieu123"
+    response = requests.put(
+        f"{BACKEND_URL}/users/{be_kieu_user_id}/password",
+        headers=get_headers(),
+        json={"new_password": new_password}
+    )
+    
+    reset_password_success = print_test_result("Reset 'Bé Kiều' User Password", response)
+    if not reset_password_success:
+        print("Failed to reset 'Bé Kiều' user password. Exiting test.")
+        return False
+    
+    print(f"✅ Successfully reset password for 'Bé Kiều' user to '{new_password}'")
+    
+    # 6. Test login with the new credentials
+    kieu_email = be_kieu_user.get('email')
+    print(f"Testing login with new credentials: {kieu_email} / {new_password}")
+    
+    response = requests.post(
+        f"{BACKEND_URL}/token",
+        data={"username": kieu_email, "password": new_password}
+    )
+    
+    login_success = print_test_result("Login as 'Bé Kiều' User", response)
+    if not login_success:
+        print("Failed to login as 'Bé Kiều' user with new password. Exiting test.")
+        return False
+    
+    kieu_token = response.json()["access_token"]
+    print("✅ Successfully logged in as 'Bé Kiều' user with new password")
+    
+    # 7. Call GET /api/permissions/my-permissions to see what permissions this user has
+    kieu_headers = {
+        "Authorization": f"Bearer {kieu_token}",
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/my-permissions",
+        headers=kieu_headers
+    )
+    
+    permissions_success = print_test_result("Get 'Bé Kiều' User Permissions", response)
+    if not permissions_success:
+        print("Failed to get 'Bé Kiều' user permissions. Exiting test.")
+        return False
+    
+    permissions_data = response.json()
+    
+    # 8. Document the user's current role and permissions
+    print("\n=== 'Bé Kiều' User Role and Permissions ===")
+    print(f"User ID: {permissions_data.get('user_id', 'N/A')}")
+    print(f"User Role: {permissions_data.get('user_role', 'N/A')}")
+    
+    # Count permissions by type
+    permissions = permissions_data.get('permissions', {})
+    view_count = 0
+    edit_count = 0
+    delete_count = 0
+    
+    for perm_id, perm_details in permissions.items():
+        if perm_details.get('can_view', False):
+            view_count += 1
+        if perm_details.get('can_edit', False):
+            edit_count += 1
+        if perm_details.get('can_delete', False):
+            delete_count += 1
+    
+    print(f"Permissions Summary:")
+    print(f"- Total Permissions: {len(permissions)}")
+    print(f"- View Permissions: {view_count}")
+    print(f"- Edit Permissions: {edit_count}")
+    print(f"- Delete Permissions: {delete_count}")
+    
+    # Print some sample permissions (first 5)
+    print("\nSample Permissions:")
+    count = 0
+    for perm_id, perm_details in permissions.items():
+        if count < 5:
+            print(f"- Permission ID: {perm_id}")
+            print(f"  - Can View: {perm_details.get('can_view', False)}")
+            print(f"  - Can Edit: {perm_details.get('can_edit', False)}")
+            print(f"  - Can Delete: {perm_details.get('can_delete', False)}")
+            print(f"  - Source: {perm_details.get('source', 'N/A')}")
+            count += 1
+    
+    return True
 
 def test_dashboard():
     """Test Dashboard API endpoints"""
