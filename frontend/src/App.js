@@ -3476,7 +3476,10 @@ const Settings = () => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa chi phí task này?')) return;
     
     try {
+      console.log('Deleting rate with ID:', rateId);
       await axios.delete(`${API}/api/task-cost-rates/${rateId}`);
+      console.log('Rate deleted successfully, reloading data...');
+      
       // Reload data from server to ensure consistency
       await loadTaskCostData();
       toast.success('Xóa chi phí task thành công!');
