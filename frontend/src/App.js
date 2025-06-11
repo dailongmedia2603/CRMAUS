@@ -3875,6 +3875,265 @@ const Settings = () => {
   );
 };
 
+// Task Cost Rate Modal Component
+const TaskCostRateModal = ({ isOpen, onClose, onSubmit, editingData, taskTypes }) => {
+  const [formData, setFormData] = useState({
+    task_type_id: '',
+    hourly_rate: '',
+    is_active: true
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (editingData) {
+      setFormData({
+        task_type_id: editingData.task_type_id || '',
+        hourly_rate: editingData.hourly_rate || '',
+        is_active: editingData.is_active ?? true
+      });
+    } else {
+      setFormData({
+        task_type_id: '',
+        hourly_rate: '',
+        is_active: true
+      });
+    }
+  }, [editingData, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.task_type_id || !formData.hourly_rate) {
+      toast.error('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit({
+        ...formData,
+        hourly_rate: parseFloat(formData.hourly_rate)
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              {editingData ? 'Sửa chi phí Task' : 'Thêm chi phí Task'}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loại Task *
+              </label>
+              <select
+                value={formData.task_type_id}
+                onChange={(e) => setFormData({ ...formData, task_type_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              >
+                <option value="">Chọn loại task</option>
+                {taskTypes.filter(type => type.is_active).map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chi phí / Giờ (VND) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1000"
+                value={formData.hourly_rate}
+                onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Nhập chi phí theo giờ"
+                required
+              />
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
+                Kích hoạt
+              </label>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? 'Đang xử lý...' : (editingData ? 'Cập nhật' : 'Tạo mới')}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Task Cost Type Modal Component
+const TaskCostTypeModal = ({ isOpen, onClose, onSubmit, editingData }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    is_active: true
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (editingData) {
+      setFormData({
+        name: editingData.name || '',
+        description: editingData.description || '',
+        is_active: editingData.is_active ?? true
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        is_active: true
+      });
+    }
+  }, [editingData, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập tên loại task');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              {editingData ? 'Sửa loại Task' : 'Thêm loại Task'}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tên loại Task *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="VD: Content Writing, Design, Development"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mô tả
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Mô tả chi tiết về loại task này"
+              />
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="type_is_active"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              />
+              <label htmlFor="type_is_active" className="ml-2 block text-sm text-gray-900">
+                Kích hoạt
+              </label>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+              >
+                {loading ? 'Đang xử lý...' : (editingData ? 'Cập nhật' : 'Tạo mới')}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // LeadsComponent - Simple placeholder for Lead management
 const LeadsComponent = ({ user }) => (
   <div className="space-y-6">
