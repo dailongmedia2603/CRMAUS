@@ -586,6 +586,51 @@ class TaskCostSettings(TaskCostSettingsBase):
     # Enriched fields
     updated_by_name: Optional[str] = None
 
+# ✅ NEW: Task Cost Type Models (Loại chi phí task)
+class TaskCostTypeBase(BaseModel):
+    name: str  # Tên loại task (e.g., "Content Writing", "Design", "Development")
+    description: Optional[str] = None
+    is_active: bool = True
+
+class TaskCostTypeCreate(TaskCostTypeBase):
+    pass
+
+class TaskCostTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class TaskCostType(TaskCostTypeBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    # Enriched fields
+    created_by_name: Optional[str] = None
+
+# ✅ NEW: Task Cost Rate Models (Bảng giá cho từng loại task)
+class TaskCostRateBase(BaseModel):
+    task_type_id: str  # Reference to TaskCostType
+    cost_per_hour: float  # Giá tiền/giờ (VND)
+    is_active: bool = True
+
+class TaskCostRateCreate(TaskCostRateBase):
+    pass
+
+class TaskCostRateUpdate(BaseModel):
+    task_type_id: Optional[str] = None
+    cost_per_hour: Optional[float] = None
+    is_active: Optional[bool] = None
+
+class TaskCostRate(TaskCostRateBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    # Enriched fields
+    task_type_name: Optional[str] = None
+    created_by_name: Optional[str] = None
+
 # ================= EXPENSE MANAGEMENT MODELS =================
 
 # Expense Category Models
