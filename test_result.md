@@ -99,6 +99,20 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the Task Cost Rate creation functionality in the Settings module. The 'Thêm chi phí Task' button opens a modal with the correct fields: task type dropdown, cost per hour input, and 'Kích hoạt' checkbox. The dropdown correctly displays available task types (Viết content, Content Writing Test, Edit video). The 'Kích hoạt' checkbox is checked by default. When filling out the form with valid data (selecting a task type and entering 50000 for cost per hour) and clicking 'Tạo mới', the form successfully submits to the backend API. A POST request is made to the /api/task-cost-rates/ endpoint, and a success toast message appears ('Tạo chi phí task thành công!'). The modal closes automatically, and the new task cost rate appears in the table with the correct formatting (50.000 ₫). The field name mismatch issue (cost_per_hour vs hourly_rate) has been resolved, and the form submission now works correctly without any 422 Unprocessable Entity errors."
+  - task: "Task Cost Management Delete Functionality"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the fixed delete functionality in Settings module Task Cost management that should now properly hide deleted items."
+      - working: false
+        agent: "testing"
+        comment: "Tested the delete functionality in Settings module Task Cost management with mixed results. Task Cost Type deletion works correctly - deleted types disappear from the UI immediately and remain gone after page refresh. The success toast message 'Xóa loại task thành công!' appears when a type is deleted. However, Task Cost Rate deletion is not working properly - when attempting to delete a rate, it remains visible in the UI and no success toast appears. The fix to add '?is_active=true' parameter to API calls is working for task cost types but not for task cost rates. The issue appears to be in the frontend implementation of the handleDeleteRate function, which might not be correctly updating the UI after deletion."
 
 metadata:
   created_by: "testing_agent"
