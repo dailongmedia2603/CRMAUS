@@ -916,8 +916,7 @@ const SidebarContent = ({ user, logout }) => {
         </button>
         )}
 
-        {/* Task */}
-        {hasPermission('internal_tasks_internal_tasks_view') && (
+        {/* Task - Tất cả users đều có quyền truy cập */}
         <button
           onClick={() => navigate("/task")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -929,7 +928,6 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Công việc
         </button>
-        )}
 
         {/* Dự án Section */}
         {(hasPermission('projects_projects_view') || hasPermission('campaigns_campaigns_view') || hasPermission('templates_templates_view')) && (
