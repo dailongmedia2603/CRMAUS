@@ -3724,6 +3724,10 @@ const Settings = () => {
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-medium text-gray-900">Cấu hình Loại Task</h2>
                   <button
+                    onClick={() => {
+                      setEditingType(null);
+                      setShowTypeModal(true);
+                    }}
                     disabled={user?.role !== 'admin'}
                     className={`px-4 py-2 rounded-md text-sm font-medium ${
                       user?.role !== 'admin'
@@ -3735,12 +3739,92 @@ const Settings = () => {
                   </button>
                 </div>
 
-                {/* Placeholder Content */}
-                <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">⚙️</div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Cấu hình loại Task</h3>
-                  <p className="text-gray-500">Tính năng đang được phát triển...</p>
+                {/* Search */}
+                <div className="max-w-md">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      value={typeSearchTerm}
+                      onChange={(e) => setTypeSearchTerm(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Tìm kiếm loại task..."
+                    />
+                  </div>
                 </div>
+
+                {/* Task Cost Types Grid */}
+                {loading ? (
+                  <div className="text-center py-12">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mr-3"></div>
+                      Đang tải...
+                    </div>
+                  </div>
+                ) : filteredTypes.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 text-6xl mb-4">⚙️</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {typeSearchTerm ? 'Không tìm thấy loại task nào' : 'Chưa có loại task nào'}
+                    </h3>
+                    <p className="text-gray-500">
+                      {typeSearchTerm ? 'Thử thay đổi từ khóa tìm kiếm' : 'Tạo loại task đầu tiên để bắt đầu'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredTypes.map((type) => (
+                      <div key={type.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              <h3 className="text-lg font-medium text-gray-900">{type.name}</h3>
+                              <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                type.is_active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {type.is_active ? 'Hoạt động' : 'Tạm dừng'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {type.description || 'Không có mô tả'}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-2">
+                              Tạo bởi: {type.created_by_name || 'Unknown'}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {type.created_at ? format(new Date(type.created_at), 'dd/MM/yyyy') : 'N/A'}
+                            </p>
+                          </div>
+                          <div className="flex flex-col space-y-1 ml-2">
+                            <button
+                              onClick={() => {
+                                setEditingType(type);
+                                setShowTypeModal(true);
+                              }}
+                              disabled={user?.role !== 'admin'}
+                              className="text-blue-600 hover:text-blue-900 disabled:text-gray-400 text-sm"
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              onClick={() => handleDeleteType(type.id)}
+                              disabled={user?.role !== 'admin'}
+                              className="text-red-600 hover:text-red-900 disabled:text-gray-400 text-sm"
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
