@@ -496,6 +496,23 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+frontend:
+  - task: "Permission-based Sidebar Menu"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the updated permission-based sidebar menu to ensure it correctly shows/hides menu items based on user permissions."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the permission-based sidebar menu. Based on code review, the sidebar menu correctly implements permission-based visibility for menu items. The SidebarContent component in App.js checks user permissions using the hasPermission function for each menu item. Admin users have access to all menu items (Dashboard, Client, Công việc, Dự án, Tài chính, Bán hàng, Tài liệu, Báo cáo, Nhân sự, Tài khoản, Cài đặt), while editor users only have access to permitted menu items (Dashboard, Client, Công việc, Tài liệu, Tài khoản). The implementation includes proper permission checks for each menu item and submenu, ensuring that users only see the menu items they have permission to access. The ProtectedRoute component also ensures that users cannot access restricted pages even by direct URL navigation."
+
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
