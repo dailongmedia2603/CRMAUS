@@ -3589,6 +3589,184 @@ const Settings = () => {
     return new Intl.NumberFormat('vi-VN').format(value);
   };
 
+  // ================= TASK COST TYPE FUNCTIONS =================
+  
+  const handleAddType = async () => {
+    try {
+      setSaving(true);
+      
+      await axios.post(`${API}/api/task-cost-types/`, newType, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Thêm loại chi phí task thành công!');
+      setShowAddTypeModal(false);
+      setNewType({ name: '', description: '' });
+      fetchTaskCostTypes();
+    } catch (error) {
+      console.error('Error adding task cost type:', error);
+      if (error.response?.status === 403) {
+        toast.error('Chỉ admin mới có thể thêm loại chi phí task');
+      } else if (error.response?.status === 400) {
+        toast.error('Tên loại chi phí task đã tồn tại');
+      } else {
+        toast.error('Không thể thêm loại chi phí task');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditType = async () => {
+    try {
+      setSaving(true);
+      
+      await axios.put(`${API}/api/task-cost-types/${editingType.id}`, newType, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Cập nhật loại chi phí task thành công!');
+      setEditingType(null);
+      setShowAddTypeModal(false);
+      setNewType({ name: '', description: '' });
+      fetchTaskCostTypes();
+    } catch (error) {
+      console.error('Error updating task cost type:', error);
+      if (error.response?.status === 403) {
+        toast.error('Chỉ admin mới có thể cập nhật loại chi phí task');
+      } else if (error.response?.status === 400) {
+        toast.error('Tên loại chi phí task đã tồn tại');
+      } else {
+        toast.error('Không thể cập nhật loại chi phí task');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteType = async (typeId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa loại chi phí task này?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/task-cost-types/${typeId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Xóa loại chi phí task thành công!');
+      fetchTaskCostTypes();
+    } catch (error) {
+      console.error('Error deleting task cost type:', error);
+      if (error.response?.status === 400) {
+        toast.error('Không thể xóa loại chi phí task đang được sử dụng');
+      } else {
+        toast.error('Không thể xóa loại chi phí task');
+      }
+    }
+  };
+
+  // ================= TASK COST RATE FUNCTIONS =================
+  
+  const handleAddRate = async () => {
+    try {
+      setSaving(true);
+      
+      await axios.post(`${API}/api/task-cost-rates/`, newRate, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Thêm chi phí task thành công!');
+      setShowAddRateModal(false);
+      setNewRate({ task_type_id: '', cost_per_hour: 0 });
+      fetchTaskCostRates();
+    } catch (error) {
+      console.error('Error adding task cost rate:', error);
+      if (error.response?.status === 403) {
+        toast.error('Chỉ admin mới có thể thêm chi phí task');
+      } else if (error.response?.status === 400) {
+        toast.error('Chi phí cho loại task này đã tồn tại');
+      } else {
+        toast.error('Không thể thêm chi phí task');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditRate = async () => {
+    try {
+      setSaving(true);
+      
+      await axios.put(`${API}/api/task-cost-rates/${editingRate.id}`, newRate, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Cập nhật chi phí task thành công!');
+      setEditingRate(null);
+      setShowAddRateModal(false);
+      setNewRate({ task_type_id: '', cost_per_hour: 0 });
+      fetchTaskCostRates();
+    } catch (error) {
+      console.error('Error updating task cost rate:', error);
+      if (error.response?.status === 403) {
+        toast.error('Chỉ admin mới có thể cập nhật chi phí task');
+      } else {
+        toast.error('Không thể cập nhật chi phí task');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRate = async (rateId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa chi phí task này?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/task-cost-rates/${rateId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Xóa chi phí task thành công!');
+      fetchTaskCostRates();
+    } catch (error) {
+      console.error('Error deleting task cost rate:', error);
+      toast.error('Không thể xóa chi phí task');
+    }
+  };
+
+  const openAddRateModal = () => {
+    setNewRate({ task_type_id: '', cost_per_hour: 0 });
+    setEditingRate(null);
+    setShowAddRateModal(true);
+  };
+
+  const openEditRateModal = (rate) => {
+    setNewRate({
+      task_type_id: rate.task_type_id,
+      cost_per_hour: rate.cost_per_hour
+    });
+    setEditingRate(rate);
+    setShowAddRateModal(true);
+  };
+
+  const openAddTypeModal = () => {
+    setNewType({ name: '', description: '' });
+    setEditingType(null);
+    setShowAddTypeModal(true);
+  };
+
+  const openEditTypeModal = (type) => {
+    setNewType({
+      name: type.name,
+      description: type.description || ''
+    });
+    setEditingType(type);
+    setShowAddTypeModal(true);
+  };
+
   const tabs = [
     { id: 'task-cost', name: 'Chi phí Task', icon: '💰' },
     { id: 'other', name: 'Khác', icon: '⚙️' }
