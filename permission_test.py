@@ -41,6 +41,42 @@ def print_test_result(test_name, response, expected_status=200):
         print(f"Response: {response.text}")
         return False
 
+def ensure_editor_user_exists():
+    """Create the editor user if it doesn't exist"""
+    print("\n=== Ensuring Editor User Exists ===")
+    
+    # Login with admin credentials
+    admin_token = get_token(ADMIN_EMAIL, ADMIN_PASSWORD)
+    if not admin_token:
+        print("Failed to login as admin. Exiting.")
+        return False
+    
+    # Check if user already exists by trying to login
+    editor_token = get_token(EDITOR_EMAIL, EDITOR_PASSWORD)
+    if editor_token:
+        print("✅ Editor user already exists")
+        return True
+    
+    # Create the editor user
+    new_user = {
+        "email": EDITOR_EMAIL,
+        "full_name": "Bé Kiều",
+        "role": "editor",
+        "password": EDITOR_PASSWORD
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/users/",
+        headers=get_headers(admin_token),
+        json=new_user
+    )
+    
+    create_success = print_test_result("Create Editor User", response)
+    if create_success:
+        print(f"Successfully created editor user: {new_user['full_name']}")
+    
+    return create_success
+
 def configure_editor_role_permissions():
     """Configure permissions for the editor role"""
     print("\n=== Configuring Editor Role Permissions ===")
