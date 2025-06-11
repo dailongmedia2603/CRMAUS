@@ -3888,13 +3888,13 @@ const TaskCostRateModal = ({ isOpen, onClose, onSubmit, editingData, taskTypes }
     if (editingData) {
       setFormData({
         task_type_id: editingData.task_type_id || '',
-        hourly_rate: editingData.hourly_rate || '',
+        cost_per_hour: editingData.cost_per_hour || '',
         is_active: editingData.is_active ?? true
       });
     } else {
       setFormData({
         task_type_id: '',
-        hourly_rate: '',
+        cost_per_hour: '',
         is_active: true
       });
     }
