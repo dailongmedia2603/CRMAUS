@@ -4043,6 +4043,104 @@ const Settings = () => {
                 )}
               </div>
             )}
+
+            {taskCostSubTab === 'config' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-medium text-gray-900">Cấu hình Loại Task</h2>
+                  <button
+                    onClick={openAddTypeModal}
+                    disabled={user?.role !== 'admin'}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                      user?.role !== 'admin'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    } transition-colors`}
+                  >
+                    + Thêm loại Task
+                  </button>
+                </div>
+
+                {/* Task Types Table */}
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tên loại Task
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Mô tả
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ngày tạo
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {taskCostTypes.map((type) => (
+                          <tr key={type.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {type.name}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {type.description || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(type.created_at).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="flex space-x-2">
+                                {user?.role === 'admin' && (
+                                  <>
+                                    <button
+                                      onClick={() => openEditTypeModal(type)}
+                                      className="text-blue-600 hover:text-blue-800"
+                                      title="Sửa"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteType(type.id)}
+                                      className="text-red-600 hover:text-red-800"
+                                      title="Xóa"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
+                                {user?.role !== 'admin' && (
+                                  <span className="text-gray-400 text-xs">Chỉ admin</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {taskCostTypes.length === 0 && (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                              Chưa có loại task nào
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -4054,6 +4152,130 @@ const Settings = () => {
           </div>
         )}
       </div>
+
+      {/* Add/Edit Rate Modal */}
+      {showAddRateModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {editingRate ? 'Sửa chi phí Task' : 'Thêm chi phí Task'}
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Loại Task
+                  </label>
+                  <select
+                    value={newRate.task_type_id}
+                    onChange={(e) => setNewRate({ ...newRate, task_type_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Chọn loại task</option>
+                    {taskCostTypes.filter(type => type.is_active).map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Chi phí / Giờ (VND)
+                  </label>
+                  <input
+                    type="number"
+                    value={newRate.cost_per_hour}
+                    onChange={(e) => setNewRate({ ...newRate, cost_per_hour: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
+                    min="0"
+                    step="1000"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowAddRateModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={editingRate ? handleEditRate : handleAddRate}
+                  disabled={saving || !newRate.task_type_id || newRate.cost_per_hour <= 0}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+                >
+                  {saving ? 'Đang lưu...' : (editingRate ? 'Cập nhật' : 'Thêm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Type Modal */}
+      {showAddTypeModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {editingType ? 'Sửa loại Task' : 'Thêm loại Task'}
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên loại Task
+                  </label>
+                  <input
+                    type="text"
+                    value={newType.name}
+                    onChange={(e) => setNewType({ ...newType, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="VD: Content Writing, Design, Development"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mô tả (tùy chọn)
+                  </label>
+                  <textarea
+                    value={newType.description}
+                    onChange={(e) => setNewType({ ...newType, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    rows="3"
+                    placeholder="Mô tả chi tiết về loại task này..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowAddTypeModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={editingType ? handleEditType : handleAddType}
+                  disabled={saving || !newType.name.trim()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400"
+                >
+                  {saving ? 'Đang lưu...' : (editingType ? 'Cập nhật' : 'Thêm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
