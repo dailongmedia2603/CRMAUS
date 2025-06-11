@@ -1,342 +1,606 @@
-import React, { useState, useEffect, createContext } from "react";
-import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, createContext, useContext } from "react";
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { format } from "date-fns";
 import "./App.css";
-import DocumentsComponent from "./components/Documents";
-import ProjectsComponent from "./components/Projects";
-import CampaignsComponent from "./components/Campaigns";
-import CampaignDetailComponent from "./components/CampaignDetail";
-import TemplatesComponent from "./components/Templates";
-import { ExpenseOverview, ExpenseList, ExpenseConfig } from "./components/ExpenseComponents";
 
-// Biến môi trường
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Import components thực sự
+import ProjectsComponent from "./components/Projects.js";
+import CampaignsComponent from "./components/Campaigns.js";
+import CampaignDetailComponent from "./components/CampaignDetail.js";
+import DocumentsComponent from "./components/Documents.js";
+import TemplatesComponent from "./components/Templates.js";
+import { ExpenseManagement } from "./components/ExpenseComponents.js";
+import ClientsComponent from "./components/Clients.js";
+import ClientDetailComponent from "./components/ClientDetail.js";
+import ProjectDetailComponent from "./components/ProjectDetail.js";
+import HumanResources from "./components/HumanResources.js";
 
-// Context để quản lý trạng thái đăng nhập
-export const AuthContext = createContext();
+// Auth context
+// Create AuthContext for user authentication and permissions
+const AuthContext = createContext();
 
-// Component chính
+// Create PermissionContext for permission management
+const PermissionContext = createContext();
+
+export { AuthContext, PermissionContext };
+
+// Permission Hook
+const usePermissions = () => {
+  const context = useContext(PermissionContext);
+  if (!context) {
+    throw new Error('usePermissions must be used within a PermissionProvider');
+  }
+  return context;
+};
+
+// Permission checking functions
+const checkPermission = (permissions, permissionId, action = 'view') => {
+  if (!permissions || !permissionId) return false;
+  const permission = permissions[permissionId];
+  if (!permission) return false;
+  return permission[`can_${action}`] || false;
+};
+
+const hasAnyPermission = (permissions, permissionIds, action = 'view') => {
+  if (!permissions || !permissionIds || !Array.isArray(permissionIds)) return false;
+  return permissionIds.some(permissionId => checkPermission(permissions, permissionId, action));
+};
+
+// Permission Provider Component
+const PermissionProvider = ({ children, user, token }) => {
+  const [permissions, setPermissions] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user && token) {
+      fetchUserPermissions();
+    } else {
+      setPermissions(null);
+      setLoading(false);
+    }
+  }, [user, token]);
+
+  const fetchUserPermissions = async () => {
+    try {
+      setLoading(true);
+      
+      // Admin has all permissions
+      if (user.role === 'admin') {
+        setPermissions('admin');
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${API}/api/permissions/my-permissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPermissions(response.data.permissions);
+      console.log('User permissions loaded:', response.data);
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
+      setPermissions({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasPermission = (permissionId, action = 'view') => {
+    // Admin has all permissions
+    if (permissions === 'admin') return true;
+    return checkPermission(permissions, permissionId, action);
+  };
+
+  const hasAnyOfPermissions = (permissionIds, action = 'view') => {
+    // Admin has all permissions
+    if (permissions === 'admin') return true;
+    return hasAnyPermission(permissions, permissionIds, action);
+  };
+
+  const value = {
+    permissions,
+    loading,
+    hasPermission,
+    hasAnyOfPermissions,
+    refreshPermissions: fetchUserPermissions
+  };
+
+  return (
+    <PermissionContext.Provider value={value}>
+      {children}
+    </PermissionContext.Provider>
+  );
+};
+
+// Environment variables - Use backend URL from environment variable
+const API = process.env.REACT_APP_BACKEND_URL || '';
+
 function App() {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
-  // Kiểm tra token và lấy thông tin người dùng
+  // Authentication check
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
+      const savedToken = localStorage.getItem('token');
+      if (savedToken) {
         try {
-          const response = await axios.get(`${API}/users/me/`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
+          setToken(savedToken);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+          const response = await axios.get(`${API}/api/users/me/`);
           setUser(response.data);
         } catch (error) {
-          console.error("Authentication error:", error);
-          localStorage.removeItem("token");
+          localStorage.removeItem('token');
+          setToken(null);
+          delete axios.defaults.headers.common['Authorization'];
         }
       }
       setLoading(false);
     };
 
-    // Kiểm tra xem hệ thống đã được khởi tạo chưa
-    const checkInitialization = async () => {
-      try {
-        await axios.get(`${API}/health`);
-        setInitialized(true);
-      } catch (error) {
-        console.error("API connection error:", error);
-      }
-    };
-
     checkAuth();
-    checkInitialization();
   }, []);
 
-  // Thiết lập axios interceptor để xử lý token
-  useEffect(() => {
-    const requestInterceptor = axios.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem("token");
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    const responseInterceptor = axios.interceptors.response.use(
-      (response) => {
-        return response;
-      },
-      (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          setUser(null);
-          toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      axios.interceptors.request.eject(requestInterceptor);
-      axios.interceptors.response.eject(responseInterceptor);
-    };
-  }, []);
-
-  // Các hàm xử lý đăng nhập, đăng xuất
-  const login = async (email, password) => {
-    try {
-      const response = await axios.post(`${API}/token`, new URLSearchParams({
-        'username': email,
-        'password': password
-      }), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-
-      localStorage.setItem("token", response.data.access_token);
-      
-      // Lấy thông tin người dùng
-      const userResponse = await axios.get(`${API}/users/me/`, {
-        headers: {
-          Authorization: `Bearer ${response.data.access_token}`
-        }
-      });
-      
-      setUser(userResponse.data);
-      toast.success("Đăng nhập thành công!");
-      return true;
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu");
-      return false;
-    }
+  const login = (userData, userToken) => {
+    setUser(userData);
+    setToken(userToken);
+    localStorage.setItem('token', userToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${userToken}`;
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
     setUser(null);
-    toast.info("Đã đăng xuất");
+    setToken(null);
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
   };
 
-  // Thiết lập ban đầu cho hệ thống
-  const setupSystem = async () => {
-    try {
-      const response = await axios.post(`${API}/setup`);
-      toast.success("Hệ thống đã được khởi tạo thành công!");
-      toast.info(`Email: ${response.data.email}, Mật khẩu: ${response.data.password}`);
-      return response.data;
-    } catch (error) {
-      console.error("Setup error:", error);
-      toast.error("Không thể khởi tạo hệ thống");
-      return null;
-    }
-  };
-
+  // Show loading while checking auth
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <div className="spinner"></div>
-          <p className="mt-4 text-gray-700">Đang tải...</p>
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">Đang tải...</p>
         </div>
       </div>
     );
   }
 
-  // Nếu chưa khởi tạo hệ thống, hiển thị trang thiết lập
-  if (!initialized) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <ToastContainer />
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Hệ thống CRM chưa được khởi tạo
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Vui lòng nhấn nút bên dưới để thiết lập hệ thống
-          </p>
-          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-              <button
-                onClick={setupSystem}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Khởi tạo hệ thống
-              </button>
-            </div>
+  // Show login if not authenticated
+  if (!user) {
+    return <LoginComponent login={login} />;
+  }
+
+  // Main app layout
+  return (
+    <AuthContext.Provider value={{ user, token, logout }}>
+      <PermissionProvider user={user} token={token}>
+        <div className="min-h-screen bg-gray-50 flex">
+          {/* Static sidebar for desktop */}
+          <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
+            <SidebarContent user={user} logout={logout} />
+          </div>
+
+          {/* Main content */}
+          <div className="md:pl-64 flex flex-col flex-1">
+            {/* Modern Header */}
+            <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+              {/* Breadcrumb */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  </svg>
+                  <span className="text-gray-500">CRM AUS</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="text-gray-900 font-medium">
+                    {window.location.pathname === "/" ? "Dashboard" : 
+                     window.location.pathname === "/clients" ? "Client" :
+                     window.location.pathname.startsWith("/clients/") ? "Client Detail" :
+                     window.location.pathname === "/leads" ? "Lead" :
+                     window.location.pathname === "/task" ? "Nhiệm vụ" :
+                     window.location.pathname === "/projects" ? "Dự án" :
+                     window.location.pathname === "/contracts" ? "Hợp đồng" :
+                     window.location.pathname === "/invoices" ? "Hóa đơn" :
+                     window.location.pathname === "/campaigns" ? "Chiến dịch" :
+                     window.location.pathname === "/documents" ? "Tài liệu" :
+                     window.location.pathname === "/human-resources" ? "Nhân sự" :
+                     window.location.pathname === "/settings" ? "Cài đặt" :
+                     'Trang'}
+                  </span>
+                </div>
+
+                {/* Right Side Actions */}
+                <div className="flex items-center space-x-4">
+                  {/* Search Button */}
+                  <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+
+                  {/* Notifications */}
+                  <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM5.07 7A7.002 7.002 0 0112 2c1.857 0 3.547.72 4.816 1.898M15 17h5l-5 5v-5z" />
+                    </svg>
+                  </button>
+
+                  {/* Settings */}
+                  <button 
+                    onClick={() => {
+                      if (user?.role === 'admin') {
+                        window.location.href = '/settings';
+                      }
+                    }}
+                    disabled={user?.role !== 'admin'}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+
+                  {/* User Menu */}
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
+                      <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
+                    </div>
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-gray-700">
+                        {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Main content area */}
+            <main className="flex-1 p-6">
+              <Routes>
+                <Route path="/" element={
+                  <ProtectedRoute requiredPermission="dashboard_dashboard_view">
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients" element={
+                  <ProtectedRoute requiredPermission="clients_clients_view">
+                    <ClientsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients/:id" element={
+                  <ProtectedRoute requiredPermission="clients_clients_view">
+                    <ClientDetailComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/task" element={
+                  <ProtectedRoute requiredPermission="internal_tasks_internal_tasks_view">
+                    <Task />
+                  </ProtectedRoute>
+                } />
+                <Route path="/projects" element={
+                  <ProtectedRoute requiredPermission="projects_projects_view">
+                    <ProjectsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/projects/:id" element={
+                  <ProtectedRoute requiredPermission="projects_projects_view">
+                    <ProjectDetailComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/campaigns" element={
+                  <ProtectedRoute requiredPermission="campaigns_campaigns_view">
+                    <CampaignsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/campaigns/:id" element={
+                  <ProtectedRoute requiredPermission="campaigns_campaigns_view">
+                    <CampaignDetailComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/task-templates" element={
+                  <ProtectedRoute requiredPermission="templates_templates_view">
+                    <TemplatesComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/contracts" element={
+                  <ProtectedRoute requiredPermission="contracts_contracts_view">
+                    <Contracts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices" element={
+                  <ProtectedRoute requiredPermission="invoices_invoices_view">
+                    <Invoices />
+                  </ProtectedRoute>
+                } />
+                <Route path="/expenses" element={
+                  <ProtectedRoute requiredPermission="expenses_expenses_view">
+                    <ExpenseManagement user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/financial-reports" element={
+                  <ProtectedRoute requiredPermission="reports_financial_reports">
+                    <FinancialReports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/opportunities" element={
+                  <ProtectedRoute requiredPermission="reports_reports_view">
+                    <Opportunities />
+                  </ProtectedRoute>
+                } />
+                <Route path="/leads" element={
+                  <ProtectedRoute requiredPermission="leads_leads_view">
+                    <LeadsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/sales-reports" element={
+                  <ProtectedRoute requiredPermission="reports_sales_reports">
+                    <SalesReports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/documents" element={
+                  <ProtectedRoute requiredPermission="documents_documents_view">
+                    <DocumentsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/reports" element={
+                  <ProtectedRoute requiredPermission="reports_reports_view">
+                    <Reports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/human-resources" element={
+                  <ProtectedRoute requiredPermission="human_resources_users_view">
+                    <HumanResources user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/account" element={<Account />} />
+                <Route path="/settings" element={
+                  <ProtectedRoute requiredPermission="settings_settings_view">
+                    <Settings />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout }}>
-      <div className="App">
         <ToastContainer position="top-right" autoClose={3000} />
-        <Routes>
-          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-          <Route path="/*" element={user ? <MainLayout /> : <Navigate to="/login" />} />
-        </Routes>
-      </div>
+      </PermissionProvider>
     </AuthContext.Provider>
   );
 }
 
-// Component đăng nhập
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const { login } = React.useContext(AuthContext);
+// Dashboard Component
+const Dashboard = () => {
+  const [stats, setStats] = useState({
+    totalClients: 0,
+    totalProjects: 0,
+    totalRevenue: 0,
+    pendingInvoices: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    await login(email, password);
-    setIsSubmitting(false);
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const [clientsRes, projectsRes, invoicesRes] = await Promise.all([
+        axios.get(`${API}/api/clients/`),
+        axios.get(`${API}/api/projects/`),
+        axios.get(`${API}/api/invoices/`)
+      ]);
+
+      const clients = clientsRes.data;
+      const projects = projectsRes.data;
+      const invoices = invoicesRes.data;
+
+      const totalRevenue = invoices
+        .filter(inv => inv.status === 'paid')
+        .reduce((sum, inv) => sum + inv.amount, 0);
+
+      const pendingInvoices = invoices.filter(inv => inv.status === 'sent').length;
+
+      setStats({
+        totalClients: clients.length,
+        totalProjects: projects.length,
+        totalRevenue,
+        pendingInvoices
+      });
+    } catch (error) {
+      toast.error('Lỗi khi tải thống kê');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Phần bên trái - nền xanh với logo và hình ảnh */}
-      <div className="hidden md:flex md:w-1/2 bg-blue-500 text-white flex-col p-12">
-        <div className="flex items-center mb-8">
-          <svg className="h-10 w-10 text-white mr-3" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14 10a4 4 0 100-8 4 4 0 000 8zm-8.5 3a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19 21h-8.5v-2.1c0-2.2 1.8-4 4-4h1c2.2 0 4 1.8 4 4V21z" />
-            <path d="M3 21h7v-2.1c0-1.7-1.1-3.2-2.8-3.7-1.5-.5-3.2-.5-4.8.1-1.2.5-2 1.8-1.9 3.1V21h2.5z" />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-1">Tổng quan hệ thống CRM</p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="modern-card p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Tổng khách hàng</dt>
+                <dd className="text-lg font-semibold text-gray-900">
+                  {loading ? '...' : stats.totalClients}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="modern-card p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Tổng dự án</dt>
+                <dd className="text-lg font-semibold text-gray-900">
+                  {loading ? '...' : stats.totalProjects}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="modern-card p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Tổng doanh thu</dt>
+                <dd className="text-lg font-semibold text-gray-900">
+                  {loading ? '...' : formatCurrency(stats.totalRevenue)}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="modern-card p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">Hóa đơn chờ</dt>
+                <dd className="text-lg font-semibold text-gray-900">
+                  {loading ? '...' : stats.pendingInvoices}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <button
+          onClick={() => window.location.href = '/clients'}
+          className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-left transition-colors"
+        >
+          <svg className="w-6 h-6 text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <span className="text-xl font-bold">CRM Marketing</span>
-        </div>
-        
-        <div className="flex-grow flex flex-col justify-center mb-10">
-          <h2 className="text-4xl font-bold mb-4">Your place to work</h2>
-          <h3 className="text-3xl font-bold mb-8">Plan. Create. Control.</h3>
-          
-          <div className="relative mt-6">
-            <img 
-              src="https://cdn.pixabay.com/photo/2022/05/20/13/29/project-management-7209803_1280.png" 
-              alt="Workflow illustration" 
-              className="w-full max-w-md mx-auto"
-            />
-          </div>
-        </div>
+          <h3 className="font-semibold text-gray-900">Quản lý khách hàng</h3>
+          <p className="text-sm text-gray-600">Thêm và quản lý khách hàng</p>
+        </button>
+
+        <button
+          onClick={() => window.location.href = '/projects'}
+          className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-left transition-colors"
+        >
+          <svg className="w-6 h-6 text-green-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="font-semibold text-gray-900">Quản lý dự án</h3>
+          <p className="text-sm text-gray-600">Tạo và theo dõi dự án</p>
+        </button>
+
+        <button
+          onClick={() => window.location.href = '/invoices'}
+          className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-left transition-colors"
+        >
+          <svg className="w-6 h-6 text-yellow-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="font-semibold text-gray-900">Quản lý hóa đơn</h3>
+          <p className="text-sm text-gray-600">Tạo và theo dõi hóa đơn</p>
+        </button>
+
+        <button
+          onClick={() => window.location.href = '/task'}
+          className="p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-left transition-colors"
+        >
+          <svg className="w-6 h-6 text-purple-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <h3 className="font-semibold text-gray-900">Quản lý nhiệm vụ</h3>
+          <p className="text-sm text-gray-600">Giao và theo dõi nhiệm vụ</p>
+        </button>
       </div>
-      
-      {/* Phần bên phải - form đăng nhập */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-6">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Đăng nhập hệ thống CRM</h2>
-            <p className="text-gray-600">Dành cho Agency Marketing</p>
+
+      {/* System Status */}
+      <div className="modern-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Trạng thái hệ thống</h3>
+            <p className="text-sm text-gray-600">Tất cả các dịch vụ đang hoạt động bình thường</p>
           </div>
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="flex items-center">
+            <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+            <span className="text-sm font-medium text-green-700">Hoạt động</span>
+          </div>
+        </div>
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 text-center">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
+              <p className="text-sm font-medium text-gray-900">Backend API</p>
+              <p className="text-xs text-gray-600">FastAPI Server</p>
             </div>
-
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1 text-center">
-                Mật khẩu
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+              <p className="text-sm font-medium text-gray-900">Database</p>
+              <p className="text-xs text-gray-600">MongoDB</p>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Quên mật khẩu?
-                </a>
-              </div>
-            </div>
-
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
             <div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
-              </button>
+              <p className="text-sm font-medium text-gray-900">Frontend</p>
+              <p className="text-xs text-gray-600">React App</p>
             </div>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Chưa có tài khoản? 
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 ml-1">
-                Liên hệ Admin
-              </a>
-            </p>
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           </div>
         </div>
       </div>
@@ -344,174 +608,42 @@ const Login = () => {
   );
 };
 
-// Documents component wrapper
-const Documents = () => {
-  const { user } = React.useContext(AuthContext);
-  return <DocumentsComponent user={user} />;
-};
-
-// Templates component wrapper
-const Templates = () => {
-  const { user } = React.useContext(AuthContext);
-  return <TemplatesComponent user={user} />;
-};
-
-// Layout chính của ứng dụng
-const MainLayout = () => {
-  const { user, logout } = React.useContext(AuthContext);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
-      {/* Sidebar for mobile */}
-      <div className={`md:hidden ${sidebarOpen ? "block" : "hidden"} fixed inset-0 flex z-40`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-indigo-700">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
-            <button
-              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="sr-only">Đóng sidebar</span>
-              <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <SidebarContent user={user} logout={logout} />
+// Protected Route Component
+const ProtectedRoute = ({ children, requiredPermission, fallback = null }) => {
+  const { hasPermission, loading } = usePermissions();
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+  
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return fallback || (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Không có quyền truy cập</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Bạn không có quyền truy cập vào trang này.
+          </p>
         </div>
       </div>
-
-      {/* Static sidebar for desktop */}
-      <div className="hidden md:flex md:flex-shrink-0">
-        <div className="flex flex-col w-64">
-          <div className="flex flex-col h-0 flex-1">
-            <SidebarContent user={user} logout={logout} />
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden bg-gray-50">
-        {/* Modern Header */}
-        <div className="modern-header flex items-center justify-between px-6 py-4">
-          {/* Breadcrumb */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center text-sm text-gray-500">
-              <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-              </svg>
-              <span className="breadcrumb-item">Trang chủ</span>
-              {window.location.pathname !== '/' && (
-                <>
-                  <svg className="w-4 h-4 mx-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  <span className="breadcrumb-item active">
-                    {window.location.pathname.startsWith('/clients') ? 'Khách hàng' :
-                     window.location.pathname.startsWith('/projects') ? 'Dự án' :
-                     window.location.pathname.startsWith('/task-templates') ? 'Template dịch vụ' :
-                     window.location.pathname.startsWith('/task') ? 'Nhiệm vụ' :
-                     window.location.pathname.startsWith('/campaigns') ? 'Chiến dịch' :
-                     window.location.pathname.startsWith('/invoices') ? 'Hóa đơn' :
-                     window.location.pathname.startsWith('/contracts') ? 'Hợp đồng' :
-                     window.location.pathname.startsWith('/expenses') ? 'Quản lý chi phí' :
-                     window.location.pathname.startsWith('/documents') ? 'Tài liệu' :
-                     window.location.pathname.startsWith('/settings') ? 'Cài đặt' :
-                     window.location.pathname.startsWith('/account') ? 'Tài khoản' :
-                     window.location.pathname.startsWith('/reports') ? 'Báo cáo' :
-                     'Trang'}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Search Button */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-
-            {/* Notifications */}
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM5.07 7A7.002 7.002 0 0112 2c1.857 0 3.547.72 4.816 1.898M15 17h5l-5 5v-5z" />
-              </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            {/* Settings */}
-            <button 
-              onClick={() => {
-                if (user?.role === 'admin') {
-                  window.location.href = '/settings';
-                }
-              }}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-              disabled={user?.role !== 'admin'}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-
-            {/* User Menu */}
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.full_name || 'User'}</p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
-              </div>
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">
-                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-6 px-8 max-w-none">
-            <div className="w-full max-w-none">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/clients/:id" element={<ClientDetail />} />
-                <Route path="/projects" element={<ProjectsComponent />} />
-                <Route path="/projects/:id" element={<ProjectDetail />} />
-                <Route path="/task" element={<Task />} />
-                <Route path="/task-templates" element={<TemplatesComponent />} />
-                <Route path="/contracts" element={<Contracts />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/expenses" element={<ExpenseOverview />} />
-                <Route path="/campaigns" element={<CampaignsComponent />} />
-                <Route path="/campaigns/:id" element={<CampaignDetailComponent />} />
-                <Route path="/documents" element={<DocumentsComponent />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/financial-reports" element={<FinancialReports />} />
-                <Route path="/opportunities" element={<Opportunities />} />
-                <Route path="/sales-reports" element={<SalesReports />} />
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+    );
+  }
+  
+  return children;
 };
 
-// Nội dung sidebar
+// SidebarContent Component  
 const SidebarContent = ({ user, logout }) => {
+  const { hasPermission, loading } = usePermissions();
+  const location = useLocation();
   const navigate = useNavigate();
-  const location = window.location.pathname;
   
   const [openSubmenus, setOpenSubmenus] = useState({
     project: false,
@@ -519,63 +651,238 @@ const SidebarContent = ({ user, logout }) => {
     sales: false
   });
 
-  const toggleSubmenu = (menu) => {
-    setOpenSubmenus({
-      ...openSubmenus,
-      [menu]: !openSubmenus[menu]
-    });
-  };
-  
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  // Permission-based menu items
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      path: '/',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+        </svg>
+      ),
+      permission: 'dashboard_dashboard_view'
+    },
+    {
+      id: 'clients',
+      label: 'Client',
+      path: '/clients',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      permission: 'clients_clients_view'
+    },
+    {
+      id: 'task',
+      label: 'Task',
+      path: '/task',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      permission: 'internal_tasks_internal_tasks_view'
+    }
+  ];
+
+  const projectSubmenu = [
+    {
+      id: 'projects',
+      label: 'Danh sách dự án',
+      path: '/projects',
+      permission: 'projects_projects_view'
+    },
+    {
+      id: 'campaigns',
+      label: 'Chiến dịch',
+      path: '/campaigns',
+      permission: 'campaigns_campaigns_view'
+    },
+    {
+      id: 'templates',
+      label: 'Template dịch vụ',
+      path: '/task-templates',
+      permission: 'templates_templates_view'
+    }
+  ];
+
+  const financeSubmenu = [
+    {
+      id: 'invoices',
+      label: 'Hóa đơn',
+      path: '/invoices',
+      permission: 'invoices_invoices_view'
+    },
+    {
+      id: 'contracts',
+      label: 'Hợp đồng',
+      path: '/contracts',
+      permission: 'contracts_contracts_view'
+    },
+    {
+      id: 'expenses',
+      label: 'Quản lý chi phí',
+      path: '/expenses',
+      permission: 'expenses_expenses_view'
+    },
+    {
+      id: 'financial-reports',
+      label: 'Báo cáo tài chính',
+      path: '/financial-reports',
+      permission: 'reports_financial_reports'
+    }
+  ];
+
+  const salesSubmenu = [
+    {
+      id: 'leads',
+      label: 'Lead',
+      path: '/leads',
+      permission: 'leads_leads_view'
+    },
+    {
+      id: 'opportunities',
+      label: 'Cơ hội',
+      path: '/opportunities',
+      permission: 'reports_reports_view' // Assuming opportunities are part of reports
+    },
+    {
+      id: 'sales-reports',
+      label: 'Báo cáo',
+      path: '/sales-reports',
+      permission: 'reports_sales_reports'
+    }
+  ];
+
+  const otherMenuItems = [
+    {
+      id: 'documents',
+      label: 'Tài liệu',
+      path: '/documents',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      permission: 'documents_documents_view'
+    },
+    {
+      id: 'reports',
+      label: 'Báo cáo',
+      path: '/reports',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      permission: 'reports_reports_view'
+    },
+    {
+      id: 'human-resources',
+      label: 'Nhân sự',
+      path: '/human-resources',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      permission: 'human_resources_users_view'
+    },
+    {
+      id: 'account',
+      label: 'Tài khoản',
+      path: '/account',
+      icon: (
+        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+      permission: null // Always visible
+    }
+  ];
+
+  // Check if user has permission for any items in a submenu
+  const hasAnyPermissionInSubmenu = (submenu) => {
+    return submenu.some(item => !item.permission || hasPermission(item.permission));
   };
 
+  // Check if user has permission for a menu item
+  const canAccessMenuItem = (item) => {
+    return !item.permission || hasPermission(item.permission);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-full">
+        <div className="flex flex-col w-64 bg-white border-r border-gray-200">
+          <div className="flex items-center justify-center h-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const toggleSubmenu = (menu) => {
+    setOpenSubmenus(prev => ({
+      ...prev,
+      [menu]: !prev[menu]
+    }));
+  };
+
+  // Unified color scheme - blue theme
+  const activeClasses = "text-white bg-blue-600 shadow-md";
+  const hoverClasses = "text-blue-700 bg-blue-50 hover:bg-blue-100";
+  const defaultClasses = "text-gray-700 hover:text-blue-700 hover:bg-blue-50";
+  
+  const subActiveClasses = "text-white bg-blue-600 shadow-sm";
+  const subHoverClasses = "text-blue-700 bg-blue-50 hover:bg-blue-100";
+  const subDefaultClasses = "text-gray-600 hover:text-blue-700 hover:bg-blue-50";
+
   return (
-    <div className="modern-sidebar flex flex-col h-full">
-      {/* Logo Section */}
-      <div className="sidebar-logo m-4">
+    <div className="h-screen w-64 bg-white shadow-lg flex flex-col border-r border-gray-200">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
-            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3 shadow-md">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0a2 2 0 002-2v-1a2 2 0 00-2-2H5a2 2 0 00-2 2v1a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <div className="text-white font-bold text-lg">CRM Pro</div>
-            <div className="text-blue-100 text-xs">Marketing System</div>
+            <h1 className="text-xl font-bold text-white">CRM AUS</h1>
+            <p className="text-blue-100 text-xs">Quản lý khách hàng</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-2">
+      <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {/* Dashboard */}
         <button
           onClick={() => navigate("/")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location === "/"
-              ? "active text-white"
-              : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname === "/" ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5v14l4-2 4 2V5z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15V9m4 6V9m4 6V9" />
           </svg>
-          Trang chủ
+          Dashboard
         </button>
 
         {/* Client */}
         <button
           onClick={() => navigate("/clients")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/clients")
-              ? "active text-white"
-              : "text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname.startsWith("/clients") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           Client
@@ -584,68 +891,68 @@ const SidebarContent = ({ user, logout }) => {
         {/* Task */}
         <button
           onClick={() => navigate("/task")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/task") && !location.startsWith("/task-templates")
-              ? "active text-white"
-              : "text-gray-700 hover:bg-yellow-50 hover:text-yellow-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname.startsWith("/task") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
-          Task
+          Công việc
         </button>
 
-        {/* Dự án (với submenu) */}
-        <div>
+        {/* Dự án Section */}
+        <div className="space-y-1">
           <button
-            onClick={() => toggleSubmenu("project")}
-            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-green-50 hover:text-green-700"
+            onClick={() => toggleSubmenu('project')}
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              openSubmenus.project || location.pathname.startsWith("/projects") || location.pathname.startsWith("/campaigns") || location.pathname.startsWith("/task-templates") 
+                ? hoverClasses : defaultClasses
+            }`}
           >
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
               Dự án
             </div>
-            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.project ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.project ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
           
           {openSubmenus.project && (
-            <div className="mt-2 ml-4 space-y-1 slide-in">
+            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
               <button
                 onClick={() => navigate("/projects")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/projects") ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/projects") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Danh sách dự án
               </button>
               <button
                 onClick={() => navigate("/campaigns")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/campaigns") ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/campaigns") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
                 Chiến dịch
               </button>
               <button
                 onClick={() => navigate("/task-templates")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/task-templates") ? 'bg-green-100 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/task-templates") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
                 Template dịch vụ
               </button>
@@ -653,65 +960,68 @@ const SidebarContent = ({ user, logout }) => {
           )}
         </div>
 
-        {/* Tài chính (với submenu) */}
-        <div>
+        {/* Tài chính Section */}
+        <div className="space-y-1">
           <button
-            onClick={() => toggleSubmenu("finance")}
-            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700"
+            onClick={() => toggleSubmenu('finance')}
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              openSubmenus.finance || location.pathname.startsWith("/invoices") || location.pathname.startsWith("/contracts") || location.pathname.startsWith("/expenses") || location.pathname.startsWith("/financial-reports")
+                ? hoverClasses : defaultClasses
+            }`}
           >
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Tài chính
             </div>
-            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.finance ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.finance ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
           
           {openSubmenus.finance && (
-            <div className="mt-2 ml-4 space-y-1 slide-in">
+            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
               <button
                 onClick={() => navigate("/invoices")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/invoices") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/invoices") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Hóa đơn
               </button>
               <button
                 onClick={() => navigate("/contracts")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/contracts") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/contracts") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Hợp đồng
               </button>
               <button
                 onClick={() => navigate("/expenses")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/expenses") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/expenses") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Quản lý chi phí
               </button>
               <button
                 onClick={() => navigate("/financial-reports")}
-                className={`w-full flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.startsWith("/financial-reports") ? 'bg-emerald-100 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/financial-reports") ? subActiveClasses : subDefaultClasses
                 }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Báo cáo tài chính
@@ -720,49 +1030,58 @@ const SidebarContent = ({ user, logout }) => {
           )}
         </div>
 
-        {/* Bán hàng (với submenu) */}
-        <div>
+        {/* Bán hàng Section */}
+        <div className="space-y-1">
           <button
-            onClick={() => toggleSubmenu("sales")}
-            className="sidebar-nav-item w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+            onClick={() => toggleSubmenu('sales')}
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              openSubmenus.sales || location.pathname.startsWith("/opportunities") || location.pathname.startsWith("/sales-reports")
+                ? hoverClasses : defaultClasses
+            }`}
           >
             <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
               Bán hàng
             </div>
-            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.sales ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.sales ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
           
           {openSubmenus.sales && (
-            <div className="mt-2 ml-4 space-y-1 slide-in">
+            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
               <button
-                onClick={() => navigate("/clients")}
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                onClick={() => navigate("/leads")}
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/leads") ? subActiveClasses : subDefaultClasses
+                }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Khách hàng
+                Lead
               </button>
               <button
                 onClick={() => navigate("/opportunities")}
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/opportunities") ? subActiveClasses : subDefaultClasses
+                }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
                 Cơ hội
               </button>
               <button
                 onClick={() => navigate("/sales-reports")}
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                  location.pathname.startsWith("/sales-reports") ? subActiveClasses : subDefaultClasses
+                }`}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 Báo cáo
               </button>
@@ -770,62 +1089,67 @@ const SidebarContent = ({ user, logout }) => {
           )}
         </div>
 
-        {/* Documents */}
+        {/* Tài liệu */}
         <button
           onClick={() => navigate("/documents")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/documents")
-              ? "active text-white"
-              : "text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname.startsWith("/documents") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2H8.5a2.5 2.5 0 01-2.5-2.5v-8.5z" />
           </svg>
           Tài liệu
         </button>
 
-        {/* Reports */}
+        {/* Báo cáo */}
         <button
           onClick={() => navigate("/reports")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/reports")
-              ? "active text-white"
-              : "text-gray-700 hover:bg-red-50 hover:text-red-700"
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname.startsWith("/reports") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           Báo cáo
         </button>
 
-        {/* Account */}
+        {/* Nhân sự */}
         <button
-          onClick={() => navigate("/account")}
-          className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.startsWith("/account")
-              ? "active text-white"
-              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          onClick={() => navigate("/human-resources")}
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname.startsWith("/human-resources") ? activeClasses : defaultClasses
           }`}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+          Nhân sự
+        </button>
+
+        {/* Tài khoản */}
+        <button
+          onClick={() => navigate("/account")}
+          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            location.pathname.startsWith("/account") ? activeClasses : defaultClasses
+          }`}
+        >
+          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           Tài khoản
         </button>
 
-        {/* Settings - Admin only */}
+        {/* Cài đặt - Only for Admin */}
         {user?.role === 'admin' && (
           <button
             onClick={() => navigate("/settings")}
-            className={`sidebar-nav-item w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              location.startsWith("/settings")
-                ? "active text-white"
-                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.pathname.startsWith("/settings") ? activeClasses : defaultClasses
             }`}
           >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -834,28 +1158,30 @@ const SidebarContent = ({ user, logout }) => {
         )}
       </nav>
 
-      {/* User Profile Section */}
-      <div className="p-4">
-        <div className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">
-                {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+      {/* User Info & Logout */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center flex-1 min-w-0">
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+              <span className="text-sm font-semibold text-white">
+                {user?.full_name?.charAt(0) || 'U'}
               </span>
             </div>
-          </div>
-          <div className="ml-3 flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.full_name || 'User'}
-            </p>
-            <p className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.full_name || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {user?.role || 'N/A'}
+              </p>
+            </div>
           </div>
           <button
-            onClick={handleLogout}
-            className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors duration-200"
+            onClick={logout}
+            className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
             title="Đăng xuất"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </button>
@@ -864,1286 +1190,1003 @@ const SidebarContent = ({ user, logout }) => {
     </div>
   );
 };
-// Component Expense Management (Quản lý Chi phí)
-const Expense = () => {
-  const [activeTab, setActiveTab] = useState('overview'); // overview, expenses, config
+
+const LoginComponent = ({ login }) => {
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [connectionTest, setConnectionTest] = useState(null);
 
-  return (
-    <div className="w-full max-w-none">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Quản lý Chi phí</h1>
-        <p className="text-gray-600">Theo dõi và quản lý tất cả chi phí của doanh nghiệp</p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`${
-              activeTab === 'overview'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Tổng quan
-          </button>
-          <button
-            onClick={() => setActiveTab('expenses')}
-            className={`${
-              activeTab === 'expenses'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Chi phí
-          </button>
-          <button
-            onClick={() => setActiveTab('config')}
-            className={`${
-              activeTab === 'config'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm`}
-          >
-            Cấu hình
-          </button>
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      <div className="w-full">
-        {activeTab === 'overview' && <ExpenseOverview />}
-        {activeTab === 'expenses' && <ExpenseList />}
-        {activeTab === 'config' && <ExpenseConfig />}
-      </div>
-    </div>
-  );
-};
-
-// Component placeholder cho Revenue
-const Revenue = () => (
-  <div>
-    <h1 className="text-2xl font-semibold text-gray-900">Revenue</h1>
-    <p className="text-gray-600">Quản lý doanh thu</p>
-  </div>
-);
-
-// Các component placeholder cho Dashboard, Clients, etc.
-const Dashboard = () => {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await axios.get(`${API}/dashboard`);
-        setDashboardData(response.data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        toast.error("Không thể tải dữ liệu Dashboard");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="spinner mb-4"></div>
-          <p className="text-gray-600">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!dashboardData) {
-    return <div className="text-center py-10">Không thể tải dữ liệu Dashboard</div>;
-  }
-
-  return (
-    <div className="space-y-6 fade-in">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Chào mừng trở lại! Dưới đây là tổng quan về hệ thống CRM.</p>
-        </div>
-        <div className="flex space-x-3">
-          <button className="btn-secondary">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Xuất báo cáo
-          </button>
-          <button className="btn-primary">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Tạo mới
-          </button>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Clients */}
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{dashboardData.client_count || 0}</p>
-              <p className="text-sm text-green-600 mt-1">
-                <span className="font-medium">+12%</span> so với tháng trước
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Active Projects */}
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Dự án đang hoạt động</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
-                {dashboardData.projects_by_status?.in_progress || 0}
-              </p>
-              <p className="text-sm text-blue-600 mt-1">
-                <span className="font-medium">+5</span> dự án mới
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Pending Invoices */}
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Hóa đơn chờ thanh toán</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
-                {dashboardData.invoices_by_status?.sent || 0}
-              </p>
-              <p className="text-sm text-orange-600 mt-1">
-                <span className="font-medium">
-                  {(dashboardData.financial?.total_pending || 0).toLocaleString()} VNĐ
-                </span>
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* User Tasks */}
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Nhiệm vụ của tôi</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
-                {(dashboardData.user_tasks?.pending || 0) + (dashboardData.user_tasks?.in_progress || 0)}
-              </p>
-              <p className="text-sm text-purple-600 mt-1">
-                <span className="font-medium">{dashboardData.user_tasks?.pending || 0}</span> cần thực hiện
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts and Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Project Status Chart */}
-        <div className="modern-card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Phân bố trạng thái dự án</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <p>Biểu đồ thống kê</p>
-              <p className="text-sm">Chart component sẽ được tích hợp</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Revenue Chart */}
-        <div className="modern-card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Xu hướng doanh thu</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-              </svg>
-              <p>Biểu đồ doanh thu</p>
-              <p className="text-sm">Line chart sẽ được tích hợp</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Quick Action 1 */}
-        <div className="action-card-blue">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-white">Thêm khách hàng mới</h3>
-              <p className="text-blue-100 mt-1">Tạo hồ sơ khách hàng và bắt đầu quản lý dự án</p>
-              <button className="mt-4 bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200">
-                Tạo ngay
-              </button>
-            </div>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Action 2 */}
-        <div className="action-card-green">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-white">Tạo dự án mới</h3>
-              <p className="text-green-100 mt-1">Lập kế hoạch và triển khai dự án cho khách hàng</p>
-              <button className="mt-4 bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition-colors duration-200">
-                Bắt đầu
-              </button>
-            </div>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Action 3 */}
-        <div className="action-card-purple">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-white">Xuất hóa đơn</h3>
-              <p className="text-purple-100 mt-1">Tạo và gửi hóa đơn cho khách hàng</p>
-              <button className="mt-4 bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-50 transition-colors duration-200">
-                Tạo hóa đơn
-              </button>
-            </div>
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Tasks */}
-        <div className="modern-card">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Nhiệm vụ sắp tới</h3>
-              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">Xem tất cả</button>
-            </div>
-          </div>
-          <div className="p-6">
-            {dashboardData.upcoming_tasks && dashboardData.upcoming_tasks.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.upcoming_tasks.slice(0, 5).map((task, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{task.name}</p>
-                      <p className="text-xs text-gray-500">
-                        Hạn: {task.end_date ? format(new Date(task.end_date), 'dd/MM/yyyy') : 'Không xác định'}
-                      </p>
-                    </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {task.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <p>Không có nhiệm vụ sắp tới</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Expiring Contracts */}
-        <div className="modern-card">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Hợp đồng sắp hết hạn</h3>
-              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">Xem tất cả</button>
-            </div>
-          </div>
-          <div className="p-6">
-            {dashboardData.expiring_contracts && dashboardData.expiring_contracts.length > 0 ? (
-              <div className="space-y-4">
-                {dashboardData.expiring_contracts.slice(0, 5).map((contract, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{contract.title}</p>
-                      <p className="text-xs text-gray-500">
-                        Hết hạn: {contract.end_date ? format(new Date(contract.end_date), 'dd/MM/yyyy') : 'Không xác định'}
-                      </p>
-                    </div>
-                    <span className="text-sm font-medium text-orange-600">
-                      {contract.value ? contract.value.toLocaleString() : '0'} VNĐ
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p>Không có hợp đồng sắp hết hạn</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Clients = () => {
-  const navigate = useNavigate();
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [viewArchived, setViewArchived] = useState(false);
-  const [selectedClients, setSelectedClients] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("active"); // active, archived, all
-  const [avatarPreview, setAvatarPreview] = useState(null);
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); 
-  const [currentClientId, setCurrentClientId] = useState(null); 
-  const [statsData, setStatsData] = useState({
-    totalClients: 0,
-    activeClients: 0,
-    newClientsThisMonth: 0
-  });
-  const [formData, setFormData] = useState({
-    name: "",
-    company: "",
-    industry: "",
-    size: "",
-    website: "",
-    phone: "",
-    contact_name: "",
-    contact_email: "",
-    contact_phone: "",
-    notes: "",
-    address: "",
-    tags: []
-  });
-  const [filterData, setFilterData] = useState({
-    tags: [],
-    hasProjects: null,
-    hasInvoices: null,
-    dateFrom: "",
-    dateTo: ""
-  });
-
-  const [actionMenuOpen, setActionMenuOpen] = useState(null);
-  const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
-
-  // Mẫu tag để lựa chọn
-  const availableTags = ["Doanh nghiệp", "Cá nhân", "Mới", "VIP", "Tiềm năng"];
-
-  useEffect(() => {
-    fetchClients();
-    fetchStats();
-  }, [statusFilter, viewArchived]);
-
-  const fetchClients = async () => {
+  const testConnection = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(`${API}/clients/`);
+      setConnectionTest('testing');
+      console.log('🔗 Testing connection to:', API);
       
-      let filteredClients = response.data;
-      
-      if (statusFilter === "active") {
-        filteredClients = filteredClients.filter(client => !client.archived);
-      } else if (statusFilter === "archived") {
-        filteredClients = filteredClients.filter(client => client.archived);
-      }
-
-      if (searchTerm) {
-        filteredClients = filteredClients.filter(client => 
-          client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          (client.contact_email && client.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (client.contact_name && client.contact_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (client.website && client.website.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      }
-
-      setClients(filteredClients);
+      // Test basic connectivity
+      const response = await axios.get(`${API}/api/`, { timeout: 5000 });
+      console.log('✅ Connection test response:', response.data);
+      setConnectionTest('success');
+      toast.success('Kết nối backend thành công!');
     } catch (error) {
-      console.error("Error fetching clients:", error);
-      toast.error("Không thể tải danh sách khách hàng");
+      console.error('❌ Connection test failed:', error);
+      setConnectionTest('failed');
+      toast.error(`Lỗi kết nối: ${error.message}`);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      console.log('🔐 Login attempt with:', { email: credentials.email });
+      console.log('🌐 API URL:', API);
+      
+      const formData = new URLSearchParams();
+      formData.append('username', credentials.email);
+      formData.append('password', credentials.password);
+
+      console.log('📤 Sending login request to:', `${API}/api/token`);
+      const response = await axios.post(`${API}/api/token`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        timeout: 10000
+      });
+
+      console.log('✅ Login response:', response.data);
+      
+      console.log('👤 Fetching user info...');
+      const userResponse = await axios.get(`${API}/api/users/me/`, {
+        headers: { Authorization: `Bearer ${response.data.access_token}` },
+        timeout: 10000
+      });
+
+      console.log('👤 User data:', userResponse.data);
+      
+      login(userResponse.data, response.data.access_token);
+      toast.success('Đăng nhập thành công!');
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Network Error?', error.code === 'NETWORK_ERROR');
+      toast.error(`Đăng nhập thất bại! ${error.response?.data?.detail || error.message || 'Vui lòng kiểm tra thông tin.'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get(`${API}/clients/`);
-      const allClients = response.data;
-      
-      const totalClients = allClients.length;
-      const activeClients = allClients.filter(client => !client.archived).length;
-      
-      const now = new Date();
-      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const newClientsThisMonth = allClients.filter(client => {
-        const createdDate = new Date(client.created_at);
-        return createdDate >= firstDayOfMonth;
-      }).length;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <div className="mx-auto h-20 w-20 bg-indigo-600 rounded-full flex items-center justify-center">
+            <svg className="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0a2 2 0 002-2v-1a2 2 0 00-2-2H5a2 2 0 00-2 2v1a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Đăng nhập CRM AUS
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Hệ thống quản lý khách hàng toàn diện
+          </p>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={credentials.email}
+                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Mật khẩu
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Mật khẩu"
+              />
+            </div>
+          </div>
 
-      setStatsData({
-        totalClients,
-        activeClients,
-        newClientsThisMonth
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="spinner mr-2"></div>
+                  Đang đăng nhập...
+                </div>
+              ) : (
+                'Đăng nhập'
+              )}
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <div className="text-sm text-gray-600">
+              <strong>Thông tin đăng nhập demo:</strong>
+            </div>
+            <div className="text-sm text-gray-500 mt-2">
+              Email: admin@example.com<br />
+              Password: admin123
+            </div>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={testConnection}
+                disabled={connectionTest === 'testing'}
+                className={`text-xs px-3 py-1 rounded border ${
+                  connectionTest === 'success' ? 'bg-green-100 text-green-700 border-green-300' :
+                  connectionTest === 'failed' ? 'bg-red-100 text-red-700 border-red-300' :
+                  'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                {connectionTest === 'testing' ? 'Đang kiểm tra...' :
+                 connectionTest === 'success' ? '✅ Kết nối OK' :
+                 connectionTest === 'failed' ? '❌ Lỗi kết nối' :
+                 'Test kết nối Backend'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Task Management Component - ADVANCED IMPLEMENTATION
+const Task = () => {
+  const { user, token } = useContext(AuthContext);
+  const [tasks, setTasks] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statistics, setStatistics] = useState({
+    total_tasks: 0,
+    not_started: 0,
+    in_progress: 0,
+    completed: 0,
+    high_priority: 0,
+    normal_priority: 0,
+    low_priority: 0
+  });
+  
+  // Filters and state
+  const [selectedTasks, setSelectedTasks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('today');
+  const [showCompleted, setShowCompleted] = useState(false);
+  
+  // Modals
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [viewingTask, setViewingTask] = useState(null);
+  const [feedbackTask, setFeedbackTask] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [newFeedback, setNewFeedback] = useState('');
+  const [feedbackCounts, setFeedbackCounts] = useState({}); // Store feedback counts for each task
+  
+  // Report modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportTask, setReportTask] = useState(null);
+  const [reportLink, setReportLink] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  useEffect(() => {
+    fetchTasks();
+    fetchUsers();
+    fetchStatistics();
+  }, [statusFilter, priorityFilter, dateFilter, showCompleted]);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      
+      if (searchTerm) params.append('search', searchTerm);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (priorityFilter !== 'all') params.append('priority', priorityFilter);
+      if (dateFilter !== 'all') params.append('date_filter', dateFilter);
+      if (showCompleted) params.append('completed_only', 'true');
+
+      const response = await axios.get(`${API}/api/internal-tasks/?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
+      const tasksData = response.data;
+      setTasks(tasksData);
+      
+      // Fetch feedback counts for all tasks
+      await fetchFeedbackCounts(tasksData);
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error('Error fetching tasks:', error);
+      toast.error('Lỗi khi tải danh sách công việc');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleStatusFilterChange = (e) => {
-    setStatusFilter(e.target.value);
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedClients(clients.map(client => client.id));
-    } else {
-      setSelectedClients([]);
-    }
-  };
-
-  const handleSelectClient = (clientId) => {
-    if (selectedClients.includes(clientId)) {
-      setSelectedClients(selectedClients.filter(id => id !== clientId));
-    } else {
-      setSelectedClients([...selectedClients, clientId]);
-    }
-  };
-
-  const toggleActionMenu = (clientId) => {
-    if (actionMenuOpen === clientId) {
-      setActionMenuOpen(null);
-    } else {
-      setActionMenuOpen(clientId);
-    }
-  };
-
-  const toggleBulkActionMenu = () => {
-    setBulkActionMenuOpen(!bulkActionMenuOpen);
-  };
-  
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setAvatarPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-  
-  const handleTagSelect = (e) => {
-    const tag = e.target.value;
-    if (tag && !formData.tags.includes(tag)) {
-      setFormData({
-        ...formData,
-        tags: [...formData.tags, tag]
-      });
-    }
-  };
-  
-  const removeTag = (tagToRemove) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove)
-    });
-  };
-  
-  const handleEditClient = (client) => {
-    setIsEditing(true);
-    setCurrentClientId(client.id);
-    
-    setFormData({
-      name: client.name || "",
-      company: client.company || "",
-      industry: client.industry || "",
-      size: client.size || "",
-      website: client.website || "",
-      phone: client.phone || "",
-      contact_name: client.contact_name || "",
-      contact_email: client.contact_email || "",
-      contact_phone: client.contact_phone || "",
-      notes: client.notes || "",
-      address: client.address || "",
-      tags: client.tags || []
-    });
-    
-    setAvatarPreview(client.avatar_url || null);
-    setIsModalOpen(true);
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchUsers = async () => {
     try {
-      const clientData = {
-        ...formData,
-        company: formData.company || formData.name
-      };
+      const response = await axios.get(`${API}/api/users/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
 
-      if (avatarFile) {
-        const formDataUpload = new FormData();
-        formDataUpload.append('file', avatarFile);
-        
-        const uploadResponse = await axios.post(`${API}/upload-avatar/`, formDataUpload, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+  const fetchStatistics = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (dateFilter !== 'all') params.append('date_filter', dateFilter);
+      
+      const response = await axios.get(`${API}/api/internal-tasks/statistics?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStatistics(response.data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+      // Fallback to calculating from tasks array if API fails
+      const stats = {
+        total_tasks: tasks.length,
+        not_started: tasks.filter(t => t.status === 'not_started').length,
+        in_progress: tasks.filter(t => t.status === 'in_progress').length,
+        completed: tasks.filter(t => t.status === 'completed').length,
+        high_priority: tasks.filter(t => t.priority === 'urgent').length,
+        normal_priority: tasks.filter(t => t.priority === 'normal').length,
+        low_priority: tasks.filter(t => t.priority === 'low').length
+      };
+      setStatistics(stats);
+    }
+  };
+
+  const handleCreateTask = async (taskData) => {
+    try {
+      console.log('Creating task with data:', taskData);
+      console.log('API URL:', `${API}/api/internal-tasks/`);
+      
+      const response = await axios.post(`${API}/api/internal-tasks/`, taskData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Task created successfully:', response.data);
+      setShowCreateModal(false);
+      toast.success('Tạo công việc thành công!');
+      fetchTasks(); // Refresh task list
+      fetchStatistics();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Lỗi khi tạo công việc';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map(err => err.msg || err).join(', ');
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleUpdateTask = async (taskData) => {
+    try {
+      await axios.put(`${API}/api/internal-tasks/${editingTask.id}`, taskData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setEditingTask(null);
+      toast.success('Cập nhật công việc thành công!');
+      fetchTasks(); // Refresh task list
+      fetchStatistics();
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error('Lỗi khi cập nhật công việc');
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
+      try {
+        await axios.delete(`${API}/api/internal-tasks/${taskId}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
         
-        clientData.avatar_url = uploadResponse.data.avatar_url;
-      }
-
-      let response;
-      if (isEditing) {
-        response = await axios.put(`${API}/clients/${currentClientId}`, clientData);
-        toast.success("Cập nhật khách hàng thành công!");
-      } else {
-        response = await axios.post(`${API}/clients/`, clientData);
-        toast.success("Thêm khách hàng thành công!");
-      }
-
-      resetForm();
-      setIsModalOpen(false);
-      fetchClients();
-      fetchStats();
-    } catch (error) {
-      console.error("Error saving client:", error);
-      toast.error(isEditing ? "Không thể cập nhật khách hàng" : "Không thể thêm khách hàng mới");
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      company: "",
-      industry: "",
-      size: "",
-      website: "",
-      phone: "",
-      contact_name: "",
-      contact_email: "",
-      contact_phone: "",
-      notes: "",
-      address: "",
-      tags: []
-    });
-    setAvatarPreview(null);
-    setAvatarFile(null);
-    setIsEditing(false);
-    setCurrentClientId(null);
-  };
-
-  const handleDeleteClient = async (clientId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
-      try {
-        await axios.delete(`${API}/clients/${clientId}`);
-        toast.success("Xóa khách hàng thành công!");
-        fetchClients();
-        fetchStats();
+        toast.success('Xóa công việc thành công!');
+        fetchTasks(); // Refresh task list
+        fetchStatistics();
       } catch (error) {
-        console.error("Error deleting client:", error);
-        toast.error("Không thể xóa khách hàng");
+        console.error('Error deleting task:', error);
+        toast.error('Lỗi khi xóa công việc');
       }
     }
   };
 
-  const handleArchiveClient = async (clientId, isArchived) => {
-    try {
-      const client = clients.find(c => c.id === clientId);
-      const updatedClient = { ...client, archived: !isArchived };
-      
-      await axios.put(`${API}/clients/${clientId}`, updatedClient);
-      toast.success(isArchived ? "Khôi phục khách hàng thành công!" : "Lưu trữ khách hàng thành công!");
-      fetchClients();
-      fetchStats();
-    } catch (error) {
-      console.error("Error archiving client:", error);
-      toast.error("Không thể cập nhật trạng thái khách hàng");
-    }
-  };
-
-  const handleBulkAction = async (action) => {
-    if (selectedClients.length === 0) {
-      toast.warning("Vui lòng chọn ít nhất một khách hàng");
+  const handleBulkDelete = async () => {
+    if (selectedTasks.length === 0) {
+      toast.warning('Vui lòng chọn ít nhất một công việc để xóa');
       return;
     }
 
-    const confirmMessage = action === 'delete' 
-      ? `Bạn có chắc chắn muốn xóa ${selectedClients.length} khách hàng đã chọn?`
-      : `Bạn có chắc chắn muốn ${action === 'archive' ? 'lưu trữ' : 'khôi phục'} ${selectedClients.length} khách hàng đã chọn?`;
-
-    if (window.confirm(confirmMessage)) {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} công việc đã chọn?`)) {
       try {
-        if (action === 'delete') {
-          await Promise.all(selectedClients.map(id => axios.delete(`${API}/clients/${id}`)));
-          toast.success("Xóa các khách hàng thành công!");
-        } else {
-          const isArchive = action === 'archive';
-          await Promise.all(selectedClients.map(async (id) => {
-            const client = clients.find(c => c.id === id);
-            const updatedClient = { ...client, archived: isArchive };
-            return axios.put(`${API}/clients/${id}`, updatedClient);
-          }));
-          toast.success(isArchive ? "Lưu trữ các khách hàng thành công!" : "Khôi phục các khách hàng thành công!");
-        }
+        await axios.post(`${API}/api/internal-tasks/bulk-delete`, {
+          task_ids: selectedTasks
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
-        setSelectedClients([]);
-        setBulkActionMenuOpen(false);
-        fetchClients();
-        fetchStats();
+        setSelectedTasks([]);
+        toast.success(`Xóa ${selectedTasks.length} công việc thành công!`);
+        fetchTasks(); // Refresh task list
+        fetchStatistics();
       } catch (error) {
-        console.error(`Error ${action} clients:`, error);
-        toast.error("Có lỗi xảy ra khi thực hiện thao tác");
+        console.error('Error bulk deleting tasks:', error);
+        toast.error('Lỗi khi xóa công việc');
       }
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
-  }
+  const handleStatusChange = async (taskId, newStatus, reportLink = null) => {
+    try {
+      const updateData = { status: newStatus };
+      if (reportLink) {
+        updateData.report_link = reportLink;
+      }
+      
+      await axios.patch(`${API}/api/internal-tasks/${taskId}/status`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Cập nhật trạng thái thành công!');
+      
+      // Use setTimeout to prevent rapid re-renders
+      setTimeout(() => {
+        fetchTasks();
+        fetchStatistics();
+      }, 100);
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Lỗi khi cập nhật trạng thái';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      
+      toast.error(errorMessage);
+      throw error; // Re-throw to handle in modal
+    }
+  };
 
-  return (
-    <div className="space-y-6 fade-in">
-      {/* Modern Header */}
+  const handleAddFeedback = async () => {
+    try {
+      if (!newFeedback.trim()) {
+        toast.error('Vui lòng nhập nội dung feedback');
+        return;
+      }
+
+      const response = await axios.post(`${API}/api/internal-tasks/${feedbackTask.id}/feedback/`, {
+        message: newFeedback.trim()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Add new feedback to the list with user info
+      const newFeedbackItem = {
+        id: response.data.id || Date.now().toString(),
+        task_id: feedbackTask.id,
+        user_id: user.id,
+        user_name: user.full_name,
+        message: newFeedback.trim(),
+        created_at: new Date().toISOString()
+      };
+      
+      setFeedbacks(prev => [...prev, newFeedbackItem]);
+      setNewFeedback('');
+      
+      // Update feedback count for this task
+      setFeedbackCounts(prev => ({
+        ...prev,
+        [feedbackTask.id]: (prev[feedbackTask.id] || 0) + 1
+      }));
+      
+      toast.success('Thêm feedback thành công!');
+    } catch (error) {
+      console.error('Error adding feedback:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Lỗi khi thêm feedback';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
+  };
+
+  const fetchFeedbacks = async (taskId) => {
+    try {
+      const response = await axios.get(`${API}/api/internal-tasks/${taskId}/feedback/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const feedbackData = response.data || [];
+      setFeedbacks(feedbackData);
+      
+      // Update feedback count for this task
+      setFeedbackCounts(prev => ({
+        ...prev,
+        [taskId]: feedbackData.length
+      }));
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error);
+      // Fallback to empty array if API not implemented yet
+      setFeedbacks([]);
+      setFeedbackCounts(prev => ({
+        ...prev,
+        [taskId]: 0
+      }));
+    }
+  };
+
+  const fetchFeedbackCounts = async (tasks) => {
+    try {
+      const counts = {};
+      await Promise.all(tasks.map(async (task) => {
+        try {
+          const response = await axios.get(`${API}/api/internal-tasks/${task.id}/feedback/`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          counts[task.id] = response.data?.length || 0;
+        } catch (error) {
+          counts[task.id] = 0;
+        }
+      }));
+      setFeedbackCounts(counts);
+    } catch (error) {
+      console.error('Error fetching feedback counts:', error);
+    }
+  };
+
+  // Report modal functions
+  const handleOpenReportModal = (task) => {
+    setReportTask(task);
+    setReportLink('');
+    setShowReportModal(true);
+  };
+
+  const handleCloseReportModal = () => {
+    if (!isSubmittingReport) {
+      setShowReportModal(false);
+      setReportTask(null);
+      setReportLink('');
+    }
+  };
+
+  const submitCompletion = async () => {
+    if (!reportLink.trim()) {
+      toast.error('Vui lòng nhập link báo cáo');
+      return;
+    }
+
+    setIsSubmittingReport(true);
+
+    try {
+      await handleStatusChange(reportTask.id, 'completed', reportLink);
+      setShowReportModal(false);
+      setReportTask(null);
+      setReportLink('');
+      toast.success('Hoàn thành công việc thành công!');
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast.error('Có lỗi xảy ra khi hoàn thành công việc');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  // Filter tasks based on current filters
+  const filteredTasks = tasks.filter(task => {
+    if (searchTerm && !task.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    if (statusFilter !== 'all' && task.status !== statusFilter) {
+      return false;
+    }
+    if (priorityFilter !== 'all' && task.priority !== priorityFilter) {
+      return false;
+    }
+    if (showCompleted && task.status !== 'completed') {
+      return false;
+    }
+    if (!showCompleted && task.status === 'completed') {
+      return false;
+    }
+    return true;
+  });
+
+  // Utility functions
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'not_started':
+        return <div className="w-3 h-3 bg-gray-400 rounded-full"></div>;
+      case 'in_progress':
+        return <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>;
+      case 'completed':
+        return <div className="w-3 h-3 bg-green-400 rounded-full"></div>;
+      default:
+        return <div className="w-3 h-3 bg-gray-400 rounded-full"></div>;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'not_started': return 'Chưa làm';
+      case 'in_progress': return 'Đang làm';
+      case 'completed': return 'Hoàn thành';
+      default: return 'Không xác định';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'normal': return 'bg-blue-100 text-blue-800';
+      case 'low': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityLabel = (priority) => {
+    switch (priority) {
+      case 'urgent': return 'Khẩn cấp';
+      case 'high': return 'Cao';
+      case 'normal': return 'Trung bình';
+      case 'low': return 'Thấp';
+      default: return 'Không xác định';
+    }
+  };
+
+  const StatCard = ({ title, count, color, onClick, isActive }) => (
+    <div 
+      className={`modern-card p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+        isActive ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+      }`}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Khách hàng</h1>
-          <p className="text-gray-600 mt-1">Quản lý thông tin khách hàng và mối quan hệ</p>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className={`text-2xl font-bold ${color}`}>{count}</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="btn-primary"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        <div className={`w-12 h-12 rounded-full ${color.replace('text', 'bg').replace('-600', '-100')} flex items-center justify-center`}>
+          <svg className={`w-6 h-6 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          Thêm khách hàng
-        </button>
-      </div>
-
-      {/* Modern Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.totalClients}</p>
-              <p className="text-sm text-blue-600 mt-1">
-                <span className="font-medium">+12%</span> so với tháng trước
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-          </div>
         </div>
+      </div>
+    </div>
+  );
 
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Đang hoạt động</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{statsData.activeClients}</p>
-              <p className="text-sm text-green-600 mt-1">
-                <span className="font-medium">Hoạt động tích cực</span>
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý công việc</h1>
+          <p className="text-gray-600 mt-1">Quản lý và theo dõi công việc nội bộ agency</p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="modern-input"
+          >
+            <option value="today">Hôm nay</option>
+            <option value="week">Tuần này</option>
+            <option value="month">Tháng này</option>
+            <option value="all">Tất cả</option>
+          </select>
+        </div>
       </div>
 
-      {/* Modern Search and Filter Bar */}
-      <div className="modern-card">
-        <div className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm khách hàng..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="modern-input pl-10"
-                />
-              </div>
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard
+          title="Tổng Task"
+          count={statistics.total_tasks || 0}
+          color="text-blue-600"
+          onClick={() => {
+            setStatusFilter('all');
+            setPriorityFilter('all');
+          }}
+          isActive={statusFilter === 'all' && priorityFilter === 'all'}
+        />
+        <StatCard
+          title="Chưa làm"
+          count={statistics.not_started || 0}
+          color="text-gray-600"
+          onClick={() => {
+            setStatusFilter('not_started');
+            setPriorityFilter('all');
+          }}
+          isActive={statusFilter === 'not_started'}
+        />
+        <StatCard
+          title="Hoàn thành"
+          count={statistics.completed || 0}
+          color="text-green-600"
+          onClick={() => {
+            setStatusFilter('completed');
+            setPriorityFilter('all');
+          }}
+          isActive={statusFilter === 'completed'}
+        />
+        <StatCard
+          title="Cao"
+          count={statistics.high_priority || 0}
+          color="text-red-600"
+          onClick={() => {
+            setPriorityFilter('urgent');
+            setStatusFilter('all');
+          }}
+          isActive={priorityFilter === 'urgent'}
+        />
+        <StatCard
+          title="Trung bình"
+          count={statistics.normal_priority || 0}
+          color="text-blue-600"
+          onClick={() => {
+            setPriorityFilter('normal');
+            setStatusFilter('all');
+          }}
+          isActive={priorityFilter === 'normal'}
+        />
+        <StatCard
+          title="Thấp"
+          count={statistics.low_priority || 0}
+          color="text-gray-600"
+          onClick={() => {
+            setPriorityFilter('low');
+            setStatusFilter('all');
+          }}
+          isActive={priorityFilter === 'low'}
+        />
+      </div>
+
+      {/* Toolbar */}
+      <div className="modern-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Search and Filters */}
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Tìm kiếm công việc..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="modern-input pl-10"
+              />
             </div>
             
-            {/* Filter Controls */}
-            <div className="flex gap-3">
-              <select
-                value={statusFilter}
-                onChange={handleStatusFilterChange}
-                className="modern-input"
-              >
-                <option value="active">Đang hoạt động</option>
-                <option value="archived">Đã lưu trữ</option>
-                <option value="all">Tất cả</option>
-              </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="modern-input"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="not_started">Chưa làm</option>
+              <option value="in_progress">Đang làm</option>
+              <option value="completed">Hoàn thành</option>
+            </select>
 
-              {selectedClients.length > 0 && (
-                <div className="relative">
-                  <button
-                    onClick={toggleBulkActionMenu}
-                    className="btn-secondary"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                    </svg>
-                    Thao tác ({selectedClients.length})
-                  </button>
-                  {bulkActionMenuOpen && (
-                    <div className="dropdown-menu">
-                      {bulkActionMenuOpen && <div className="dropdown-backdrop" onClick={() => setBulkActionMenuOpen(false)}></div>}
-                    <div className="py-1">
-                      <button
-                        onClick={() => handleBulkAction('archive')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Lưu trữ
-                      </button>
-                      <button
-                        onClick={() => handleBulkAction('restore')}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Khôi phục
-                      </button>
-                      <button
-                        onClick={() => handleBulkAction('delete')}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="modern-input"
+            >
+              <option value="all">Tất cả ưu tiên</option>
+              <option value="urgent">Cao</option>
+              <option value="normal">Trung bình</option>
+              <option value="low">Thấp</option>
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            {selectedTasks.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+              >
+                Xóa ({selectedTasks.length})
+              </button>
             )}
+            
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                showCompleted 
+                  ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {showCompleted ? 'Trở về' : 'Hoàn thành'}
+            </button>
+
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary flex items-center gap-2"
+              title="Thêm công việc mới"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Thêm công việc
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Modern Client Table */}
-      <div className="modern-table">
-        <div className="table-container">
-          <table className="min-w-full divide-y divide-gray-300">
-            <thead>
+      {/* Tasks List */}
+      <div className="modern-card">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <input
                     type="checkbox"
-                    checked={selectedClients.length === clients.length && clients.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedTasks(filteredTasks.map(t => t.id));
+                      } else {
+                        setSelectedTasks([]);
+                      }
+                    }}
+                    checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Khách hàng
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Công việc
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Liên hệ
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Mô tả
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Thông tin
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Deadline
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Tags
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ưu tiên
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Feedback
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Trạng thái
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  Hành động
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Report
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Action
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thao tác
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {clients.map((client) => (
-                <tr key={client.id} className="hover:bg-blue-50 transition-colors duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedClients.includes(client.id)}
-                      onChange={() => handleSelectClient(client.id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-12 w-12 flex-shrink-0">
-                        {client.avatar_url ? (
-                          <img className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-200" src={client.avatar_url} alt="" />
-                        ) : (
-                          <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-white">
-                              {client.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="ml-4">
-                        <button
-                          onClick={() => navigate(`/clients/${client.id}`)}
-                          className="text-sm font-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors duration-200"
-                        >
-                          {client.name}
-                        </button>
-                        <div className="text-sm text-gray-600 font-medium">{client.company}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{client.contact_name}</div>
-                    <div className="text-sm text-gray-600">{client.contact_email}</div>
-                    <div className="text-sm text-gray-600">{client.contact_phone}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{client.industry}</div>
-                    <div className="text-sm text-gray-600">{client.size}</div>
-                    {client.website && (
-                      <div className="text-sm text-blue-600 hover:text-blue-800">
-                        <a href={client.website} target="_blank" rel="noopener noreferrer" className="transition-colors duration-200">
-                          {client.website}
-                        </a>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-wrap gap-1">
-                      {client.tags && client.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="status-badge status-info"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`status-badge ${
-                      client.archived 
-                        ? 'bg-gray-100 text-gray-800' 
-                        : 'status-success'
-                    }`}>
-                      {client.archived ? 'Đã lưu trữ' : 'Hoạt động'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="relative">
-                      <button
-                        onClick={() => toggleActionMenu(client.id)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
-                      >
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                        </svg>
-                      </button>
-                      {actionMenuOpen === client.id && (
-                        <div className="dropdown-menu">
-                          {actionMenuOpen === client.id && <div className="dropdown-backdrop" onClick={() => setActionMenuOpen(null)}></div>}
-                          <div className="py-1">
-                            <button
-                              onClick={() => {
-                                navigate(`/clients/${client.id}`);
-                                setActionMenuOpen(null);
-                              }}
-                              className="dropdown-menu-item"
-                            >
-                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              Xem chi tiết
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleEditClient(client);
-                                setActionMenuOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleArchiveClient(client.id, client.archived);
-                                setActionMenuOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              {client.archived ? 'Khôi phục' : 'Lưu trữ'}
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDeleteClient(client.id);
-                                setActionMenuOpen(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                            >
-                              Xóa
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan="10" className="px-6 py-4 text-center">
+                    <div className="spinner mx-auto"></div>
                   </td>
                 </tr>
-              ))}
+              ) : filteredTasks.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
+                    Không có công việc nào
+                  </td>
+                </tr>
+              ) : (
+                filteredTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    selectedTasks={selectedTasks}
+                    setSelectedTasks={setSelectedTasks}
+                    onStatusChange={handleStatusChange}
+                    onEdit={setEditingTask}
+                    onDelete={handleDeleteTask}
+                    onView={setViewingTask}
+                    onOpenReportModal={handleOpenReportModal}
+                    onFeedback={(task) => {
+                      setFeedbackTask(task);
+                      fetchFeedbacks(task.id);
+                    }}
+                    feedbackCounts={feedbackCounts}
+                    getStatusIcon={getStatusIcon}
+                    getPriorityColor={getPriorityColor}
+                    getPriorityLabel={getPriorityLabel}
+                    getStatusLabel={getStatusLabel}
+                  />
+                ))
+              )}
             </tbody>
           </table>
         </div>
-        
-        {clients.length === 0 && (
-          <div className="text-center py-10 text-gray-500">
-            {statusFilter === 'all' ? 'Chưa có khách hàng nào' : 
-             statusFilter === 'archived' ? 'Chưa có khách hàng nào bị lưu trữ' :
-             'Chưa có khách hàng hoạt động nào'}
+
+        {filteredTasks.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có công việc</h3>
+            <p className="text-gray-600">Bắt đầu bằng cách tạo công việc đầu tiên</p>
           </div>
         )}
       </div>
 
-      {/* Add/Edit Client Modal */}
-      {isModalOpen && (
+      {/* Modals */}
+      {showCreateModal && (
+        <TaskModal
+          users={users}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateTask}
+        />
+      )}
+
+      {editingTask && (
+        <TaskModal
+          task={editingTask}
+          users={users}
+          onClose={() => setEditingTask(null)}
+          onSubmit={handleUpdateTask}
+        />
+      )}
+
+      {viewingTask && (
+        <TaskDetailModal
+          task={viewingTask}
+          onClose={() => setViewingTask(null)}
+        />
+      )}
+
+      {feedbackTask && (
+        <FeedbackModal
+          task={feedbackTask}
+          feedbacks={feedbacks}
+          newFeedback={newFeedback}
+          setNewFeedback={setNewFeedback}
+          onClose={() => setFeedbackTask(null)}
+          onAddFeedback={handleAddFeedback}
+          user={user}
+        />
+      )}
+
+      {/* Report Link Modal */}
+      {showReportModal && reportTask && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
-                {isEditing ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}
-              </h3>
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Hoàn thành công việc</h3>
               <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={handleCloseReportModal}
+                disabled={isSubmittingReport}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Avatar Upload */}
-              <div className="text-center">
-                <div className="flex justify-center mb-4">
-                  {avatarPreview ? (
-                    <img
-                      src={avatarPreview}
-                      alt="Avatar preview"
-                      className="h-20 w-20 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
-                      <svg className="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                  id="avatar-upload"
-                />
-                <label
-                  htmlFor="avatar-upload"
-                  className="cursor-pointer bg-white border border-gray-300 rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Chọn ảnh đại diện
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên khách hàng *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên công ty *
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    required
-                    value={formData.company}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngành nghề
-                  </label>
-                  <input
-                    type="text"
-                    name="industry"
-                    value={formData.industry}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quy mô
-                  </label>
-                  <select
-                    name="size"
-                    value={formData.size}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="">Chọn quy mô</option>
-                    <option value="1-10">1-10 nhân viên</option>
-                    <option value="11-50">11-50 nhân viên</option>
-                    <option value="51-200">51-200 nhân viên</option>
-                    <option value="201-500">201-500 nhân viên</option>
-                    <option value="500+">Trên 500 nhân viên</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên người liên hệ
-                  </label>
-                  <input
-                    type="text"
-                    name="contact_name"
-                    value={formData.contact_name}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email liên hệ
-                  </label>
-                  <input
-                    type="email"
-                    name="contact_email"
-                    value={formData.contact_email}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Điện thoại liên hệ
-                  </label>
-                  <input
-                    type="tel"
-                    name="contact_phone"
-                    value={formData.contact_phone}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Địa chỉ
+            
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Vui lòng cung cấp link báo cáo để hoàn thành công việc: <strong>{reportTask.name}</strong>
+            </p>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!isSubmittingReport && reportLink.trim()) {
+                submitCompletion();
+              }
+            }}>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Link báo cáo *
                 </label>
                 <input
                   type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="https://example.com/report"
+                  value={reportLink}
+                  onChange={(e) => setReportLink(e.target.value)}
+                  disabled={isSubmittingReport}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+                  autoFocus
+                  required
                 />
+                {reportLink && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Link đã nhập
+                  </p>
+                )}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags
-                </label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <select
-                  onChange={handleTagSelect}
-                  value=""
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="">Chọn tag</option>
-                  {availableTags.map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tag}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ghi chú
-                </label>
-                <textarea
-                  name="notes"
-                  rows={3}
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
+              
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={handleCloseReportModal}
+                  disabled={isSubmittingReport}
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                  disabled={!reportLink.trim() || isSubmittingReport}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center font-medium"
                 >
-                  {isEditing ? 'Cập nhật' : 'Thêm'}
+                  {isSubmittingReport ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Hoàn thành
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -2154,732 +2197,693 @@ const Clients = () => {
   );
 };
 
-// Component chi tiết dự án
-const ProjectDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [project, setProject] = useState(null);
-  const [client, setClient] = useState(null);
-  const [contracts, setContracts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+// TaskRow Component with memo to prevent unnecessary re-renders
+const TaskRow = React.memo(({ 
+  task, 
+  selectedTasks, 
+  setSelectedTasks, 
+  onStatusChange, 
+  onEdit, 
+  onDelete, 
+  onView, 
+  onFeedback,
+  onOpenReportModal, // Add new prop
+  feedbackCounts = {}, // Add feedbackCounts prop
+  getStatusIcon,
+  getPriorityColor,
+  getPriorityLabel,
+  getStatusLabel
+}) => {
 
-  useEffect(() => {
-    fetchProjectDetail();
-    fetchProjectTasks();
-    fetchProjectContracts();
-    fetchProjectInvoices();
-  }, [id]);
-
-  const fetchProjectDetail = async () => {
-    try {
-      const response = await axios.get(`${API}/projects/${id}`);
-      setProject(response.data);
-      
-      // Fetch client info
-      if (response.data.client_id) {
-        const clientResponse = await axios.get(`${API}/clients/${response.data.client_id}`);
-        setClient(clientResponse.data);
-      }
-    } catch (error) {
-      console.error("Error fetching project:", error);
-      toast.error("Không thể tải thông tin dự án");
-      navigate('/projects');
+  const handleStatusUpdate = async (newStatus) => {
+    if (newStatus === 'completed') {
+      // Open report modal instead of inline logic
+      onOpenReportModal(task);
+    } else {
+      onStatusChange(task.id, newStatus);
     }
   };
 
-  const fetchProjectTasks = async () => {
-    try {
-      // Note: This would need to be implemented based on your task structure
-      // For now, we'll set empty array
-      setTasks([]);
-    } catch (error) {
-      console.error("Error fetching project tasks:", error);
-    }
-  };
-
-  const fetchProjectContracts = async () => {
-    try {
-      const response = await axios.get(`${API}/contracts/`);
-      // Filter contracts by project_id
-      const projectContracts = response.data.filter(contract => contract.project_id === id);
-      setContracts(projectContracts);
-    } catch (error) {
-      console.error("Error fetching project contracts:", error);
-    }
-  };
-
-  const fetchProjectInvoices = async () => {
-    try {
-      const response = await axios.get(`${API}/invoices/`);
-      // Filter invoices by project_id
-      const projectInvoices = response.data.filter(invoice => invoice.project_id === id);
-      setInvoices(projectInvoices);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching project invoices:", error);
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="spinner mb-4"></div>
-          <p className="text-gray-600">Đang tải thông tin dự án...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!project) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-gray-600">Không tìm thấy thông tin dự án</p>
+  const getActionButton = () => {
+    if (task.status === 'not_started') {
+      return (
         <button
-          onClick={() => navigate('/projects')}
-          className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+          onClick={() => handleStatusUpdate('in_progress')}
+          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm"
         >
-          Quay lại danh sách
+          Bắt đầu
         </button>
-      </div>
-    );
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'on_hold': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      );
+    } else if (task.status === 'in_progress') {
+      return (
+        <button
+          onClick={() => handleStatusUpdate('completed')}
+          className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm"
+        >
+          Hoàn thành
+        </button>
+      );
     }
-  };
-
-  const getStatusText = (status) => {
-    const statusMap = {
-      'planning': 'Đang lập kế hoạch',
-      'in_progress': 'Đang thực hiện',
-      'on_hold': 'Tạm dừng',
-      'completed': 'Hoàn thành',
-      'cancelled': 'Đã hủy',
-      'overdue': 'Quá hạn',
-      'pending': 'Chờ xử lý'
-    };
-    return statusMap[status] || status;
+    return null;
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header với thông tin cơ bản */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/projects')}
-              className="flex items-center text-gray-600 hover:text-gray-900"
+    <>
+      <tr key={task.id} className="hover:bg-gray-50">
+        <td className="px-6 py-4 whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={selectedTasks.includes(task.id)}
+            onChange={() => {
+              if (selectedTasks.includes(task.id)) {
+                setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+              } else {
+                setSelectedTasks([...selectedTasks, task.id]);
+              }
+            }}
+            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className="flex items-center">
+            {getStatusIcon(task.status)}
+            <span className="ml-2 text-sm font-medium text-gray-900 truncate max-w-xs">
+              {task.name}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <button
+            onClick={() => onView(task)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Chi tiết
+          </button>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          {new Date(task.deadline).toLocaleString('vi-VN')}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
+            {getPriorityLabel(task.priority)}
+          </span>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <button
+            onClick={() => onFeedback(task)}
+            className={`text-sm px-3 py-1 rounded hover:bg-gray-200 transition-colors ${
+              feedbackCounts[task.id] > 0 
+                ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            Feedback ({feedbackCounts[task.id] || 0})
+          </button>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          {getStatusLabel(task.status)}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          {task.report_link ? (
+            <a
+              href={task.report_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-800"
             >
-              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              Xem báo cáo
+            </a>
+          ) : (
+            <span className="text-sm text-gray-400">Chưa có</span>
+          )}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          {getActionButton()}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => onView(task)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              Quay lại danh sách dự án
             </button>
-            <div className="flex space-x-3">
-              <button className="bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Chỉnh sửa
-              </button>
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
-                Tạo hóa đơn
-              </button>
-            </div>
+            <button
+              onClick={() => onEdit(task)}
+              className="text-green-600 hover:text-green-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onDelete(task.id)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
+        </td>
+      </tr>
+    </>
+  );
+});
+
+// TaskModal Component (Create/Edit)
+const TaskModal = ({ task, users, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: task?.name || '',
+    description: task?.description || '',
+    assigned_to: task?.assigned_to || '',
+    deadline: task?.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : '',
+    priority: task?.priority || 'normal',
+    document_links: task?.document_links || []
+  });
+  const [newLink, setNewLink] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error('Vui lòng nhập tên công việc');
+      return;
+    }
+    if (!formData.assigned_to) {
+      toast.error('Vui lòng chọn người nhận');
+      return;
+    }
+    if (!formData.deadline) {
+      toast.error('Vui lòng chọn deadline');
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  const addDocumentLink = () => {
+    if (newLink.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        document_links: [...prev.document_links, newLink.trim()]
+      }));
+      setNewLink('');
+    }
+  };
+
+  const removeDocumentLink = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      document_links: prev.document_links.filter((_, i) => i !== index)
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {task ? 'Sửa công việc' : 'Thêm công việc mới'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="px-6 py-6">
-          <div className="flex items-start space-x-6">
-            {/* Icon dự án */}
-            <div className="flex-shrink-0">
-              <div className="h-24 w-24 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <svg className="h-12 w-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tên công việc *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                placeholder="Nhập tên công việc..."
+              />
             </div>
 
-            {/* Thông tin chính */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(project.status)}`}>
-                  {getStatusText(project.status)}
-                </span>
-              </div>
-              
-              {client && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mô tả
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                rows={6}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Mô tả chi tiết công việc..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Link tài liệu
+              </label>
+              <div className="flex gap-3 mb-3">
+                <input
+                  type="url"
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập link tài liệu..."
+                />
                 <button
-                  onClick={() => navigate(`/clients/${client.id}`)}
-                  className="text-lg text-indigo-600 hover:text-indigo-800 mt-1"
+                  type="button"
+                  onClick={addDocumentLink}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap font-medium"
                 >
-                  {client.name} - {client.company}
+                  Thêm
                 </button>
-              )}
-              
-              {project.description && (
-                <p className="text-sm text-gray-600 mt-2">{project.description}</p>
-              )}
-
-              {/* Team members */}
-              {project.team && project.team.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-gray-500 mb-2">Thành viên nhóm:</p>
-                  <div className="flex space-x-2">
-                    {project.team.map((member, index) => (
-                      <div
-                        key={index}
-                        className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center"
-                      >
-                        <span className="text-xs font-medium text-gray-700">
-                          {member.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Stats cards mini */}
-              <div className="grid grid-cols-4 gap-4 mt-6">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-lg font-semibold text-gray-900">
-                    {project.budget ? project.budget.toLocaleString() : '0'} VNĐ
-                  </div>
-                  <div className="text-sm text-gray-600">Ngân sách</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-lg font-semibold text-gray-900">
-                    {project.contract_value ? project.contract_value.toLocaleString() : '0'} VNĐ
-                  </div>
-                  <div className="text-sm text-gray-600">Giá trị hợp đồng</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-lg font-semibold text-gray-900">{contracts.length}</div>
-                  <div className="text-sm text-gray-600">Hợp đồng</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-lg font-semibold text-gray-900">{invoices.length}</div>
-                  <div className="text-sm text-gray-600">Hóa đơn</div>
-                </div>
               </div>
+              {formData.document_links.length > 0 && (
+                <div className="space-y-3 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  {formData.document_links.map((link, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm truncate flex-1 mr-3"
+                        title={link}
+                      >
+                        {link}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeDocumentLink(index)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Xóa link"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Người nhận *
+              </label>
+              <select
+                required
+                value={formData.assigned_to}
+                onChange={(e) => setFormData(prev => ({...prev, assigned_to: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              >
+                <option value="">Chọn người nhận</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.full_name} ({user.role})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Thông tin thời gian và tài chính */}
-            <div className="flex-shrink-0 w-80">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Thông tin dự án</h3>
-                <div className="space-y-3">
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Ngày bắt đầu</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {project.start_date ? format(new Date(project.start_date), 'dd/MM/yyyy') : 'Chưa xác định'}
-                    </dd>
-                  </div>
-                  
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Ngày kết thúc</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {project.end_date ? format(new Date(project.end_date), 'dd/MM/yyyy') : 'Chưa xác định'}
-                    </dd>
-                  </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ưu tiên
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({...prev, priority: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              >
+                <option value="low">Thấp</option>
+                <option value="normal">Trung bình</option>
+                <option value="high">Cao</option>
+                <option value="urgent">Khẩn cấp</option>
+              </select>
+            </div>
 
-                  {project.debt && project.debt > 0 && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Công nợ</dt>
-                      <dd className="mt-1 text-sm text-red-600 font-semibold">
-                        {project.debt.toLocaleString()} VNĐ
-                      </dd>
-                    </div>
-                  )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Deadline *
+              </label>
+              <input
+                type="datetime-local"
+                required
+                value={formData.deadline}
+                onChange={(e) => setFormData(prev => ({...prev, deadline: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              />
+            </div>
 
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Ngày tạo</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {project.created_at ? format(new Date(project.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Cập nhật cuối</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {project.updated_at ? format(new Date(project.updated_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                    </dd>
-                  </div>
+            {/* Preview/Status Box */}
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h4 className="font-medium text-gray-900 mb-3">Thông tin tóm tắt</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tên:</span>
+                  <span className="font-medium">{formData.name || 'Chưa nhập'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Người nhận:</span>
+                  <span className="font-medium">
+                    {formData.assigned_to ? 
+                      users.find(u => u.id === formData.assigned_to)?.full_name || 'Unknown' : 
+                      'Chưa chọn'
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Ưu tiên:</span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    formData.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                    formData.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                    formData.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {formData.priority === 'urgent' ? 'Khẩn cấp' :
+                     formData.priority === 'high' ? 'Cao' :
+                     formData.priority === 'normal' ? 'Trung bình' : 'Thấp'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Số link:</span>
+                  <span className="font-medium">{formData.document_links.length}</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Full Width Submit Buttons */}
+          <div className="md:col-span-2 flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium text-lg"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-lg"
+            >
+              {task ? 'Cập nhật' : 'Tạo công việc'}
+            </button>
+          </div>
+        </form>
       </div>
+    </div>
+  );
+};
 
-      {/* Tab Navigation */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`${
-                activeTab === 'overview'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Tổng quan
-            </button>
-            <button
-              onClick={() => setActiveTab('tasks')}
-              className={`${
-                activeTab === 'tasks'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Nhiệm vụ ({tasks.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('contracts')}
-              className={`${
-                activeTab === 'contracts'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Hợp đồng ({contracts.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('invoices')}
-              className={`${
-                activeTab === 'invoices'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Hóa đơn ({invoices.length})
-            </button>
-          </nav>
+// TaskDetailModal Component
+const TaskDetailModal = ({ task, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">Chi tiết công việc</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="p-6">
-          {/* Tab Content */}
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Progress Summary */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Tiến độ dự án</h3>
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-indigo-600">
-                        {project.status === 'completed' ? '100%' : 
-                         project.status === 'in_progress' ? '60%' : 
-                         project.status === 'on_hold' ? '30%' : '0%'}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">Hoàn thành</div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-green-600">
-                        {invoices.filter(inv => inv.status === 'paid').length}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">Hóa đơn đã thanh toán</div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-600">
-                        {project.team ? project.team.length : 0}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">Thành viên tham gia</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tên công việc</label>
+            <p className="text-gray-900">{task.name}</p>
+          </div>
 
-              {/* Project Description */}
-              {project.description && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Mô tả dự án</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Financial Summary */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Tổng quan tài chính</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="text-lg font-semibold text-blue-900">
-                      {project.budget ? project.budget.toLocaleString() : '0'} VNĐ
-                    </div>
-                    <div className="text-sm text-blue-600">Ngân sách dự án</div>
-                  </div>
-                  
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="text-lg font-semibold text-green-900">
-                      {project.contract_value ? project.contract_value.toLocaleString() : '0'} VNĐ
-                    </div>
-                    <div className="text-sm text-green-600">Giá trị hợp đồng</div>
-                  </div>
-                  
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <div className="text-lg font-semibold text-yellow-900">
-                      {invoices.reduce((total, inv) => total + (inv.amount || 0), 0).toLocaleString()} VNĐ
-                    </div>
-                    <div className="text-sm text-yellow-600">Tổng hóa đơn</div>
-                  </div>
-                  
-                  {project.debt && project.debt > 0 && (
-                    <div className="bg-red-50 p-4 rounded-lg">
-                      <div className="text-lg font-semibold text-red-900">
-                        {project.debt.toLocaleString()} VNĐ
-                      </div>
-                      <div className="text-sm text-red-600">Công nợ</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Lịch sử hoạt động</h3>
-                <div className="flow-root">
-                  <ul className="-mb-8">
-                    <li>
-                      <div className="relative pb-8">
-                        <div className="relative flex space-x-3">
-                          <div>
-                            <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                              <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                              </svg>
-                            </span>
-                          </div>
-                          <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                            <div>
-                              <p className="text-sm text-gray-500">
-                                Dự án được tạo
-                              </p>
-                            </div>
-                            <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                              {project.created_at ? format(new Date(project.created_at), 'dd/MM/yyyy') : 'N/A'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'tasks' && (
+          {task.description && (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Nhiệm vụ</h3>
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
-                  Tạo nhiệm vụ mới
-                </button>
-              </div>
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có nhiệm vụ nào</h3>
-                <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo nhiệm vụ mới cho dự án này.</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+              <p className="text-gray-900 whitespace-pre-wrap">{task.description}</p>
+            </div>
+          )}
+
+          {task.document_links && task.document_links.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Link tài liệu</label>
+              <div className="space-y-1">
+                {task.document_links.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    {link}
+                  </a>
+                ))}
               </div>
             </div>
           )}
 
-          {activeTab === 'contracts' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Người giao</label>
+            <p className="text-gray-900">{task.assigned_by_name}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Người nhận</label>
+            <p className="text-gray-900">{task.assigned_to_name}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+            <p className="text-gray-900">{new Date(task.deadline).toLocaleString('vi-VN')}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ưu tiên</label>
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+              task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+              task.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {task.priority === 'urgent' ? 'Khẩn cấp' : task.priority === 'high' ? 'Cao' : task.priority === 'normal' ? 'Trung bình' : 'Thấp'}
+            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              task.status === 'completed' ? 'bg-green-100 text-green-800' :
+              task.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {task.status === 'completed' ? 'Hoàn thành' :
+               task.status === 'in_progress' ? 'Đang làm' : 'Chưa làm'}
+            </span>
+          </div>
+
+          {task.report_link && (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Hợp đồng</h3>
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
-                  Tạo hợp đồng mới
-                </button>
-              </div>
-              {contracts.length > 0 ? (
-                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-300">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tiêu đề
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Giá trị
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Trạng thái
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Ngày kết thúc
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {contracts.map((contract) => (
-                        <tr key={contract.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {contract.title}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {contract.value?.toLocaleString()} VNĐ
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              contract.status === 'signed' ? 'bg-green-100 text-green-800' :
-                              contract.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {contract.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {contract.end_date ? format(new Date(contract.end_date), 'dd/MM/yyyy') : 'N/A'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có hợp đồng nào</h3>
-                  <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo hợp đồng mới cho dự án này.</p>
-                </div>
-              )}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Báo cáo</label>
+              <a
+                href={task.report_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800"
+              >
+                {task.report_link}
+              </a>
             </div>
           )}
 
-          {activeTab === 'invoices' && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Hóa đơn</h3>
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
-                  Tạo hóa đơn mới
-                </button>
-              </div>
-              {invoices.length > 0 ? (
-                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-300">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Số hóa đơn
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tiêu đề
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Số tiền
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Trạng thái
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Hạn thanh toán
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {invoices.map((invoice) => (
-                        <tr key={invoice.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {invoice.invoice_number}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {invoice.title}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {invoice.amount?.toLocaleString()} VNĐ
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-                              invoice.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                              invoice.status === 'sent' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {invoice.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yyyy') : 'N/A'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có hóa đơn nào</h3>
-                  <p className="mt-1 text-sm text-gray-500">Bắt đầu bằng cách tạo hóa đơn mới cho dự án này.</p>
-                </div>
-              )}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ngày tạo</label>
+            <p className="text-gray-900">{new Date(task.created_at).toLocaleString('vi-VN')}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cập nhật lần cuối</label>
+            <p className="text-gray-900">{new Date(task.updated_at).toLocaleString('vi-VN')}</p>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Đóng
+          </button>
         </div>
       </div>
     </div>
   );
 };
-// Component placeholders cho các trang chưa implement
-const Settings = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Cài đặt hệ thống</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Cài đặt hệ thống</h3>
-        <p className="text-gray-600">Trang cài đặt sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
-    </div>
-  </div>
-);
 
-const Account = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Thông tin tài khoản</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Thông tin tài khoản</h3>
-        <p className="text-gray-600">Trang quản lý tài khoản sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
-    </div>
-  </div>
-);
+// FeedbackModal Component - Improved with persistent storage and better UI
+const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, onAddFeedback, user }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Feedback - {task.name}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Thảo luận và góp ý về công việc này
+            </p>
+            {feedbacks.length > 0 && (
+              <span className="inline-flex items-center mt-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                {feedbacks.length} bình luận
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-const Reports = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo tổng hợp</h3>
-        <p className="text-gray-600">Hệ thống báo cáo sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
-    </div>
-  </div>
-);
+        {/* Content */}
+        <div className="flex flex-col h-[calc(90vh-140px)]">
+          {/* Feedback List */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {feedbacks.length === 0 ? (
+              <div className="text-center py-12">
+                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <p className="text-gray-500 text-lg">Chưa có feedback nào</p>
+                <p className="text-gray-400 text-sm mt-1">Hãy là người đầu tiên góp ý về công việc này</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {feedbacks.map((feedback) => (
+                  <div key={feedback.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-sm font-semibold">
+                            {feedback.user_name?.charAt(0).toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-gray-900">
+                            {feedback.user_name || 'Unknown User'}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(feedback.created_at).toLocaleString('vi-VN', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed pl-11">{feedback.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-const FinancialReports = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Báo cáo tài chính</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo tài chính</h3>
-        <p className="text-gray-600">Báo cáo doanh thu, chi phí và lợi nhuận sẽ được phát triển trong phiên bản tiếp theo</p>
+          {/* Add Feedback Section */}
+          <div className="border-t border-gray-200 p-6 bg-white">
+            <div className="flex items-start space-x-4">
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold">
+                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="mb-3">
+                  <span className="text-sm font-medium text-gray-900">
+                    {user?.full_name || 'Current User'}
+                  </span>
+                  <span className="text-xs text-gray-500 ml-2">
+                    Đang viết feedback...
+                  </span>
+                </div>
+                <textarea
+                  value={newFeedback}
+                  onChange={(e) => setNewFeedback(e.target.value)}
+                  placeholder="Nhập feedback của bạn về công việc này..."
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base"
+                />
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-xs text-gray-500">
+                    {newFeedback.length}/500 ký tự
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={onClose}
+                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+                    >
+                      Đóng
+                    </button>
+                    <button
+                      onClick={onAddFeedback}
+                      disabled={!newFeedback.trim() || newFeedback.length > 500}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      Gửi feedback
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const Opportunities = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Quản lý cơ hội</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý cơ hội bán hàng</h3>
-        <p className="text-gray-600">Tính năng quản lý leads và cơ hội sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
-    </div>
-  </div>
-);
-
-const SalesReports = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Báo cáo bán hàng</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Báo cáo bán hàng</h3>
-        <p className="text-gray-600">Thống kê hiệu suất bán hàng sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
-    </div>
-  </div>
-);
-
-const Task = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Quản lý nhiệm vụ</h1>
-    </div>
-    <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý nhiệm vụ</h3>
-        <p className="text-gray-600">Hệ thống task management sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
-    </div>
-  </div>
-);
+// Component placeholders with proper Vietnamese interface
 
 const Contracts = () => (
   <div className="space-y-6">
     <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Quản lý hợp đồng</h1>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý hợp đồng</h1>
+        <p className="text-gray-600 mt-1">Theo dõi hợp đồng và thỏa thuận</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo hợp đồng
+      </button>
     </div>
     <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý hợp đồng</h3>
-        <p className="text-gray-600">Tính năng quản lý hợp đồng sẽ được phát triển trong phiên bản tiếp theo</p>
-      </div>
+      <h2 className="text-lg font-medium mb-4">Danh sách hợp đồng</h2>
+      <p className="text-gray-600">Quản lý lifecycle hợp đồng với khách hàng.</p>
     </div>
   </div>
 );
@@ -2887,15 +2891,622 @@ const Contracts = () => (
 const Invoices = () => (
   <div className="space-y-6">
     <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-gray-900">Quản lý hóa đơn</h1>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý hóa đơn</h1>
+        <p className="text-gray-600 mt-1">Tạo và theo dõi hóa đơn thanh toán</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Tạo hóa đơn
+      </button>
     </div>
     <div className="modern-card p-6">
-      <div className="text-center py-12">
-        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      <h2 className="text-lg font-medium mb-4">Danh sách hóa đơn</h2>
+      <p className="text-gray-600">Auto-numbering system và tracking thanh toán.</p>
+    </div>
+  </div>
+);
+
+const FinancialReports = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tài chính</h1>
+      <p className="text-gray-600 mt-1">Thống kê và phân tích tài chính</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Dashboard tài chính</h2>
+      <p className="text-gray-600">Biểu đồ doanh thu, chi phí và lợi nhuận.</p>
+    </div>
+  </div>
+);
+
+const Opportunities = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Cơ hội bán hàng</h1>
+        <p className="text-gray-600 mt-1">Theo dõi và quản lý cơ hội kinh doanh</p>
+      </div>
+      <button className="btn-primary">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Quản lý hóa đơn</h3>
-        <p className="text-gray-600">Hệ thống hóa đơn sẽ được phát triển trong phiên bản tiếp theo</p>
+        Thêm cơ hội
+      </button>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Pipeline bán hàng</h2>
+      <p className="text-gray-600">Theo dõi leads và conversion rates.</p>
+    </div>
+  </div>
+);
+
+const SalesReports = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Báo cáo bán hàng</h1>
+      <p className="text-gray-600 mt-1">Phân tích hiệu suất bán hàng</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Thống kê bán hàng</h2>
+      <p className="text-gray-600">Revenue, conversion rates và performance metrics.</p>
+    </div>
+  </div>
+);
+
+const Reports = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
+      <p className="text-gray-600 mt-1">Dashboard và analytics tổng hợp</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">Dashboard analytics</h2>
+      <p className="text-gray-600">Real-time charts và KPI tracking.</p>
+    </div>
+  </div>
+);
+
+// ==================== MODULE-TAI-KHOAN START ====================
+// Account Management Module - Simple & Reliable User Management
+const Account = () => {
+  const { user, token } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [userForm, setUserForm] = useState({
+    email: '',
+    full_name: '',
+    role: 'staff',
+    password: ''
+  });
+
+  const roles = [
+    { value: 'admin', label: 'Admin', color: 'bg-red-100 text-red-800' },
+    { value: 'account', label: 'Account Manager', color: 'bg-blue-100 text-blue-800' },
+    { value: 'manager', label: 'Project Manager', color: 'bg-green-100 text-green-800' },
+    { value: 'content', label: 'Content Creator', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'design', label: 'Designer', color: 'bg-pink-100 text-pink-800' },
+    { value: 'editor', label: 'Editor', color: 'bg-indigo-100 text-indigo-800' },
+    { value: 'sale', label: 'Sales', color: 'bg-orange-100 text-orange-800' },
+    { value: 'creative', label: 'Creative', color: 'bg-purple-100 text-purple-800' },
+    { value: 'staff', label: 'Staff', color: 'bg-gray-100 text-gray-800' }
+  ];
+
+  // Load users - SIMPLE FUNCTION
+  const loadUsers = async () => {
+    console.log('🔄 loadUsers called');
+    console.log('User role:', user?.role);
+    console.log('Token exists:', !!token);
+    console.log('API URL:', API);
+
+    if (!token || user?.role !== 'admin') {
+      console.log('❌ Cannot load users - no admin access');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('📡 Making API call to get users...');
+      
+      const response = await axios.get(`${API}/api/users/`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('✅ Users API response:', response.data);
+      console.log('Number of users:', response.data.length);
+      
+      setUsers(response.data);
+      toast.success(`Tải thành công ${response.data.length} tài khoản!`);
+      
+    } catch (error) {
+      console.error('❌ Error loading users:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      setUsers([]);
+      toast.error(`Lỗi tải danh sách: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create user
+  const createUser = async (e) => {
+    e.preventDefault();
+    
+    if (!userForm.email || !userForm.full_name || !userForm.password) {
+      toast.error('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    try {
+      console.log('Creating user:', userForm);
+      
+      const response = await axios.post(`${API}/api/users/`, userForm, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('✅ User created:', response.data);
+      
+      setShowCreateModal(false);
+      setUserForm({ email: '', full_name: '', role: 'staff', password: '' });
+      toast.success('Tạo tài khoản thành công!');
+      loadUsers(); // Reload
+    } catch (error) {
+      console.error('❌ Error creating user:', error);
+      toast.error(error.response?.data?.detail || 'Lỗi tạo tài khoản');
+    }
+  };
+
+  // Delete user
+  const deleteUser = async (userId, userName) => {
+    if (userId === user.id) {
+      toast.error('Không thể xóa tài khoản của chính mình');
+      return;
+    }
+
+    if (!window.confirm(`Xóa tài khoản "${userName}"?`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/users/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      toast.success('Xóa tài khoản thành công!');
+      loadUsers(); // Reload
+    } catch (error) {
+      console.error('❌ Error deleting user:', error);
+      toast.error('Lỗi xóa tài khoản');
+    }
+  };
+
+  const getRoleInfo = (role) => {
+    return roles.find(r => r.value === role) || { value: role, label: role, color: 'bg-gray-100 text-gray-800' };
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Tài khoản</h1>
+        <p className="text-gray-600 mt-1">Quản lý thông tin cá nhân và tài khoản người dùng</p>
+      </div>
+
+      {/* Debug Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+        <h3 className="font-semibold text-blue-800 mb-2">🔍 Debug Info:</h3>
+        <ul className="text-blue-700 space-y-1">
+          <li>👤 User: {user?.full_name} ({user?.role})</li>
+          <li>🔑 Token: {token ? 'Available' : 'Missing'}</li>
+          <li>📡 API: {API}</li>
+          <li>👥 Users loaded: {users.length}</li>
+          <li>🎯 Is Admin: {user?.role === 'admin' ? 'Yes' : 'No'}</li>
+        </ul>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'profile'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Thông tin cá nhân
+          </button>
+          
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => {
+                setActiveTab('users');
+                loadUsers(); // Load users when tab is clicked
+              }}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Quản lý tài khoản ({users.length})
+            </button>
+          )}
+        </nav>
+      </div>
+
+      {/* Profile Tab */}
+      {activeTab === 'profile' && (
+        <div className="modern-card p-6">
+          <h2 className="text-lg font-semibold mb-4">Thông tin cá nhân</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
+              <div className="text-gray-900">{user?.full_name}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <div className="text-gray-900">{user?.email}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleInfo(user?.role).color}`}>
+                {getRoleInfo(user?.role).label}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Users Management Tab */}
+      {activeTab === 'users' && user?.role === 'admin' && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Quản lý tài khoản</h2>
+              <p className="text-gray-600">Tạo và quản lý tài khoản người dùng</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={loadUsers}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                disabled={loading}
+              >
+                {loading ? '⏳ Đang tải...' : '🔄 Tải lại'}
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn-primary"
+              >
+                ➕ Tạo tài khoản mới
+              </button>
+            </div>
+          </div>
+
+          {/* Users Table */}
+          <div className="modern-card">
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="inline-flex items-center">
+                  <div className="spinner mr-2"></div>
+                  Đang tải danh sách tài khoản...
+                </div>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p className="mb-4">Chưa có tài khoản nào</p>
+                <button 
+                  onClick={loadUsers}
+                  className="btn-primary"
+                >
+                  🔄 Thử tải lại
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Người dùng
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Vai trò
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ngày tạo
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((userItem) => (
+                      <tr key={userItem.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-sm font-semibold text-blue-800">
+                                {userItem.full_name?.charAt(0) || 'U'}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {userItem.full_name}
+                              </div>
+                              {userItem.id === user.id && (
+                                <div className="text-xs text-blue-600">(Bạn)</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {userItem.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleInfo(userItem.role).color}`}>
+                            {getRoleInfo(userItem.role).label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(userItem.created_at).toLocaleDateString('vi-VN')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          {userItem.id !== user.id && (
+                            <button
+                              onClick={() => deleteUser(userItem.id, userItem.full_name)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Xóa tài khoản"
+                            >
+                              🗑️ Xóa
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Tạo tài khoản mới</h3>
+            
+            <form onSubmit={createUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Họ và tên *
+                </label>
+                <input
+                  type="text"
+                  value={userForm.full_name}
+                  onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
+                  className="modern-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  className="modern-input"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Vai trò
+                </label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                  className="modern-input"
+                >
+                  {roles.map((role) => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mật khẩu *
+                </label>
+                <input
+                  type="password"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                  className="modern-input"
+                  required
+                  minLength="6"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setUserForm({ email: '', full_name: '', role: 'staff', password: '' });
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  Hủy
+                </button>
+                <button type="submit" className="btn-primary">
+                  Tạo tài khoản
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+// ==================== MODULE-TAI-KHOAN END ====================
+
+const Settings = () => (
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
+      <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
+    </div>
+    <div className="modern-card p-6">
+      <h2 className="text-lg font-medium mb-4">User Management</h2>
+      <p className="text-gray-600">Quản lý người dùng và phân quyền.</p>
+    </div>
+  </div>
+);
+
+// LeadsComponent - Simple placeholder for Lead management
+const LeadsComponent = ({ user }) => (
+  <div className="space-y-6">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý Lead</h1>
+        <p className="text-gray-600 mt-1">Quản lý thông tin và theo dõi tiềm năng khách hàng</p>
+      </div>
+      <button
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+        title="Thêm lead mới"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Thêm Lead
+      </button>
+    </div>
+
+    {/* Statistics */}
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Tổng Lead</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Lead Qualified</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Chờ Follow-up</dt>
+              <dd className="text-lg font-semibold text-gray-900">0</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4zM9 6h6v11H9V6z" />
+              </svg>
+            </div>
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">Conversion Rate</dt>
+              <dd className="text-lg font-semibold text-gray-900">0%</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Content Placeholder */}
+    <div className="bg-white rounded-lg shadow-sm border">
+      <div className="text-center py-20">
+        <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Lead Management</h3>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Tính năng quản lý Lead đang được phát triển. Sẽ sớm được cập nhật với đầy đủ tính năng quản lý tiềm năng khách hàng.
+        </p>
+        <div className="mt-6">
+          <div className="text-sm text-gray-500">
+            Các tính năng sắp tới:
+          </div>
+          <ul className="mt-2 text-sm text-gray-600 space-y-1">
+            <li>• Quản lý thông tin Lead</li>
+            <li>• Theo dõi trạng thái Lead</li>
+            <li>• Phân công Sales</li>
+            <li>• Báo cáo conversion</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

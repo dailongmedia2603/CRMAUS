@@ -379,7 +379,7 @@ function App() {
   );
 }
 
-// Dashboard Component
+// Dashboard Component (ném từ App.js cũ)
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -639,7 +639,7 @@ const ProtectedRoute = ({ children, requiredPermission, fallback = null }) => {
   return children;
 };
 
-// SidebarContent Component  
+// SidebarContent Component với Permission-Based Rendering
 const SidebarContent = ({ user, logout }) => {
   const { hasPermission, loading } = usePermissions();
   const location = useLocation();
@@ -651,7 +651,36 @@ const SidebarContent = ({ user, logout }) => {
     sales: false
   });
 
-  // Permission-based menu items
+  // Check if user has permission for any items in a submenu
+  const hasAnyPermissionInSubmenu = (submenu) => {
+    return submenu.some(item => !item.permission || hasPermission(item.permission));
+  };
+
+  // Check if user has permission for a menu item
+  const canAccessMenuItem = (item) => {
+    return !item.permission || hasPermission(item.permission);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-full">
+        <div className="flex flex-col w-64 bg-white border-r border-gray-200">
+          <div className="flex items-center justify-center h-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const toggleSubmenu = (menu) => {
+    setOpenSubmenus(prev => ({
+      ...prev,
+      [menu]: !prev[menu]
+    }));
+  };
+
+  // Menu config with permissions
   const menuItems = [
     {
       id: 'dashboard',
@@ -747,91 +776,15 @@ const SidebarContent = ({ user, logout }) => {
       id: 'opportunities',
       label: 'Cơ hội',
       path: '/opportunities',
-      permission: 'reports_reports_view' // Assuming opportunities are part of reports
+      permission: 'reports_reports_view'
     },
     {
       id: 'sales-reports',
-      label: 'Báo cáo',
+      label: 'Báo cáo bán hàng',
       path: '/sales-reports',
       permission: 'reports_sales_reports'
     }
   ];
-
-  const otherMenuItems = [
-    {
-      id: 'documents',
-      label: 'Tài liệu',
-      path: '/documents',
-      icon: (
-        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      permission: 'documents_documents_view'
-    },
-    {
-      id: 'reports',
-      label: 'Báo cáo',
-      path: '/reports',
-      icon: (
-        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      permission: 'reports_reports_view'
-    },
-    {
-      id: 'human-resources',
-      label: 'Nhân sự',
-      path: '/human-resources',
-      icon: (
-        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
-      permission: 'human_resources_users_view'
-    },
-    {
-      id: 'account',
-      label: 'Tài khoản',
-      path: '/account',
-      icon: (
-        <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      ),
-      permission: null // Always visible
-    }
-  ];
-
-  // Check if user has permission for any items in a submenu
-  const hasAnyPermissionInSubmenu = (submenu) => {
-    return submenu.some(item => !item.permission || hasPermission(item.permission));
-  };
-
-  // Check if user has permission for a menu item
-  const canAccessMenuItem = (item) => {
-    return !item.permission || hasPermission(item.permission);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex h-full">
-        <div className="flex flex-col w-64 bg-white border-r border-gray-200">
-          <div className="flex items-center justify-center h-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const toggleSubmenu = (menu) => {
-    setOpenSubmenus(prev => ({
-      ...prev,
-      [menu]: !prev[menu]
-    }));
-  };
 
   // Unified color scheme - blue theme
   const activeClasses = "text-white bg-blue-600 shadow-md";
@@ -861,274 +814,178 @@ const SidebarContent = ({ user, logout }) => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        {/* Dashboard */}
-        <button
-          onClick={() => navigate("/")}
-          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.pathname === "/" ? activeClasses : defaultClasses
-          }`}
-        >
-          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15V9m4 6V9m4 6V9" />
-          </svg>
-          Dashboard
-        </button>
-
-        {/* Client */}
-        <button
-          onClick={() => navigate("/clients")}
-          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.pathname.startsWith("/clients") ? activeClasses : defaultClasses
-          }`}
-        >
-          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          Client
-        </button>
-
-        {/* Task */}
-        <button
-          onClick={() => navigate("/task")}
-          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.pathname.startsWith("/task") ? activeClasses : defaultClasses
-          }`}
-        >
-          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-          </svg>
-          Công việc
-        </button>
-
-        {/* Dự án Section */}
-        <div className="space-y-1">
+        {/* Main Menu Items with Permission Check */}
+        {menuItems.filter(item => canAccessMenuItem(item)).map(item => (
           <button
-            onClick={() => toggleSubmenu('project')}
-            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              openSubmenus.project || location.pathname.startsWith("/projects") || location.pathname.startsWith("/campaigns") || location.pathname.startsWith("/task-templates") 
-                ? hoverClasses : defaultClasses
+            key={item.id}
+            onClick={() => navigate(item.path)}
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.pathname === item.path ? activeClasses : defaultClasses
             }`}
           >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              Dự án
-            </div>
-            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.project ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            {item.icon}
+            {item.label}
           </button>
-          
-          {openSubmenus.project && (
-            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
-              <button
-                onClick={() => navigate("/projects")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/projects") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Danh sách dự án
-              </button>
-              <button
-                onClick={() => navigate("/campaigns")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/campaigns") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-                Chiến dịch
-              </button>
-              <button
-                onClick={() => navigate("/task-templates")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/task-templates") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-                Template dịch vụ
-              </button>
-            </div>
-          )}
-        </div>
+        ))}
 
-        {/* Tài chính Section */}
-        <div className="space-y-1">
+        {/* Project Submenu - Only show if user has any project permissions */}
+        {hasAnyPermissionInSubmenu(projectSubmenu) && (
+          <div>
+            <button
+              onClick={() => toggleSubmenu('project')}
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                projectSubmenu.some(item => location.pathname === item.path) ? activeClasses : defaultClasses
+              }`}
+            >
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Dự án
+              </div>
+              <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.project ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSubmenus.project && (
+              <div className="ml-6 mt-2 space-y-1">
+                {projectSubmenu.filter(item => canAccessMenuItem(item)).map(subItem => (
+                  <button
+                    key={subItem.id}
+                    onClick={() => navigate(subItem.path)}
+                    className={`w-full flex items-start px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                      location.pathname === subItem.path ? subActiveClasses : subDefaultClasses
+                    }`}
+                  >
+                    {subItem.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Finance Submenu - Only show if user has any finance permissions */}
+        {hasAnyPermissionInSubmenu(financeSubmenu) && (
+          <div>
+            <button
+              onClick={() => toggleSubmenu('finance')}
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                financeSubmenu.some(item => location.pathname === item.path) ? activeClasses : defaultClasses
+              }`}
+            >
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Tài chính
+              </div>
+              <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.finance ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSubmenus.finance && (
+              <div className="ml-6 mt-2 space-y-1">
+                {financeSubmenu.filter(item => canAccessMenuItem(item)).map(subItem => (
+                  <button
+                    key={subItem.id}
+                    onClick={() => navigate(subItem.path)}
+                    className={`w-full flex items-start px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                      location.pathname === subItem.path ? subActiveClasses : subDefaultClasses
+                    }`}
+                  >
+                    {subItem.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Sales Submenu - Only show if user has any sales permissions */}
+        {hasAnyPermissionInSubmenu(salesSubmenu) && (
+          <div>
+            <button
+              onClick={() => toggleSubmenu('sales')}
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                salesSubmenu.some(item => location.pathname === item.path) ? activeClasses : defaultClasses
+              }`}
+            >
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                Bán hàng
+              </div>
+              <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.sales ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSubmenus.sales && (
+              <div className="ml-6 mt-2 space-y-1">
+                {salesSubmenu.filter(item => canAccessMenuItem(item)).map(subItem => (
+                  <button
+                    key={subItem.id}
+                    onClick={() => navigate(subItem.path)}
+                    className={`w-full flex items-start px-4 py-2 text-sm rounded-lg transition-all duration-200 ${
+                      location.pathname === subItem.path ? subActiveClasses : subDefaultClasses
+                    }`}
+                  >
+                    {subItem.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Standalone Menu Items with Permission Check */}
+        {/* Documents */}
+        {hasPermission('documents_documents_view') && (
           <button
-            onClick={() => toggleSubmenu('finance')}
-            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              openSubmenus.finance || location.pathname.startsWith("/invoices") || location.pathname.startsWith("/contracts") || location.pathname.startsWith("/expenses") || location.pathname.startsWith("/financial-reports")
-                ? hoverClasses : defaultClasses
+            onClick={() => navigate("/documents")}
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.pathname.startsWith("/documents") ? activeClasses : defaultClasses
             }`}
           >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Tài chính
-            </div>
-            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.finance ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
+            Tài liệu
           </button>
-          
-          {openSubmenus.finance && (
-            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
-              <button
-                onClick={() => navigate("/invoices")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/invoices") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Hóa đơn
-              </button>
-              <button
-                onClick={() => navigate("/contracts")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/contracts") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Hợp đồng
-              </button>
-              <button
-                onClick={() => navigate("/expenses")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/expenses") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Quản lý chi phí
-              </button>
-              <button
-                onClick={() => navigate("/financial-reports")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/financial-reports") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Báo cáo tài chính
-              </button>
-            </div>
-          )}
-        </div>
+        )}
 
-        {/* Bán hàng Section */}
-        <div className="space-y-1">
+        {/* Reports */}
+        {hasPermission('reports_reports_view') && (
           <button
-            onClick={() => toggleSubmenu('sales')}
-            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              openSubmenus.sales || location.pathname.startsWith("/opportunities") || location.pathname.startsWith("/sales-reports")
-                ? hoverClasses : defaultClasses
+            onClick={() => navigate("/reports")}
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.pathname.startsWith("/reports") ? activeClasses : defaultClasses
             }`}
           >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-              Bán hàng
-            </div>
-            <svg className={`w-4 h-4 transform transition-transform duration-200 ${openSubmenus.sales ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
+            Báo cáo
           </button>
-          
-          {openSubmenus.sales && (
-            <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
-              <button
-                onClick={() => navigate("/leads")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/leads") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Lead
-              </button>
-              <button
-                onClick={() => navigate("/opportunities")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/opportunities") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-                Cơ hội
-              </button>
-              <button
-                onClick={() => navigate("/sales-reports")}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
-                  location.pathname.startsWith("/sales-reports") ? subActiveClasses : subDefaultClasses
-                }`}
-              >
-                <svg className="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                Báo cáo
-              </button>
-            </div>
-          )}
-        </div>
+        )}
 
-        {/* Tài liệu */}
-        <button
-          onClick={() => navigate("/documents")}
-          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.pathname.startsWith("/documents") ? activeClasses : defaultClasses
-          }`}
-        >
-          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2H8.5a2.5 2.5 0 01-2.5-2.5v-8.5z" />
-          </svg>
-          Tài liệu
-        </button>
+        {/* Human Resources */}
+        {hasPermission('human_resources_users_view') && (
+          <button
+            onClick={() => navigate("/human-resources")}
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              location.pathname.startsWith("/human-resources") ? activeClasses : defaultClasses
+            }`}
+          >
+            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Nhân sự
+          </button>
+        )}
 
-        {/* Báo cáo */}
-        <button
-          onClick={() => navigate("/reports")}
-          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.pathname.startsWith("/reports") ? activeClasses : defaultClasses
-          }`}
-        >
-          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          Báo cáo
-        </button>
-
-        {/* Nhân sự */}
-        <button
-          onClick={() => navigate("/human-resources")}
-          className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-            location.pathname.startsWith("/human-resources") ? activeClasses : defaultClasses
-          }`}
-        >
-          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-          </svg>
-          Nhân sự
-        </button>
-
-        {/* Tài khoản */}
+        {/* Account - Always visible */}
         <button
           onClick={() => navigate("/account")}
           className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1141,8 +998,8 @@ const SidebarContent = ({ user, logout }) => {
           Tài khoản
         </button>
 
-        {/* Cài đặt - Only for Admin */}
-        {user?.role === 'admin' && (
+        {/* Settings - Admin only or permission check */}
+        {hasPermission('settings_settings_view') && (
           <button
             onClick={() => navigate("/settings")}
             className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -1191,6 +1048,7 @@ const SidebarContent = ({ user, logout }) => {
   );
 };
 
+// Login Component
 const LoginComponent = ({ login }) => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -1331,7 +1189,9 @@ const LoginComponent = ({ login }) => {
             </div>
             <div className="text-sm text-gray-500 mt-2">
               Email: admin@example.com<br />
-              Password: admin123
+              Password: admin123<br />
+              Email: kieu@aus.com<br />
+              Password: kieu123
             </div>
             <div className="mt-4">
               <button
@@ -1357,2159 +1217,16 @@ const LoginComponent = ({ login }) => {
   );
 };
 
-// Task Management Component - ADVANCED IMPLEMENTATION
-const Task = () => {
-  const { user, token } = useContext(AuthContext);
-  const [tasks, setTasks] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [statistics, setStatistics] = useState({
-    total_tasks: 0,
-    not_started: 0,
-    in_progress: 0,
-    completed: 0,
-    high_priority: 0,
-    normal_priority: 0,
-    low_priority: 0
-  });
-  
-  // Filters and state
-  const [selectedTasks, setSelectedTasks] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('today');
-  const [showCompleted, setShowCompleted] = useState(false);
-  
-  // Modals
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [viewingTask, setViewingTask] = useState(null);
-  const [feedbackTask, setFeedbackTask] = useState(null);
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [newFeedback, setNewFeedback] = useState('');
-  const [feedbackCounts, setFeedbackCounts] = useState({}); // Store feedback counts for each task
-  
-  // Report modal state
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportTask, setReportTask] = useState(null);
-  const [reportLink, setReportLink] = useState('');
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-
-  useEffect(() => {
-    fetchTasks();
-    fetchUsers();
-    fetchStatistics();
-  }, [statusFilter, priorityFilter, dateFilter, showCompleted]);
-
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      
-      if (searchTerm) params.append('search', searchTerm);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (priorityFilter !== 'all') params.append('priority', priorityFilter);
-      if (dateFilter !== 'all') params.append('date_filter', dateFilter);
-      if (showCompleted) params.append('completed_only', 'true');
-
-      const response = await axios.get(`${API}/api/internal-tasks/?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const tasksData = response.data;
-      setTasks(tasksData);
-      
-      // Fetch feedback counts for all tasks
-      await fetchFeedbackCounts(tasksData);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      toast.error('Lỗi khi tải danh sách công việc');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(`${API}/api/users/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsers(response.data);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-
-  const fetchStatistics = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (dateFilter !== 'all') params.append('date_filter', dateFilter);
-      
-      const response = await axios.get(`${API}/api/internal-tasks/statistics?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStatistics(response.data);
-    } catch (error) {
-      console.error('Error fetching statistics:', error);
-      // Fallback to calculating from tasks array if API fails
-      const stats = {
-        total_tasks: tasks.length,
-        not_started: tasks.filter(t => t.status === 'not_started').length,
-        in_progress: tasks.filter(t => t.status === 'in_progress').length,
-        completed: tasks.filter(t => t.status === 'completed').length,
-        high_priority: tasks.filter(t => t.priority === 'urgent').length,
-        normal_priority: tasks.filter(t => t.priority === 'normal').length,
-        low_priority: tasks.filter(t => t.priority === 'low').length
-      };
-      setStatistics(stats);
-    }
-  };
-
-  const handleCreateTask = async (taskData) => {
-    try {
-      console.log('Creating task with data:', taskData);
-      console.log('API URL:', `${API}/api/internal-tasks/`);
-      
-      const response = await axios.post(`${API}/api/internal-tasks/`, taskData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Task created successfully:', response.data);
-      setShowCreateModal(false);
-      toast.success('Tạo công việc thành công!');
-      fetchTasks(); // Refresh task list
-      fetchStatistics();
-    } catch (error) {
-      console.error('Error creating task:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      
-      let errorMessage = 'Lỗi khi tạo công việc';
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        } else if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail.map(err => err.msg || err).join(', ');
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleUpdateTask = async (taskData) => {
-    try {
-      await axios.put(`${API}/api/internal-tasks/${editingTask.id}`, taskData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setEditingTask(null);
-      toast.success('Cập nhật công việc thành công!');
-      fetchTasks(); // Refresh task list
-      fetchStatistics();
-    } catch (error) {
-      console.error('Error updating task:', error);
-      toast.error('Lỗi khi cập nhật công việc');
-    }
-  };
-
-  const handleDeleteTask = async (taskId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
-      try {
-        await axios.delete(`${API}/api/internal-tasks/${taskId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        toast.success('Xóa công việc thành công!');
-        fetchTasks(); // Refresh task list
-        fetchStatistics();
-      } catch (error) {
-        console.error('Error deleting task:', error);
-        toast.error('Lỗi khi xóa công việc');
-      }
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedTasks.length === 0) {
-      toast.warning('Vui lòng chọn ít nhất một công việc để xóa');
-      return;
-    }
-
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} công việc đã chọn?`)) {
-      try {
-        await axios.post(`${API}/api/internal-tasks/bulk-delete`, {
-          task_ids: selectedTasks
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setSelectedTasks([]);
-        toast.success(`Xóa ${selectedTasks.length} công việc thành công!`);
-        fetchTasks(); // Refresh task list
-        fetchStatistics();
-      } catch (error) {
-        console.error('Error bulk deleting tasks:', error);
-        toast.error('Lỗi khi xóa công việc');
-      }
-    }
-  };
-
-  const handleStatusChange = async (taskId, newStatus, reportLink = null) => {
-    try {
-      const updateData = { status: newStatus };
-      if (reportLink) {
-        updateData.report_link = reportLink;
-      }
-      
-      await axios.patch(`${API}/api/internal-tasks/${taskId}/status`, updateData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      toast.success('Cập nhật trạng thái thành công!');
-      
-      // Use setTimeout to prevent rapid re-renders
-      setTimeout(() => {
-        fetchTasks();
-        fetchStatistics();
-      }, 100);
-    } catch (error) {
-      console.error('Error updating task status:', error);
-      console.error('Error response:', error.response?.data);
-      
-      let errorMessage = 'Lỗi khi cập nhật trạng thái';
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        }
-      }
-      
-      toast.error(errorMessage);
-      throw error; // Re-throw to handle in modal
-    }
-  };
-
-  const handleAddFeedback = async () => {
-    try {
-      if (!newFeedback.trim()) {
-        toast.error('Vui lòng nhập nội dung feedback');
-        return;
-      }
-
-      const response = await axios.post(`${API}/api/internal-tasks/${feedbackTask.id}/feedback/`, {
-        message: newFeedback.trim()
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Add new feedback to the list with user info
-      const newFeedbackItem = {
-        id: response.data.id || Date.now().toString(),
-        task_id: feedbackTask.id,
-        user_id: user.id,
-        user_name: user.full_name,
-        message: newFeedback.trim(),
-        created_at: new Date().toISOString()
-      };
-      
-      setFeedbacks(prev => [...prev, newFeedbackItem]);
-      setNewFeedback('');
-      
-      // Update feedback count for this task
-      setFeedbackCounts(prev => ({
-        ...prev,
-        [feedbackTask.id]: (prev[feedbackTask.id] || 0) + 1
-      }));
-      
-      toast.success('Thêm feedback thành công!');
-    } catch (error) {
-      console.error('Error adding feedback:', error);
-      console.error('Error response:', error.response?.data);
-      
-      let errorMessage = 'Lỗi khi thêm feedback';
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          errorMessage = error.response.data.detail;
-        }
-      }
-      
-      toast.error(errorMessage);
-    }
-  };
-
-  const fetchFeedbacks = async (taskId) => {
-    try {
-      const response = await axios.get(`${API}/api/internal-tasks/${taskId}/feedback/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const feedbackData = response.data || [];
-      setFeedbacks(feedbackData);
-      
-      // Update feedback count for this task
-      setFeedbackCounts(prev => ({
-        ...prev,
-        [taskId]: feedbackData.length
-      }));
-    } catch (error) {
-      console.error('Error fetching feedbacks:', error);
-      // Fallback to empty array if API not implemented yet
-      setFeedbacks([]);
-      setFeedbackCounts(prev => ({
-        ...prev,
-        [taskId]: 0
-      }));
-    }
-  };
-
-  const fetchFeedbackCounts = async (tasks) => {
-    try {
-      const counts = {};
-      await Promise.all(tasks.map(async (task) => {
-        try {
-          const response = await axios.get(`${API}/api/internal-tasks/${task.id}/feedback/`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          counts[task.id] = response.data?.length || 0;
-        } catch (error) {
-          counts[task.id] = 0;
-        }
-      }));
-      setFeedbackCounts(counts);
-    } catch (error) {
-      console.error('Error fetching feedback counts:', error);
-    }
-  };
-
-  // Report modal functions
-  const handleOpenReportModal = (task) => {
-    setReportTask(task);
-    setReportLink('');
-    setShowReportModal(true);
-  };
-
-  const handleCloseReportModal = () => {
-    if (!isSubmittingReport) {
-      setShowReportModal(false);
-      setReportTask(null);
-      setReportLink('');
-    }
-  };
-
-  const submitCompletion = async () => {
-    if (!reportLink.trim()) {
-      toast.error('Vui lòng nhập link báo cáo');
-      return;
-    }
-
-    setIsSubmittingReport(true);
-
-    try {
-      await handleStatusChange(reportTask.id, 'completed', reportLink);
-      setShowReportModal(false);
-      setReportTask(null);
-      setReportLink('');
-      toast.success('Hoàn thành công việc thành công!');
-    } catch (error) {
-      console.error('Error completing task:', error);
-      toast.error('Có lỗi xảy ra khi hoàn thành công việc');
-    } finally {
-      setIsSubmittingReport(false);
-    }
-  };
-
-  // Filter tasks based on current filters
-  const filteredTasks = tasks.filter(task => {
-    if (searchTerm && !task.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    if (statusFilter !== 'all' && task.status !== statusFilter) {
-      return false;
-    }
-    if (priorityFilter !== 'all' && task.priority !== priorityFilter) {
-      return false;
-    }
-    if (showCompleted && task.status !== 'completed') {
-      return false;
-    }
-    if (!showCompleted && task.status === 'completed') {
-      return false;
-    }
-    return true;
-  });
-
-  // Utility functions
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'not_started':
-        return <div className="w-3 h-3 bg-gray-400 rounded-full"></div>;
-      case 'in_progress':
-        return <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>;
-      case 'completed':
-        return <div className="w-3 h-3 bg-green-400 rounded-full"></div>;
-      default:
-        return <div className="w-3 h-3 bg-gray-400 rounded-full"></div>;
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'not_started': return 'Chưa làm';
-      case 'in_progress': return 'Đang làm';
-      case 'completed': return 'Hoàn thành';
-      default: return 'Không xác định';
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'normal': return 'bg-blue-100 text-blue-800';
-      case 'low': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityLabel = (priority) => {
-    switch (priority) {
-      case 'urgent': return 'Khẩn cấp';
-      case 'high': return 'Cao';
-      case 'normal': return 'Trung bình';
-      case 'low': return 'Thấp';
-      default: return 'Không xác định';
-    }
-  };
-
-  const StatCard = ({ title, count, color, onClick, isActive }) => (
-    <div 
-      className={`modern-card p-4 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-        isActive ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-      }`}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className={`text-2xl font-bold ${color}`}>{count}</p>
-        </div>
-        <div className={`w-12 h-12 rounded-full ${color.replace('text', 'bg').replace('-600', '-100')} flex items-center justify-center`}>
-          <svg className={`w-6 h-6 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý công việc</h1>
-          <p className="text-gray-600 mt-1">Quản lý và theo dõi công việc nội bộ agency</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="modern-input"
-          >
-            <option value="today">Hôm nay</option>
-            <option value="week">Tuần này</option>
-            <option value="month">Tháng này</option>
-            <option value="all">Tất cả</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard
-          title="Tổng Task"
-          count={statistics.total_tasks || 0}
-          color="text-blue-600"
-          onClick={() => {
-            setStatusFilter('all');
-            setPriorityFilter('all');
-          }}
-          isActive={statusFilter === 'all' && priorityFilter === 'all'}
-        />
-        <StatCard
-          title="Chưa làm"
-          count={statistics.not_started || 0}
-          color="text-gray-600"
-          onClick={() => {
-            setStatusFilter('not_started');
-            setPriorityFilter('all');
-          }}
-          isActive={statusFilter === 'not_started'}
-        />
-        <StatCard
-          title="Hoàn thành"
-          count={statistics.completed || 0}
-          color="text-green-600"
-          onClick={() => {
-            setStatusFilter('completed');
-            setPriorityFilter('all');
-          }}
-          isActive={statusFilter === 'completed'}
-        />
-        <StatCard
-          title="Cao"
-          count={statistics.high_priority || 0}
-          color="text-red-600"
-          onClick={() => {
-            setPriorityFilter('urgent');
-            setStatusFilter('all');
-          }}
-          isActive={priorityFilter === 'urgent'}
-        />
-        <StatCard
-          title="Trung bình"
-          count={statistics.normal_priority || 0}
-          color="text-blue-600"
-          onClick={() => {
-            setPriorityFilter('normal');
-            setStatusFilter('all');
-          }}
-          isActive={priorityFilter === 'normal'}
-        />
-        <StatCard
-          title="Thấp"
-          count={statistics.low_priority || 0}
-          color="text-gray-600"
-          onClick={() => {
-            setPriorityFilter('low');
-            setStatusFilter('all');
-          }}
-          isActive={priorityFilter === 'low'}
-        />
-      </div>
-
-      {/* Toolbar */}
-      <div className="modern-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Search and Filters */}
-          <div className="flex items-center space-x-4 flex-1">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Tìm kiếm công việc..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="modern-input pl-10"
-              />
-            </div>
-            
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="modern-input"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="not_started">Chưa làm</option>
-              <option value="in_progress">Đang làm</option>
-              <option value="completed">Hoàn thành</option>
-            </select>
-
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="modern-input"
-            >
-              <option value="all">Tất cả ưu tiên</option>
-              <option value="urgent">Cao</option>
-              <option value="normal">Trung bình</option>
-              <option value="low">Thấp</option>
-            </select>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-2">
-            {selectedTasks.length > 0 && (
-              <button
-                onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-              >
-                Xóa ({selectedTasks.length})
-              </button>
-            )}
-            
-            <button
-              onClick={() => setShowCompleted(!showCompleted)}
-              className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                showCompleted 
-                  ? 'bg-gray-600 text-white hover:bg-gray-700' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              {showCompleted ? 'Trở về' : 'Hoàn thành'}
-            </button>
-
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary flex items-center gap-2"
-              title="Thêm công việc mới"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Thêm công việc
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tasks List */}
-      <div className="modern-card">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedTasks(filteredTasks.map(t => t.id));
-                      } else {
-                        setSelectedTasks([]);
-                      }
-                    }}
-                    checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Công việc
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mô tả
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Deadline
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ưu tiên
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Feedback
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Report
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center">
-                    <div className="spinner mx-auto"></div>
-                  </td>
-                </tr>
-              ) : filteredTasks.length === 0 ? (
-                <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
-                    Không có công việc nào
-                  </td>
-                </tr>
-              ) : (
-                filteredTasks.map((task) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    selectedTasks={selectedTasks}
-                    setSelectedTasks={setSelectedTasks}
-                    onStatusChange={handleStatusChange}
-                    onEdit={setEditingTask}
-                    onDelete={handleDeleteTask}
-                    onView={setViewingTask}
-                    onOpenReportModal={handleOpenReportModal}
-                    onFeedback={(task) => {
-                      setFeedbackTask(task);
-                      fetchFeedbacks(task.id);
-                    }}
-                    feedbackCounts={feedbackCounts}
-                    getStatusIcon={getStatusIcon}
-                    getPriorityColor={getPriorityColor}
-                    getPriorityLabel={getPriorityLabel}
-                    getStatusLabel={getStatusLabel}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredTasks.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có công việc</h3>
-            <p className="text-gray-600">Bắt đầu bằng cách tạo công việc đầu tiên</p>
-          </div>
-        )}
-      </div>
-
-      {/* Modals */}
-      {showCreateModal && (
-        <TaskModal
-          users={users}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreateTask}
-        />
-      )}
-
-      {editingTask && (
-        <TaskModal
-          task={editingTask}
-          users={users}
-          onClose={() => setEditingTask(null)}
-          onSubmit={handleUpdateTask}
-        />
-      )}
-
-      {viewingTask && (
-        <TaskDetailModal
-          task={viewingTask}
-          onClose={() => setViewingTask(null)}
-        />
-      )}
-
-      {feedbackTask && (
-        <FeedbackModal
-          task={feedbackTask}
-          feedbacks={feedbacks}
-          newFeedback={newFeedback}
-          setNewFeedback={setNewFeedback}
-          onClose={() => setFeedbackTask(null)}
-          onAddFeedback={handleAddFeedback}
-          user={user}
-        />
-      )}
-
-      {/* Report Link Modal */}
-      {showReportModal && reportTask && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Hoàn thành công việc</h3>
-              <button
-                onClick={handleCloseReportModal}
-                disabled={isSubmittingReport}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Vui lòng cung cấp link báo cáo để hoàn thành công việc: <strong>{reportTask.name}</strong>
-            </p>
-            
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (!isSubmittingReport && reportLink.trim()) {
-                submitCompletion();
-              }
-            }}>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Link báo cáo *
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://example.com/report"
-                  value={reportLink}
-                  onChange={(e) => setReportLink(e.target.value)}
-                  disabled={isSubmittingReport}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-base"
-                  autoFocus
-                  required
-                />
-                {reportLink && (
-                  <p className="text-xs text-green-600 mt-1">
-                    ✓ Link đã nhập
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleCloseReportModal}
-                  disabled={isSubmittingReport}
-                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={!reportLink.trim() || isSubmittingReport}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center font-medium"
-                >
-                  {isSubmittingReport ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Hoàn thành
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// TaskRow Component with memo to prevent unnecessary re-renders
-const TaskRow = React.memo(({ 
-  task, 
-  selectedTasks, 
-  setSelectedTasks, 
-  onStatusChange, 
-  onEdit, 
-  onDelete, 
-  onView, 
-  onFeedback,
-  onOpenReportModal, // Add new prop
-  feedbackCounts = {}, // Add feedbackCounts prop
-  getStatusIcon,
-  getPriorityColor,
-  getPriorityLabel,
-  getStatusLabel
-}) => {
-
-  const handleStatusUpdate = async (newStatus) => {
-    if (newStatus === 'completed') {
-      // Open report modal instead of inline logic
-      onOpenReportModal(task);
-    } else {
-      onStatusChange(task.id, newStatus);
-    }
-  };
-
-  const getActionButton = () => {
-    if (task.status === 'not_started') {
-      return (
-        <button
-          onClick={() => handleStatusUpdate('in_progress')}
-          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm"
-        >
-          Bắt đầu
-        </button>
-      );
-    } else if (task.status === 'in_progress') {
-      return (
-        <button
-          onClick={() => handleStatusUpdate('completed')}
-          className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm"
-        >
-          Hoàn thành
-        </button>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <>
-      <tr key={task.id} className="hover:bg-gray-50">
-        <td className="px-6 py-4 whitespace-nowrap">
-          <input
-            type="checkbox"
-            checked={selectedTasks.includes(task.id)}
-            onChange={() => {
-              if (selectedTasks.includes(task.id)) {
-                setSelectedTasks(selectedTasks.filter(id => id !== task.id));
-              } else {
-                setSelectedTasks([...selectedTasks, task.id]);
-              }
-            }}
-            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-          />
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <div className="flex items-center">
-            {getStatusIcon(task.status)}
-            <span className="ml-2 text-sm font-medium text-gray-900 truncate max-w-xs">
-              {task.name}
-            </span>
-          </div>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <button
-            onClick={() => onView(task)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            Chi tiết
-          </button>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {new Date(task.deadline).toLocaleString('vi-VN')}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
-            {getPriorityLabel(task.priority)}
-          </span>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <button
-            onClick={() => onFeedback(task)}
-            className={`text-sm px-3 py-1 rounded hover:bg-gray-200 transition-colors ${
-              feedbackCounts[task.id] > 0 
-                ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            Feedback ({feedbackCounts[task.id] || 0})
-          </button>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {getStatusLabel(task.status)}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          {task.report_link ? (
-            <a
-              href={task.report_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              Xem báo cáo
-            </a>
-          ) : (
-            <span className="text-sm text-gray-400">Chưa có</span>
-          )}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          {getActionButton()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onView(task)}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => onEdit(task)}
-              className="text-green-600 hover:text-green-800"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => onDelete(task.id)}
-              className="text-red-600 hover:text-red-800"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        </td>
-      </tr>
-    </>
-  );
-});
-
-// TaskModal Component (Create/Edit)
-const TaskModal = ({ task, users, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
-    name: task?.name || '',
-    description: task?.description || '',
-    assigned_to: task?.assigned_to || '',
-    deadline: task?.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : '',
-    priority: task?.priority || 'normal',
-    document_links: task?.document_links || []
-  });
-  const [newLink, setNewLink] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      toast.error('Vui lòng nhập tên công việc');
-      return;
-    }
-    if (!formData.assigned_to) {
-      toast.error('Vui lòng chọn người nhận');
-      return;
-    }
-    if (!formData.deadline) {
-      toast.error('Vui lòng chọn deadline');
-      return;
-    }
-    onSubmit(formData);
-  };
-
-  const addDocumentLink = () => {
-    if (newLink.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        document_links: [...prev.document_links, newLink.trim()]
-      }));
-      setNewLink('');
-    }
-  };
-
-  const removeDocumentLink = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      document_links: prev.document_links.filter((_, i) => i !== index)
-    }));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {task ? 'Sửa công việc' : 'Thêm công việc mới'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên công việc *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-                placeholder="Nhập tên công việc..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mô tả
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
-                rows={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                placeholder="Mô tả chi tiết công việc..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Link tài liệu
-              </label>
-              <div className="flex gap-3 mb-3">
-                <input
-                  type="url"
-                  value={newLink}
-                  onChange={(e) => setNewLink(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Nhập link tài liệu..."
-                />
-                <button
-                  type="button"
-                  onClick={addDocumentLink}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap font-medium"
-                >
-                  Thêm
-                </button>
-              </div>
-              {formData.document_links.length > 0 && (
-                <div className="space-y-3 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  {formData.document_links.map((link, index) => (
-                    <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
-                      <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm truncate flex-1 mr-3"
-                        title={link}
-                      >
-                        {link}
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => removeDocumentLink(index)}
-                        className="text-red-600 hover:text-red-800 p-1"
-                        title="Xóa link"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Người nhận *
-              </label>
-              <select
-                required
-                value={formData.assigned_to}
-                onChange={(e) => setFormData(prev => ({...prev, assigned_to: e.target.value}))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-              >
-                <option value="">Chọn người nhận</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name} ({user.role})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ưu tiên
-              </label>
-              <select
-                value={formData.priority}
-                onChange={(e) => setFormData(prev => ({...prev, priority: e.target.value}))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-              >
-                <option value="low">Thấp</option>
-                <option value="normal">Trung bình</option>
-                <option value="high">Cao</option>
-                <option value="urgent">Khẩn cấp</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Deadline *
-              </label>
-              <input
-                type="datetime-local"
-                required
-                value={formData.deadline}
-                onChange={(e) => setFormData(prev => ({...prev, deadline: e.target.value}))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
-              />
-            </div>
-
-            {/* Preview/Status Box */}
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h4 className="font-medium text-gray-900 mb-3">Thông tin tóm tắt</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tên:</span>
-                  <span className="font-medium">{formData.name || 'Chưa nhập'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Người nhận:</span>
-                  <span className="font-medium">
-                    {formData.assigned_to ? 
-                      users.find(u => u.id === formData.assigned_to)?.full_name || 'Unknown' : 
-                      'Chưa chọn'
-                    }
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ưu tiên:</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    formData.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                    formData.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                    formData.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {formData.priority === 'urgent' ? 'Khẩn cấp' :
-                     formData.priority === 'high' ? 'Cao' :
-                     formData.priority === 'normal' ? 'Trung bình' : 'Thấp'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Số link:</span>
-                  <span className="font-medium">{formData.document_links.length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Full Width Submit Buttons */}
-          <div className="md:col-span-2 flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium text-lg"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-lg"
-            >
-              {task ? 'Cập nhật' : 'Tạo công việc'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// TaskDetailModal Component
-const TaskDetailModal = ({ task, onClose }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Chi tiết công việc</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên công việc</label>
-            <p className="text-gray-900">{task.name}</p>
-          </div>
-
-          {task.description && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
-              <p className="text-gray-900 whitespace-pre-wrap">{task.description}</p>
-            </div>
-          )}
-
-          {task.document_links && task.document_links.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Link tài liệu</label>
-              <div className="space-y-1">
-                {task.document_links.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-blue-600 hover:text-blue-800 text-sm"
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Người giao</label>
-            <p className="text-gray-900">{task.assigned_by_name}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Người nhận</label>
-            <p className="text-gray-900">{task.assigned_to_name}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
-            <p className="text-gray-900">{new Date(task.deadline).toLocaleString('vi-VN')}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ưu tiên</label>
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-              task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-              task.priority === 'normal' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {task.priority === 'urgent' ? 'Khẩn cấp' : task.priority === 'high' ? 'Cao' : task.priority === 'normal' ? 'Trung bình' : 'Thấp'}
-            </span>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              task.status === 'completed' ? 'bg-green-100 text-green-800' :
-              task.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {task.status === 'completed' ? 'Hoàn thành' :
-               task.status === 'in_progress' ? 'Đang làm' : 'Chưa làm'}
-            </span>
-          </div>
-
-          {task.report_link && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Báo cáo</label>
-              <a
-                href={task.report_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                {task.report_link}
-              </a>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ngày tạo</label>
-            <p className="text-gray-900">{new Date(task.created_at).toLocaleString('vi-VN')}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cập nhật lần cuối</label>
-            <p className="text-gray-900">{new Date(task.updated_at).toLocaleString('vi-VN')}</p>
-          </div>
-        </div>
-
-        <div className="flex justify-end pt-6">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-          >
-            Đóng
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// FeedbackModal Component - Improved with persistent storage and better UI
-const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, onAddFeedback, user }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Feedback - {task.name}
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Thảo luận và góp ý về công việc này
-            </p>
-            {feedbacks.length > 0 && (
-              <span className="inline-flex items-center mt-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                {feedbacks.length} bình luận
-              </span>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col h-[calc(90vh-140px)]">
-          {/* Feedback List */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {feedbacks.length === 0 ? (
-              <div className="text-center py-12">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p className="text-gray-500 text-lg">Chưa có feedback nào</p>
-                <p className="text-gray-400 text-sm mt-1">Hãy là người đầu tiên góp ý về công việc này</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {feedbacks.map((feedback) => (
-                  <div key={feedback.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white text-sm font-semibold">
-                            {feedback.user_name?.charAt(0).toUpperCase() || 'U'}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-gray-900">
-                            {feedback.user_name || 'Unknown User'}
-                          </span>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(feedback.created_at).toLocaleString('vi-VN', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-gray-700 leading-relaxed pl-11">{feedback.message}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Add Feedback Section */}
-          <div className="border-t border-gray-200 p-6 bg-white">
-            <div className="flex items-start space-x-4">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-semibold">
-                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-              <div className="flex-1">
-                <div className="mb-3">
-                  <span className="text-sm font-medium text-gray-900">
-                    {user?.full_name || 'Current User'}
-                  </span>
-                  <span className="text-xs text-gray-500 ml-2">
-                    Đang viết feedback...
-                  </span>
-                </div>
-                <textarea
-                  value={newFeedback}
-                  onChange={(e) => setNewFeedback(e.target.value)}
-                  placeholder="Nhập feedback của bạn về công việc này..."
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base"
-                />
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-xs text-gray-500">
-                    {newFeedback.length}/500 ký tự
-                  </div>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={onClose}
-                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
-                    >
-                      Đóng
-                    </button>
-                    <button
-                      onClick={onAddFeedback}
-                      disabled={!newFeedback.trim() || newFeedback.length > 500}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    >
-                      Gửi feedback
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Component placeholders with proper Vietnamese interface
-
-const Contracts = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Quản lý hợp đồng</h1>
-        <p className="text-gray-600 mt-1">Theo dõi hợp đồng và thỏa thuận</p>
-      </div>
-      <button className="btn-primary">
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Tạo hợp đồng
-      </button>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Danh sách hợp đồng</h2>
-      <p className="text-gray-600">Quản lý lifecycle hợp đồng với khách hàng.</p>
-    </div>
-  </div>
-);
-
-const Invoices = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Quản lý hóa đơn</h1>
-        <p className="text-gray-600 mt-1">Tạo và theo dõi hóa đơn thanh toán</p>
-      </div>
-      <button className="btn-primary">
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Tạo hóa đơn
-      </button>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Danh sách hóa đơn</h2>
-      <p className="text-gray-600">Auto-numbering system và tracking thanh toán.</p>
-    </div>
-  </div>
-);
-
-const FinancialReports = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tài chính</h1>
-      <p className="text-gray-600 mt-1">Thống kê và phân tích tài chính</p>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Dashboard tài chính</h2>
-      <p className="text-gray-600">Biểu đồ doanh thu, chi phí và lợi nhuận.</p>
-    </div>
-  </div>
-);
-
-const Opportunities = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Cơ hội bán hàng</h1>
-        <p className="text-gray-600 mt-1">Theo dõi và quản lý cơ hội kinh doanh</p>
-      </div>
-      <button className="btn-primary">
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Thêm cơ hội
-      </button>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Pipeline bán hàng</h2>
-      <p className="text-gray-600">Theo dõi leads và conversion rates.</p>
-    </div>
-  </div>
-);
-
-const SalesReports = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Báo cáo bán hàng</h1>
-      <p className="text-gray-600 mt-1">Phân tích hiệu suất bán hàng</p>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Thống kê bán hàng</h2>
-      <p className="text-gray-600">Revenue, conversion rates và performance metrics.</p>
-    </div>
-  </div>
-);
-
-const Reports = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
-      <p className="text-gray-600 mt-1">Dashboard và analytics tổng hợp</p>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Dashboard analytics</h2>
-      <p className="text-gray-600">Real-time charts và KPI tracking.</p>
-    </div>
-  </div>
-);
-
-// ==================== MODULE-TAI-KHOAN START ====================
-// Account Management Module - Simple & Reliable User Management
-const Account = () => {
-  const { user, token } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('profile');
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [userForm, setUserForm] = useState({
-    email: '',
-    full_name: '',
-    role: 'staff',
-    password: ''
-  });
-
-  const roles = [
-    { value: 'admin', label: 'Admin', color: 'bg-red-100 text-red-800' },
-    { value: 'account', label: 'Account Manager', color: 'bg-blue-100 text-blue-800' },
-    { value: 'manager', label: 'Project Manager', color: 'bg-green-100 text-green-800' },
-    { value: 'content', label: 'Content Creator', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'design', label: 'Designer', color: 'bg-pink-100 text-pink-800' },
-    { value: 'editor', label: 'Editor', color: 'bg-indigo-100 text-indigo-800' },
-    { value: 'sale', label: 'Sales', color: 'bg-orange-100 text-orange-800' },
-    { value: 'creative', label: 'Creative', color: 'bg-purple-100 text-purple-800' },
-    { value: 'staff', label: 'Staff', color: 'bg-gray-100 text-gray-800' }
-  ];
-
-  // Load users - SIMPLE FUNCTION
-  const loadUsers = async () => {
-    console.log('🔄 loadUsers called');
-    console.log('User role:', user?.role);
-    console.log('Token exists:', !!token);
-    console.log('API URL:', API);
-
-    if (!token || user?.role !== 'admin') {
-      console.log('❌ Cannot load users - no admin access');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      console.log('📡 Making API call to get users...');
-      
-      const response = await axios.get(`${API}/api/users/`, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('✅ Users API response:', response.data);
-      console.log('Number of users:', response.data.length);
-      
-      setUsers(response.data);
-      toast.success(`Tải thành công ${response.data.length} tài khoản!`);
-      
-    } catch (error) {
-      console.error('❌ Error loading users:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      
-      setUsers([]);
-      toast.error(`Lỗi tải danh sách: ${error.response?.data?.detail || error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Create user
-  const createUser = async (e) => {
-    e.preventDefault();
-    
-    if (!userForm.email || !userForm.full_name || !userForm.password) {
-      toast.error('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-
-    try {
-      console.log('Creating user:', userForm);
-      
-      const response = await axios.post(`${API}/api/users/`, userForm, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('✅ User created:', response.data);
-      
-      setShowCreateModal(false);
-      setUserForm({ email: '', full_name: '', role: 'staff', password: '' });
-      toast.success('Tạo tài khoản thành công!');
-      loadUsers(); // Reload
-    } catch (error) {
-      console.error('❌ Error creating user:', error);
-      toast.error(error.response?.data?.detail || 'Lỗi tạo tài khoản');
-    }
-  };
-
-  // Delete user
-  const deleteUser = async (userId, userName) => {
-    if (userId === user.id) {
-      toast.error('Không thể xóa tài khoản của chính mình');
-      return;
-    }
-
-    if (!window.confirm(`Xóa tài khoản "${userName}"?`)) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API}/api/users/${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      toast.success('Xóa tài khoản thành công!');
-      loadUsers(); // Reload
-    } catch (error) {
-      console.error('❌ Error deleting user:', error);
-      toast.error('Lỗi xóa tài khoản');
-    }
-  };
-
-  const getRoleInfo = (role) => {
-    return roles.find(r => r.value === role) || { value: role, label: role, color: 'bg-gray-100 text-gray-800' };
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Tài khoản</h1>
-        <p className="text-gray-600 mt-1">Quản lý thông tin cá nhân và tài khoản người dùng</p>
-      </div>
-
-      {/* Debug Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-        <h3 className="font-semibold text-blue-800 mb-2">🔍 Debug Info:</h3>
-        <ul className="text-blue-700 space-y-1">
-          <li>👤 User: {user?.full_name} ({user?.role})</li>
-          <li>🔑 Token: {token ? 'Available' : 'Missing'}</li>
-          <li>📡 API: {API}</li>
-          <li>👥 Users loaded: {users.length}</li>
-          <li>🎯 Is Admin: {user?.role === 'admin' ? 'Yes' : 'No'}</li>
-        </ul>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'profile'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Thông tin cá nhân
-          </button>
-          
-          {user?.role === 'admin' && (
-            <button
-              onClick={() => {
-                setActiveTab('users');
-                loadUsers(); // Load users when tab is clicked
-              }}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Quản lý tài khoản ({users.length})
-            </button>
-          )}
-        </nav>
-      </div>
-
-      {/* Profile Tab */}
-      {activeTab === 'profile' && (
-        <div className="modern-card p-6">
-          <h2 className="text-lg font-semibold mb-4">Thông tin cá nhân</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
-              <div className="text-gray-900">{user?.full_name}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="text-gray-900">{user?.email}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleInfo(user?.role).color}`}>
-                {getRoleInfo(user?.role).label}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Users Management Tab */}
-      {activeTab === 'users' && user?.role === 'admin' && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Quản lý tài khoản</h2>
-              <p className="text-gray-600">Tạo và quản lý tài khoản người dùng</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={loadUsers}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                disabled={loading}
-              >
-                {loading ? '⏳ Đang tải...' : '🔄 Tải lại'}
-              </button>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="btn-primary"
-              >
-                ➕ Tạo tài khoản mới
-              </button>
-            </div>
-          </div>
-
-          {/* Users Table */}
-          <div className="modern-card">
-            {loading ? (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center">
-                  <div className="spinner mr-2"></div>
-                  Đang tải danh sách tài khoản...
-                </div>
-              </div>
-            ) : users.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p className="mb-4">Chưa có tài khoản nào</p>
-                <button 
-                  onClick={loadUsers}
-                  className="btn-primary"
-                >
-                  🔄 Thử tải lại
-                </button>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Người dùng
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Vai trò
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ngày tạo
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Thao tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((userItem) => (
-                      <tr key={userItem.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-sm font-semibold text-blue-800">
-                                {userItem.full_name?.charAt(0) || 'U'}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {userItem.full_name}
-                              </div>
-                              {userItem.id === user.id && (
-                                <div className="text-xs text-blue-600">(Bạn)</div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {userItem.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleInfo(userItem.role).color}`}>
-                            {getRoleInfo(userItem.role).label}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(userItem.created_at).toLocaleDateString('vi-VN')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {userItem.id !== user.id && (
-                            <button
-                              onClick={() => deleteUser(userItem.id, userItem.full_name)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Xóa tài khoản"
-                            >
-                              🗑️ Xóa
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Create User Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Tạo tài khoản mới</h3>
-            
-            <form onSubmit={createUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  value={userForm.full_name}
-                  onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
-                  className="modern-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={userForm.email}
-                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                  className="modern-input"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vai trò
-                </label>
-                <select
-                  value={userForm.role}
-                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  className="modern-input"
-                >
-                  {roles.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu *
-                </label>
-                <input
-                  type="password"
-                  value={userForm.password}
-                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                  className="modern-input"
-                  required
-                  minLength="6"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setUserForm({ email: '', full_name: '', role: 'staff', password: '' });
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn-primary">
-                  Tạo tài khoản
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-// ==================== MODULE-TAI-KHOAN END ====================
-
-const Settings = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Cài đặt hệ thống</h1>
-      <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">User Management</h2>
-      <p className="text-gray-600">Quản lý người dùng và phân quyền.</p>
-    </div>
-  </div>
-);
-
-// LeadsComponent - Simple placeholder for Lead management
-const LeadsComponent = ({ user }) => (
-  <div className="space-y-6">
-    {/* Header */}
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Quản lý Lead</h1>
-        <p className="text-gray-600 mt-1">Quản lý thông tin và theo dõi tiềm năng khách hàng</p>
-      </div>
-      <button
-        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
-        title="Thêm lead mới"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Thêm Lead
-      </button>
-    </div>
-
-    {/* Statistics */}
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">Tổng Lead</dt>
-              <dd className="text-lg font-semibold text-gray-900">0</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-              </svg>
-            </div>
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">Lead Qualified</dt>
-              <dd className="text-lg font-semibold text-gray-900">0</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">Chờ Follow-up</dt>
-              <dd className="text-lg font-semibold text-gray-900">0</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4zM9 6h6v11H9V6z" />
-              </svg>
-            </div>
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">Conversion Rate</dt>
-              <dd className="text-lg font-semibold text-gray-900">0%</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Content Placeholder */}
-    <div className="bg-white rounded-lg shadow-sm border">
-      <div className="text-center py-20">
-        <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Lead Management</h3>
-        <p className="text-gray-600 max-w-md mx-auto">
-          Tính năng quản lý Lead đang được phát triển. Sẽ sớm được cập nhật với đầy đủ tính năng quản lý tiềm năng khách hàng.
-        </p>
-        <div className="mt-6">
-          <div className="text-sm text-gray-500">
-            Các tính năng sắp tới:
-          </div>
-          <ul className="mt-2 text-sm text-gray-600 space-y-1">
-            <li>• Quản lý thông tin Lead</li>
-            <li>• Theo dõi trạng thái Lead</li>
-            <li>• Phân công Sales</li>
-            <li>• Báo cáo conversion</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+// Empty components for unimplemented routes
+const Task = () => <div>Task Management - Under Development</div>;
+const Contracts = () => <div>Contracts - Under Development</div>;
+const Invoices = () => <div>Invoices - Under Development</div>;
+const FinancialReports = () => <div>Financial Reports - Under Development</div>;
+const Opportunities = () => <div>Opportunities - Under Development</div>;
+const LeadsComponent = () => <div>Leads - Under Development</div>;
+const SalesReports = () => <div>Sales Reports - Under Development</div>;
+const Reports = () => <div>Reports - Under Development</div>;
+const Account = () => <div>Account - Under Development</div>;
+const Settings = () => <div>Settings - Under Development</div>;
 
 export default App;
