@@ -565,6 +565,27 @@ class InternalTaskFeedback(InternalTaskFeedbackBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_name: Optional[str] = None  # Enriched field
 
+# ✅ NEW: Task Cost Settings Models
+class TaskCostSettingsBase(BaseModel):
+    cost_per_hour: float = 0.0  # Giá tiền/giờ (VND)
+    is_enabled: bool = True
+    updated_by: Optional[str] = None
+
+class TaskCostSettingsCreate(TaskCostSettingsBase):
+    pass
+
+class TaskCostSettingsUpdate(BaseModel):
+    cost_per_hour: Optional[float] = None
+    is_enabled: Optional[bool] = None
+
+class TaskCostSettings(TaskCostSettingsBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    # Enriched fields
+    updated_by_name: Optional[str] = None
+
 # ================= EXPENSE MANAGEMENT MODELS =================
 
 # Expense Category Models
