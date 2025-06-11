@@ -1055,6 +1055,7 @@ const SidebarContent = ({ user, logout }) => {
         )}
 
         {/* Bán hàng Section */}
+        {(hasPermission('leads_leads_view') || hasPermission('reports_reports_view') || hasPermission('reports_sales_reports')) && (
         <div className="space-y-1">
           <button
             onClick={() => toggleSubmenu('sales')}
@@ -1076,6 +1077,7 @@ const SidebarContent = ({ user, logout }) => {
           
           {openSubmenus.sales && (
             <div className="ml-8 space-y-1 border-l-2 border-blue-100 pl-4">
+              {hasPermission('leads_leads_view') && (
               <button
                 onClick={() => navigate("/leads")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1087,6 +1089,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Lead
               </button>
+              )}
+              {hasPermission('reports_reports_view') && (
               <button
                 onClick={() => navigate("/opportunities")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1098,6 +1102,8 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Cơ hội
               </button>
+              )}
+              {hasPermission('reports_sales_reports') && (
               <button
                 onClick={() => navigate("/sales-reports")}
                 className={`w-full flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
@@ -1109,9 +1115,11 @@ const SidebarContent = ({ user, logout }) => {
                 </svg>
                 Báo cáo
               </button>
+              )}
             </div>
           )}
         </div>
+        )}
 
         {/* Tài liệu */}
         {hasPermission('documents_documents_view') && (
