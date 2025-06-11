@@ -4392,6 +4392,270 @@ async def check_permission(
     }
 
 # Root endpoint
+# ================= TASK COST TYPE ENDPOINTS =================
+
+@api_router.post("/task-cost-types/", response_model=TaskCostType)
+async def create_task_cost_type(
+    task_type: TaskCostTypeCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo loại chi phí task mới (chỉ admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can create task cost types")
+    
+    # Check if name already exists
+    existing = await db.task_cost_types.find_one({"name": task_type.name, "is_active": True})
+    if existing:
+        raise HTTPException(status_code=400, detail="Task cost type name already exists")
+    
+    new_task_type = TaskCostType(
+        **task_type.dict(),
+        created_by=current_user.id
+    )
+    
+    await db.task_cost_types.insert_one(new_task_type.dict())
+    
+    # Enrich with user info
+    new_task_type.created_by_name = current_user.full_name
+    
+    return new_task_type
+
+@api_router.get("/task-cost-types/", response_model=List[TaskCostType])
+async def get_task_cost_types(
+    search: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách loại chi phí task"""
+    query_filter = {}
+    
+    if is_active is not None:
+        query_filter["is_active"] = is_active
+    
+    if search:
+        query_filter["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
+    
+    task_types = await db.task_cost_types.find(query_filter).sort("created_at", -1).to_list(length=100)
+    
+    # Enrich with user info
+    for task_type in task_types:
+        if task_type.get("created_by"):
+            creator = await db.users.find_one({"id": task_type["created_by"]})
+            task_type["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    return task_types
+
+@api_router.put("/task-cost-types/{type_id}", response_model=TaskCostType)
+async def update_task_cost_type(
+    type_id: str,
+    task_type_update: TaskCostTypeUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật loại chi phí task (chỉ admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can update task cost types")
+    
+    # Check if exists
+    existing = await db.task_cost_types.find_one({"id": type_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Task cost type not found")
+    
+    # Check name uniqueness if name is being updated
+    if task_type_update.name and task_type_update.name != existing["name"]:
+        name_exists = await db.task_cost_types.find_one({
+            "name": task_type_update.name,
+            "is_active": True,
+            "id": {"$ne": type_id}
+        })
+        if name_exists:
+            raise HTTPException(status_code=400, detail="Task cost type name already exists")
+    
+    update_data = {k: v for k, v in task_type_update.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    await db.task_cost_types.update_one({"id": type_id}, {"$set": update_data})
+    
+    # Get updated task type
+    updated_task_type = await db.task_cost_types.find_one({"id": type_id})
+    
+    # Enrich with user info
+    if updated_task_type.get("created_by"):
+        creator = await db.users.find_one({"id": updated_task_type["created_by"]})
+        updated_task_type["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    return updated_task_type
+
+@api_router.delete("/task-cost-types/{type_id}")
+async def delete_task_cost_type(
+    type_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa loại chi phí task (chỉ admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can delete task cost types")
+    
+    # Check if exists
+    existing = await db.task_cost_types.find_one({"id": type_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Task cost type not found")
+    
+    # Check if being used in task cost rates
+    used_in_rates = await db.task_cost_rates.find_one({"task_type_id": type_id, "is_active": True})
+    if used_in_rates:
+        raise HTTPException(status_code=400, detail="Cannot delete task cost type that is being used in cost rates")
+    
+    # Soft delete
+    await db.task_cost_types.update_one(
+        {"id": type_id},
+        {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": "Task cost type deleted successfully"}
+
+# ================= TASK COST RATE ENDPOINTS =================
+
+@api_router.post("/task-cost-rates/", response_model=TaskCostRate)
+async def create_task_cost_rate(
+    cost_rate: TaskCostRateCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Tạo chi phí task mới (chỉ admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can create task cost rates")
+    
+    # Check if task type exists
+    task_type = await db.task_cost_types.find_one({"id": cost_rate.task_type_id, "is_active": True})
+    if not task_type:
+        raise HTTPException(status_code=400, detail="Task cost type not found or inactive")
+    
+    # Check if cost rate for this task type already exists
+    existing = await db.task_cost_rates.find_one({
+        "task_type_id": cost_rate.task_type_id,
+        "is_active": True
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Cost rate for this task type already exists")
+    
+    new_cost_rate = TaskCostRate(
+        **cost_rate.dict(),
+        created_by=current_user.id
+    )
+    
+    await db.task_cost_rates.insert_one(new_cost_rate.dict())
+    
+    # Enrich with info
+    new_cost_rate.task_type_name = task_type["name"]
+    new_cost_rate.created_by_name = current_user.full_name
+    
+    return new_cost_rate
+
+@api_router.get("/task-cost-rates/", response_model=List[TaskCostRate])
+async def get_task_cost_rates(
+    search: Optional[str] = None,
+    task_type_id: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách chi phí task"""
+    query_filter = {}
+    
+    if is_active is not None:
+        query_filter["is_active"] = is_active
+    
+    if task_type_id:
+        query_filter["task_type_id"] = task_type_id
+    
+    cost_rates = await db.task_cost_rates.find(query_filter).sort("created_at", -1).to_list(length=100)
+    
+    # Enrich with task type names and user info
+    for rate in cost_rates:
+        # Get task type info
+        if rate.get("task_type_id"):
+            task_type = await db.task_cost_types.find_one({"id": rate["task_type_id"]})
+            rate["task_type_name"] = task_type["name"] if task_type else "Unknown"
+        
+        # Get creator info
+        if rate.get("created_by"):
+            creator = await db.users.find_one({"id": rate["created_by"]})
+            rate["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    # Apply search filter after enrichment
+    if search:
+        filtered_rates = []
+        search_lower = search.lower()
+        for rate in cost_rates:
+            if (search_lower in rate.get("task_type_name", "").lower() or
+                search_lower in str(rate.get("cost_per_hour", "")).lower()):
+                filtered_rates.append(rate)
+        cost_rates = filtered_rates
+    
+    return cost_rates
+
+@api_router.put("/task-cost-rates/{rate_id}", response_model=TaskCostRate)
+async def update_task_cost_rate(
+    rate_id: str,
+    rate_update: TaskCostRateUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật chi phí task (chỉ admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can update task cost rates")
+    
+    # Check if exists
+    existing = await db.task_cost_rates.find_one({"id": rate_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Task cost rate not found")
+    
+    # Check task type if being updated
+    if rate_update.task_type_id:
+        task_type = await db.task_cost_types.find_one({"id": rate_update.task_type_id, "is_active": True})
+        if not task_type:
+            raise HTTPException(status_code=400, detail="Task cost type not found or inactive")
+    
+    update_data = {k: v for k, v in rate_update.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    await db.task_cost_rates.update_one({"id": rate_id}, {"$set": update_data})
+    
+    # Get updated cost rate
+    updated_rate = await db.task_cost_rates.find_one({"id": rate_id})
+    
+    # Enrich with info
+    if updated_rate.get("task_type_id"):
+        task_type = await db.task_cost_types.find_one({"id": updated_rate["task_type_id"]})
+        updated_rate["task_type_name"] = task_type["name"] if task_type else "Unknown"
+    
+    if updated_rate.get("created_by"):
+        creator = await db.users.find_one({"id": updated_rate["created_by"]})
+        updated_rate["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    return updated_rate
+
+@api_router.delete("/task-cost-rates/{rate_id}")
+async def delete_task_cost_rate(
+    rate_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa chi phí task (chỉ admin)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can delete task cost rates")
+    
+    # Check if exists
+    existing = await db.task_cost_rates.find_one({"id": rate_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Task cost rate not found")
+    
+    # Soft delete
+    await db.task_cost_rates.update_one(
+        {"id": rate_id},
+        {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"detail": "Task cost rate deleted successfully"}
+
 # ================= TASK COST SETTINGS ENDPOINTS =================
 
 @api_router.get("/task-cost-settings/", response_model=TaskCostSettings)
