@@ -1804,13 +1804,52 @@ async def update_internal_task_status(
     if status not in ["not_started", "in_progress", "completed"]:
         raise HTTPException(status_code=400, detail="Invalid status")
     
-    update_data = {"status": status, "updated_at": datetime.utcnow()}
+    # Lấy task hiện tại để check status cũ
+    current_task = await db.internal_tasks.find_one({"id": task_id})
+    if not current_task:
+        raise HTTPException(status_code=404, detail="Task not found")
     
-    # Nếu hoàn thành thì cần report_link
-    if status == "completed":
+    update_data = {"status": status, "updated_at": datetime.utcnow()}
+    current_time = datetime.utcnow()
+    
+    # ✅ NEW: Track time và calculate cost
+    if status == "in_progress" and current_task.get("status") == "not_started":
+        # Bắt đầu task - ghi nhận start_time
+        update_data["start_time"] = current_time
+        print(f"Task {task_id} started at {current_time}")
+        
+    elif status == "completed":
+        # Hoàn thành task
         if not report_link:
             raise HTTPException(status_code=400, detail="Report link is required for completed tasks")
         update_data["report_link"] = report_link
+        update_data["completion_time"] = current_time
+        
+        # Tính toán thời gian và chi phí
+        start_time = current_task.get("start_time")
+        if start_time:
+            # Convert string to datetime nếu cần
+            if isinstance(start_time, str):
+                start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            
+            # Tính số giờ thực tế
+            time_diff = current_time - start_time
+            actual_hours = time_diff.total_seconds() / 3600  # Convert to hours
+            update_data["actual_hours"] = round(actual_hours, 2)
+            
+            # Lấy cost settings và tính chi phí
+            cost_settings = await db.task_cost_settings.find_one({}, sort=[("created_at", -1)])
+            if cost_settings and cost_settings.get("is_enabled", True):
+                cost_per_hour = cost_settings.get("cost_per_hour", 0.0)
+                total_cost = actual_hours * cost_per_hour
+                update_data["total_cost"] = round(total_cost, 0)  # Round to nearest VND
+                
+                print(f"Task {task_id} completed: {actual_hours:.2f} hours, cost: {total_cost:,.0f} VND")
+            else:
+                update_data["total_cost"] = 0.0
+                print(f"Task {task_id} completed: {actual_hours:.2f} hours, cost calculation disabled")
+        else:
+            print(f"Warning: Task {task_id} completed but no start_time found")
     
     result = await db.internal_tasks.update_one(
         {"id": task_id},
