@@ -367,11 +367,7 @@ function App() {
                     <SalesReports />
                   </ProtectedRoute>
                 } />
-                <Route path="/documents" element={
-                  <ProtectedRoute requiredPermission="documents_documents_view">
-                    <DocumentsComponent user={user} />
-                  </ProtectedRoute>
-                } />
+                <Route path="/documents" element={<DocumentsComponent user={user} />} />
                 <Route path="/reports" element={
                   <ProtectedRoute requiredPermission="reports_reports_view">
                     <Reports />
