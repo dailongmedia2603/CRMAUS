@@ -267,27 +267,107 @@ function App() {
             {/* Main content area */}
             <main className="flex-1 p-6">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/clients" element={<ClientsComponent user={user} />} />
-                <Route path="/clients/:id" element={<ClientDetailComponent user={user} />} />
-                <Route path="/task" element={<Task />} />
-                <Route path="/projects" element={<ProjectsComponent user={user} />} />
-                <Route path="/projects/:id" element={<ProjectDetailComponent user={user} />} />
-                <Route path="/campaigns" element={<CampaignsComponent user={user} />} />
-                <Route path="/campaigns/:id" element={<CampaignDetailComponent user={user} />} />
-                <Route path="/task-templates" element={<TemplatesComponent user={user} />} />
-                <Route path="/contracts" element={<Contracts />} />
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/expenses" element={<ExpenseManagement user={user} />} />
-                <Route path="/financial-reports" element={<FinancialReports />} />
-                <Route path="/opportunities" element={<Opportunities />} />
-                <Route path="/leads" element={<LeadsComponent user={user} />} />
-                <Route path="/sales-reports" element={<SalesReports />} />
-                <Route path="/documents" element={<DocumentsComponent user={user} />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/human-resources" element={<HumanResources user={user} />} />
+                <Route path="/" element={
+                  <ProtectedRoute requiredPermission="dashboard_dashboard_view">
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients" element={
+                  <ProtectedRoute requiredPermission="clients_clients_view">
+                    <ClientsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients/:id" element={
+                  <ProtectedRoute requiredPermission="clients_clients_view">
+                    <ClientDetailComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/task" element={
+                  <ProtectedRoute requiredPermission="internal_tasks_internal_tasks_view">
+                    <Task />
+                  </ProtectedRoute>
+                } />
+                <Route path="/projects" element={
+                  <ProtectedRoute requiredPermission="projects_projects_view">
+                    <ProjectsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/projects/:id" element={
+                  <ProtectedRoute requiredPermission="projects_projects_view">
+                    <ProjectDetailComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/campaigns" element={
+                  <ProtectedRoute requiredPermission="campaigns_campaigns_view">
+                    <CampaignsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/campaigns/:id" element={
+                  <ProtectedRoute requiredPermission="campaigns_campaigns_view">
+                    <CampaignDetailComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/task-templates" element={
+                  <ProtectedRoute requiredPermission="templates_templates_view">
+                    <TemplatesComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/contracts" element={
+                  <ProtectedRoute requiredPermission="contracts_contracts_view">
+                    <Contracts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices" element={
+                  <ProtectedRoute requiredPermission="invoices_invoices_view">
+                    <Invoices />
+                  </ProtectedRoute>
+                } />
+                <Route path="/expenses" element={
+                  <ProtectedRoute requiredPermission="expenses_expenses_view">
+                    <ExpenseManagement user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/financial-reports" element={
+                  <ProtectedRoute requiredPermission="reports_financial_reports">
+                    <FinancialReports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/opportunities" element={
+                  <ProtectedRoute requiredPermission="reports_reports_view">
+                    <Opportunities />
+                  </ProtectedRoute>
+                } />
+                <Route path="/leads" element={
+                  <ProtectedRoute requiredPermission="leads_leads_view">
+                    <LeadsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/sales-reports" element={
+                  <ProtectedRoute requiredPermission="reports_sales_reports">
+                    <SalesReports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/documents" element={
+                  <ProtectedRoute requiredPermission="documents_documents_view">
+                    <DocumentsComponent user={user} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/reports" element={
+                  <ProtectedRoute requiredPermission="reports_reports_view">
+                    <Reports />
+                  </ProtectedRoute>
+                } />
+                <Route path="/human-resources" element={
+                  <ProtectedRoute requiredPermission="human_resources_users_view">
+                    <HumanResources user={user} />
+                  </ProtectedRoute>
+                } />
                 <Route path="/account" element={<Account />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/settings" element={
+                  <ProtectedRoute requiredPermission="settings_settings_view">
+                    <Settings />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </main>
