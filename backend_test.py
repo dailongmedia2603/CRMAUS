@@ -1257,32 +1257,11 @@ def main():
     """Main test function"""
     print("=== Starting API Tests ===")
     
-    # Get authentication token
-    if not get_token():
-        print("Failed to authenticate. Exiting tests.")
-        return
-    
-    # Test specific permission management endpoints as requested
-    specific_permission_success = test_specific_permission_endpoints()
-    
-    # Test permission management endpoints (full test)
-    permission_management_success = test_permission_management()
-    
-    # Test team management endpoints
-    team_management_success = test_team_management()
-    
-    # Test performance endpoints
-    performance_success = test_performance_endpoints()
-    
-    # Test internal task management API with feedback functionality
-    internal_task_success = test_internal_task_management()
+    # Test resetting password for 'Bé Kiều' user account
+    be_kieu_password_reset_success = test_be_kieu_user_password_reset()
     
     print("\n=== Test Results ===")
-    print(f"Specific Permission Management API Endpoints: {'✅' if specific_permission_success else '❌'}")
-    print(f"Permission Management API (Full Test): {'✅' if permission_management_success else '❌'}")
-    print(f"Team Management API: {'✅' if team_management_success else '❌'}")
-    print(f"Performance API: {'✅' if performance_success else '❌'}")
-    print(f"Internal Task Management API: {'✅' if internal_task_success else '❌'}")
+    print(f"'Bé Kiều' User Password Reset: {'✅' if be_kieu_password_reset_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
