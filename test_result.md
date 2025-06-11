@@ -501,11 +501,11 @@ test_plan:
         
   - task: "Permission Enforcement in Frontend"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
@@ -513,6 +513,9 @@ test_plan:
       - working: false
         agent: "testing"
         comment: "Tested the permission enforcement in the frontend. The admin user (admin@example.com) has full access to all menu items in the sidebar as expected. The editor user (be.kieu@example.com) has limited access in the sidebar UI - they can only see Dashboard, Client, Task, Documents, and Account menu items. However, there's an issue with the permission enforcement for direct URL access - the editor user can still access restricted pages like Projects, Human Resources, Invoices, etc. by navigating directly to those URLs. The permission system is working for hiding menu items in the UI but not for blocking direct access to restricted pages."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Successfully tested the improved permission enforcement with route protection in the frontend. The editor user (be.kieu@example.com) can now only access allowed pages: Dashboard (/), Client (/clients), Internal Tasks (/task), Documents (/documents), and Account (/account). When attempting to access restricted pages by directly navigating to URLs like /human-resources, /projects, /invoices, /expenses, and /settings, the user is correctly shown the 'Không có quyền truy cập' (Access Denied) message. The sidebar menu also correctly shows only the allowed menu items. The permission error page displays correctly with Vietnamese text. No console errors were found during testing except for expected 403 errors when trying to access restricted API endpoints. The route protection is now working correctly and unauthorized users cannot access restricted pages even with direct URL navigation."
 
 agent_communication:
   - agent: "testing"
