@@ -1253,15 +1253,143 @@ def test_specific_permission_endpoints():
             items_success and admin_matrix_success and 
             (user_matrix_success if user_id else True))
 
+def test_role_permission_update():
+    """Test the role-based permission update functionality"""
+    print("\n=== Testing Role-Based Permission Update ===")
+    
+    # 1. Login with admin credentials
+    if not get_token():
+        print("Failed to authenticate as admin. Exiting test.")
+        return False
+    
+    # 2. Test updating role permissions for the "editor" role
+    test_role = "editor"
+    
+    # First, get the permission items to use in our update
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/items",
+        headers=get_headers()
+    )
+    
+    if response.status_code != 200:
+        print(f"❌ Failed to get permission items: {response.status_code}")
+        print(f"Response: {response.text}")
+        return False
+    
+    items = response.json()
+    print(f"Found {len(items)} permission items")
+    
+    # Find specific permission items for our test
+    dashboard_view_item = next((item for item in items if item["id"] == "dashboard_dashboard_view"), None)
+    clients_view_item = next((item for item in items if item["id"] == "clients_clients_view"), None)
+    tasks_view_item = next((item for item in items if item["id"] == "internal_tasks_internal_tasks_view"), None)
+    
+    if not dashboard_view_item or not clients_view_item or not tasks_view_item:
+        print("❌ Could not find required permission items")
+        print(f"Dashboard view: {dashboard_view_item}")
+        print(f"Clients view: {clients_view_item}")
+        print(f"Tasks view: {tasks_view_item}")
+        return False
+    
+    # 3. Create the request body with the correct format including the 'role' field
+    permissions_data = [
+        {
+            "role": "editor",
+            "permission_id": "dashboard_dashboard_view",
+            "can_view": True,
+            "can_edit": False,
+            "can_delete": False
+        },
+        {
+            "role": "editor", 
+            "permission_id": "clients_clients_view",
+            "can_view": True,
+            "can_edit": False,
+            "can_delete": False
+        },
+        {
+            "role": "editor",
+            "permission_id": "internal_tasks_internal_tasks_view", 
+            "can_view": True,
+            "can_edit": True,
+            "can_delete": False
+        }
+    ]
+    
+    # 4. Send the request to update role permissions
+    response = requests.post(
+        f"{BACKEND_URL}/permissions/role/{test_role}/update",
+        headers=get_headers(),
+        json=permissions_data
+    )
+    
+    update_success = print_test_result("Update Role Permissions", response)
+    if not update_success:
+        print(f"Failed to update role permissions: {response.text}")
+        return False
+    
+    print("✅ Successfully updated role permissions")
+    
+    # 5. Verify the permissions were saved correctly by calling GET /api/permissions/matrix/role/editor
+    response = requests.get(
+        f"{BACKEND_URL}/permissions/matrix/role/{test_role}",
+        headers=get_headers()
+    )
+    
+    verify_success = print_test_result("Verify Role Permissions", response)
+    if not verify_success:
+        print(f"Failed to verify role permissions: {response.text}")
+        return False
+    
+    # Check if our permissions were correctly saved
+    matrix = response.json()
+    current_permissions = matrix.get("current_permissions", [])
+    
+    # Find our specific permissions in the response
+    dashboard_perm = next((p for p in current_permissions if p["permission_id"] == "dashboard_dashboard_view"), None)
+    clients_perm = next((p for p in current_permissions if p["permission_id"] == "clients_clients_view"), None)
+    tasks_perm = next((p for p in current_permissions if p["permission_id"] == "internal_tasks_internal_tasks_view"), None)
+    
+    if not dashboard_perm or not clients_perm or not tasks_perm:
+        print("❌ Could not find updated permissions in the response")
+        return False
+    
+    # Verify the permissions match what we sent
+    dashboard_correct = (dashboard_perm["can_view"] == True and 
+                         dashboard_perm["can_edit"] == False and 
+                         dashboard_perm["can_delete"] == False)
+    
+    clients_correct = (clients_perm["can_view"] == True and 
+                       clients_perm["can_edit"] == False and 
+                       clients_perm["can_delete"] == False)
+    
+    tasks_correct = (tasks_perm["can_view"] == True and 
+                     tasks_perm["can_edit"] == True and 
+                     tasks_perm["can_delete"] == False)
+    
+    if dashboard_correct and clients_correct and tasks_correct:
+        print("✅ All permissions were correctly saved")
+    else:
+        print("❌ Permissions were not correctly saved")
+        if not dashboard_correct:
+            print(f"Dashboard permission incorrect: {dashboard_perm}")
+        if not clients_correct:
+            print(f"Clients permission incorrect: {clients_perm}")
+        if not tasks_correct:
+            print(f"Tasks permission incorrect: {tasks_perm}")
+        return False
+    
+    return True
+
 def main():
     """Main test function"""
     print("=== Starting API Tests ===")
     
-    # Test resetting password for 'Bé Kiều' user account
-    be_kieu_password_reset_success = test_be_kieu_user_password_reset()
+    # Test role-based permission update functionality
+    role_permission_update_success = test_role_permission_update()
     
     print("\n=== Test Results ===")
-    print(f"'Bé Kiều' User Password Reset: {'✅' if be_kieu_password_reset_success else '❌'}")
+    print(f"Role-Based Permission Update: {'✅' if role_permission_update_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
