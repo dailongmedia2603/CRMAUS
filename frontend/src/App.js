@@ -2338,6 +2338,22 @@ const TaskRow = React.memo(({
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
+          <button
+            onClick={() => onView(task)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Chi tiết
+          </button>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          {new Date(task.deadline).toLocaleString('vi-VN')}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
+            {getPriorityLabel(task.priority)}
+          </span>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {task.assigned_by_name && (
               <div className="text-xs text-gray-600 mb-1">
@@ -2353,22 +2369,6 @@ const TaskRow = React.memo(({
               <span className="text-xs text-gray-400">Chưa phân công</span>
             )}
           </div>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <button
-            onClick={() => onView(task)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            Chi tiết
-          </button>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {new Date(task.deadline).toLocaleString('vi-VN')}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
-            {getPriorityLabel(task.priority)}
-          </span>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <button
