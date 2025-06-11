@@ -3966,8 +3966,8 @@ const TaskCostRateModal = ({ isOpen, onClose, onSubmit, editingData, taskTypes }
                 type="number"
                 min="0"
                 step="1000"
-                value={formData.hourly_rate}
-                onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value })}
+                value={formData.cost_per_hour}
+                onChange={(e) => setFormData({ ...formData, cost_per_hour: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Nhập chi phí theo giờ"
                 required
