@@ -542,6 +542,11 @@ class InternalTask(InternalTaskBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None
+    # ✅ NEW: Time tracking fields for cost calculation
+    start_time: Optional[datetime] = None  # When user clicks "Bắt đầu"
+    completion_time: Optional[datetime] = None  # When user clicks "Hoàn thành"
+    actual_hours: Optional[float] = None  # Calculated hours between start and completion
+    total_cost: Optional[float] = None  # Calculated cost based on hours and rate
     # Enriched fields
     assigned_to_name: Optional[str] = None
     assigned_by_name: Optional[str] = None
