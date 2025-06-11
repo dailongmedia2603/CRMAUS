@@ -1149,6 +1149,7 @@ const SidebarContent = ({ user, logout }) => {
           </svg>
           Báo cáo
         </button>
+        )}
 
         {/* Nhân sự */}
         {hasPermission('human_resources_users_view') && (
