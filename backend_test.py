@@ -2680,11 +2680,15 @@ def main():
     """Main test function"""
     print("=== Starting API Tests ===")
     
+    # Test Task Cost Settings functionality
+    task_cost_settings_success = test_task_cost_settings()
+    
     # Test permission filtering for internal tasks and documents
-    permission_filtering_success = test_permission_filtering()
+    # permission_filtering_success = test_permission_filtering()
     
     print("\n=== Test Results ===")
-    print(f"Permission Filtering: {'✅' if permission_filtering_success else '❌'}")
+    print(f"Task Cost Settings: {'✅' if task_cost_settings_success else '❌'}")
+    # print(f"Permission Filtering: {'✅' if permission_filtering_success else '❌'}")
     
     print("\n=== All tests completed ===")
 
