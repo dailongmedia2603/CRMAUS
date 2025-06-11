@@ -3,9 +3,10 @@ import json
 from datetime import datetime, timedelta
 import time
 import uuid
+import os
 
-# Backend URL
-BACKEND_URL = "http://localhost:8001/api"
+# Get backend URL from environment or use default
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001') + "/api"
 
 # Test user credentials
 EMAIL = "admin@example.com"
@@ -14,6 +15,7 @@ PASSWORD = "admin123"
 # Global variables
 token = None
 created_user_id = None
+be_kieu_user_id = None
 
 def get_token():
     """Get authentication token"""
