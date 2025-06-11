@@ -498,6 +498,21 @@ test_plan:
       - working: true
         agent: "testing"
         comment: "✅ FIXED: Successfully fixed both runtime errors. 1) Changed 'location === '/' to 'location.pathname === '/' in the Dashboard button's className. 2) Replaced three separate state variables (isProjectMenuOpen, isFinanceMenuOpen, isSalesMenuOpen) with a single 'openSubmenus' state object. All navigation menu items now work correctly, and the application loads without runtime errors. The sidebar navigation works properly, and all pages load successfully."
+        
+  - task: "Permission Enforcement in Frontend"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the permission enforcement in the frontend after fixing the authentication issue. This includes testing admin access, editor access, and verifying that restricted pages are properly blocked."
+      - working: false
+        agent: "testing"
+        comment: "Tested the permission enforcement in the frontend. The admin user (admin@example.com) has full access to all menu items in the sidebar as expected. The editor user (be.kieu@example.com) has limited access in the sidebar UI - they can only see Dashboard, Client, Task, Documents, and Account menu items. However, there's an issue with the permission enforcement for direct URL access - the editor user can still access restricted pages like Projects, Human Resources, Invoices, etc. by navigating directly to those URLs. The permission system is working for hiding menu items in the UI but not for blocking direct access to restricted pages."
 
 agent_communication:
   - agent: "testing"
