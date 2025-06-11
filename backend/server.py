@@ -4308,8 +4308,83 @@ async def check_permission(
     }
 
 # Root endpoint
+# ================= TASK COST SETTINGS ENDPOINTS =================
+
+@api_router.get("/task-cost-settings/", response_model=TaskCostSettings)
+async def get_task_cost_settings(current_user: User = Depends(get_current_active_user)):
+    """Lấy cấu hình chi phí task hiện tại"""
+    
+    # Tìm settings hiện tại
+    settings = await db.task_cost_settings.find_one({}, sort=[("created_at", -1)])
+    
+    if not settings:
+        # Tạo settings mặc định nếu chưa có
+        default_settings = TaskCostSettings(
+            cost_per_hour=0.0,
+            is_enabled=True,
+            created_by=current_user.id,
+            updated_by=current_user.id
+        )
+        
+        await db.task_cost_settings.insert_one(default_settings.dict())
+        settings = default_settings.dict()
+    
+    # Enrich với thông tin user
+    if settings.get("updated_by"):
+        updated_by_user = await db.users.find_one({"id": settings["updated_by"]})
+        settings["updated_by_name"] = updated_by_user["full_name"] if updated_by_user else "Unknown"
+    
+    return settings
+
+@api_router.put("/task-cost-settings/", response_model=TaskCostSettings)
+async def update_task_cost_settings(
+    settings_update: TaskCostSettingsUpdate, 
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật cấu hình chi phí task (chỉ admin)"""
+    
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can update task cost settings")
+    
+    # Tìm settings hiện tại hoặc tạo mới
+    current_settings = await db.task_cost_settings.find_one({}, sort=[("created_at", -1)])
+    
+    if current_settings:
+        # Update existing settings
+        update_data = {k: v for k, v in settings_update.dict().items() if v is not None}
+        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_by"] = current_user.id
+        
+        await db.task_cost_settings.update_one(
+            {"id": current_settings["id"]}, 
+            {"$set": update_data}
+        )
+        
+        # Get updated settings
+        updated_settings = await db.task_cost_settings.find_one({"id": current_settings["id"]})
+    else:
+        # Create new settings
+        new_settings = TaskCostSettings(
+            cost_per_hour=settings_update.cost_per_hour or 0.0,
+            is_enabled=settings_update.is_enabled if settings_update.is_enabled is not None else True,
+            created_by=current_user.id,
+            updated_by=current_user.id
+        )
+        
+        await db.task_cost_settings.insert_one(new_settings.dict())
+        updated_settings = new_settings.dict()
+    
+    # Enrich với thông tin user
+    if updated_settings.get("updated_by"):
+        updated_by_user = await db.users.find_one({"id": updated_settings["updated_by"]})
+        updated_settings["updated_by_name"] = updated_by_user["full_name"] if updated_by_user else "Unknown"
+    
+    return updated_settings
+
+# ================= ROOT AND HEALTH ENDPOINTS =================
+
 @api_router.get("/")
-async def root():
+async def read_root():
     return {"message": "CRM API for Marketing Agency"}
 
 # Health check
