@@ -3772,6 +3772,11 @@ const Settings = () => {
     { id: 'other', name: 'Khác', icon: '⚙️' }
   ];
 
+  const taskCostSubTabs = [
+    { id: 'list', name: 'Danh sách', icon: '📋' },
+    { id: 'config', name: 'Cấu hình', icon: '⚙️' }
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -3779,7 +3784,7 @@ const Settings = () => {
         <p className="text-gray-600 mt-1">Cấu hình và quản lý hệ thống (Admin only)</p>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Main Tab Navigation */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
@@ -3802,6 +3807,143 @@ const Settings = () => {
       {/* Tab Content */}
       <div className="modern-card p-6">
         {activeTab === 'task-cost' && (
+          <div className="space-y-6">
+            {/* Sub Tab Navigation for Task Cost */}
+            <div className="border-b border-gray-100">
+              <nav className="-mb-px flex space-x-6">
+                {taskCostSubTabs.map((subTab) => (
+                  <button
+                    key={subTab.id}
+                    onClick={() => setTaskCostSubTab(subTab.id)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      taskCostSubTab === subTab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="mr-2">{subTab.icon}</span>
+                    {subTab.name}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Sub Tab Content */}
+            {taskCostSubTab === 'list' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-medium text-gray-900">Danh sách Chi phí Task</h2>
+                  <button
+                    onClick={openAddRateModal}
+                    disabled={user?.role !== 'admin'}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                      user?.role !== 'admin'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } transition-colors`}
+                  >
+                    + Thêm chi phí Task
+                  </button>
+                </div>
+
+                {/* Search */}
+                <div className="max-w-md">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Tìm kiếm chi phí task..."
+                    />
+                  </div>
+                </div>
+
+                {/* Task Cost Rates Table */}
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Loại Task
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Chi phí / Giờ
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ngày tạo
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Hành động
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredRates.map((rate) => (
+                          <tr key={rate.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {rate.task_type_name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {formatCurrency(rate.cost_per_hour)} VND
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(rate.created_at).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="flex space-x-2">
+                                {user?.role === 'admin' && (
+                                  <>
+                                    <button
+                                      onClick={() => openEditRateModal(rate)}
+                                      className="text-blue-600 hover:text-blue-800"
+                                      title="Sửa"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteRate(rate.id)}
+                                      className="text-red-600 hover:text-red-800"
+                                      title="Xóa"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
+                                {user?.role !== 'admin' && (
+                                  <span className="text-gray-400 text-xs">Chỉ admin</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {filteredRates.length === 0 && (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                              {searchTerm ? 'Không tìm thấy chi phí task nào' : 'Chưa có chi phí task nào'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-medium text-gray-900 mb-2">Cấu hình Chi phí Task</h2>
