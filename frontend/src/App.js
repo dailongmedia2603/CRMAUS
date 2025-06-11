@@ -3521,7 +3521,7 @@ const Settings = () => {
   // Filter functions
   const filteredRates = taskCostRates.filter(rate => 
     rate.task_type_name?.toLowerCase().includes(rateSearchTerm.toLowerCase()) ||
-    rate.hourly_rate?.toString().includes(rateSearchTerm)
+    rate.cost_per_hour?.toString().includes(rateSearchTerm)
   );
 
   const filteredTypes = taskCostTypes.filter(type => 
