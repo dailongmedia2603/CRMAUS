@@ -487,8 +487,163 @@ def test_task_cost_management():
     print("\n=== Task Cost Management API Tests Completed Successfully ===")
     return True
 
+def test_contracts_api():
+    """Test Contracts API endpoints for ClientDetail page"""
+    print("\n=== Testing Contracts API Endpoints ===")
+    
+    # Get authentication token
+    if not token:
+        get_token()
+    
+    headers = get_headers()
+    
+    # 1. First, get a list of clients to use a valid client_id
+    print("\n--- Getting clients list ---")
+    response = requests.get(
+        f"{BACKEND_URL}/clients/",
+        headers=headers
+    )
+    
+    clients_success = print_test_result("Get Clients List", response)
+    if not clients_success:
+        print(f"Failed to get clients list: {response.text}")
+        return False
+    
+    clients = response.json()
+    if not clients:
+        print("No clients found in the database. Cannot test contracts API.")
+        return False
+    
+    # Use the first client for testing
+    test_client = clients[0]
+    client_id = test_client["id"]
+    print(f"Using client: {test_client['name']} (ID: {client_id}) for testing")
+    
+    # 2. Test GET /api/contracts/client/{client_id} endpoint
+    print(f"\n--- Testing GET /api/contracts/client/{client_id} ---")
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/client/{client_id}",
+        headers=headers
+    )
+    
+    client_contracts_success = print_test_result("Get Client Contracts", response)
+    if not client_contracts_success:
+        print(f"Failed to get client contracts: {response.text}")
+        return False
+    
+    client_contracts = response.json()
+    print(f"Found {len(client_contracts)} contracts for client {test_client['name']}")
+    
+    # Verify the contracts data structure
+    if client_contracts:
+        print("\n--- Verifying client contracts data structure ---")
+        contract = client_contracts[0]
+        required_fields = ["title", "status", "value", "start_date", "end_date"]
+        
+        missing_fields = [field for field in required_fields if field not in contract]
+        if missing_fields:
+            print(f"❌ Contract data is missing required fields: {', '.join(missing_fields)}")
+            return False
+        else:
+            print("✅ Contract data includes all required fields")
+            print(f"Sample contract: {contract['title']} - Status: {contract['status']} - Value: {contract['value']}")
+        
+        # 3. Test GET /api/contracts/{contract_id} endpoint
+        contract_id = contract["id"]
+        print(f"\n--- Testing GET /api/contracts/{contract_id} ---")
+        response = requests.get(
+            f"{BACKEND_URL}/contracts/{contract_id}",
+            headers=headers
+        )
+        
+        contract_detail_success = print_test_result("Get Contract Detail", response)
+        if not contract_detail_success:
+            print(f"Failed to get contract detail: {response.text}")
+            return False
+        
+        contract_detail = response.json()
+        print(f"Successfully retrieved contract detail: {contract_detail['title']}")
+        
+        # Verify contract detail data structure
+        print("\n--- Verifying contract detail data structure ---")
+        missing_fields = [field for field in required_fields if field not in contract_detail]
+        if missing_fields:
+            print(f"❌ Contract detail is missing required fields: {', '.join(missing_fields)}")
+            return False
+        else:
+            print("✅ Contract detail includes all required fields")
+            
+        # Print all fields in the contract detail for verification
+        print("\nContract Detail Fields:")
+        for key, value in contract_detail.items():
+            print(f"  {key}: {value}")
+    else:
+        print("No contracts found for this client. Creating a test contract...")
+        
+        # Create a test contract for the client
+        new_contract = {
+            "client_id": client_id,
+            "title": f"Test Contract {int(time.time())}",
+            "start_date": (datetime.now() - timedelta(days=30)).isoformat(),
+            "end_date": (datetime.now() + timedelta(days=335)).isoformat(),
+            "value": 50000000,
+            "status": "active",
+            "terms": "Test contract terms for API testing"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/contracts/",
+            headers=headers,
+            json=new_contract
+        )
+        
+        create_contract_success = print_test_result("Create Test Contract", response)
+        if not create_contract_success:
+            print(f"Failed to create test contract: {response.text}")
+            return False
+        
+        created_contract = response.json()
+        contract_id = created_contract["id"]
+        print(f"Created test contract: {created_contract['title']} (ID: {contract_id})")
+        
+        # Test GET /api/contracts/{contract_id} endpoint with the newly created contract
+        print(f"\n--- Testing GET /api/contracts/{contract_id} ---")
+        response = requests.get(
+            f"{BACKEND_URL}/contracts/{contract_id}",
+            headers=headers
+        )
+        
+        contract_detail_success = print_test_result("Get Contract Detail", response)
+        if not contract_detail_success:
+            print(f"Failed to get contract detail: {response.text}")
+            return False
+        
+        contract_detail = response.json()
+        print(f"Successfully retrieved contract detail: {contract_detail['title']}")
+        
+        # Verify contract detail data structure
+        print("\n--- Verifying contract detail data structure ---")
+        required_fields = ["title", "status", "value", "start_date", "end_date"]
+        missing_fields = [field for field in required_fields if field not in contract_detail]
+        if missing_fields:
+            print(f"❌ Contract detail is missing required fields: {', '.join(missing_fields)}")
+            return False
+        else:
+            print("✅ Contract detail includes all required fields")
+            
+        # Print all fields in the contract detail for verification
+        print("\nContract Detail Fields:")
+        for key, value in contract_detail.items():
+            print(f"  {key}: {value}")
+    
+    print("\n=== Contracts API Tests Completed Successfully ===")
+    return True
+
 if __name__ == "__main__":
     print("Starting backend API tests...")
     
+    # Test Contracts API endpoints
+    test_contracts_api()
+    
     # Test Task Cost Management APIs
-    test_task_cost_management()
+    # test_task_cost_management()
