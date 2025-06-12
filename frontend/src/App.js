@@ -1395,6 +1395,26 @@ const Task = () => {
   const [reportTask, setReportTask] = useState(null);
   const [reportLink, setReportLink] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [taskTypes, setTaskTypes] = useState([]);
+  const [loadingTaskTypes, setLoadingTaskTypes] = useState(false);
+
+  // Load task types when modal opens
+  useEffect(() => {
+    const loadTaskTypes = async () => {
+      try {
+        setLoadingTaskTypes(true);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/task-cost-types/?is_active=true`);
+        setTaskTypes(response.data);
+      } catch (error) {
+        console.error('Error loading task types:', error);
+        toast.error('Lỗi khi tải danh sách loại task');
+      } finally {
+        setLoadingTaskTypes(false);
+      }
+    };
+
+    loadTaskTypes();
+  }, []);
 
   useEffect(() => {
     fetchTasks();
