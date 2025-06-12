@@ -563,6 +563,7 @@ class InternalTaskUpdate(BaseModel):
     priority: Optional[str] = None
     status: Optional[str] = None
     report_link: Optional[str] = None
+    task_type_id: Optional[str] = None
 
 class InternalTask(InternalTaskBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
