@@ -1545,9 +1545,8 @@ const Task = () => {
 
     if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} công việc đã chọn?`)) {
       try {
-        await axios.post(`${API}/api/internal-tasks/bulk-delete`, {
-          task_ids: selectedTasks
-        }, {
+        // Backend expects a list of task_ids directly, not wrapped in an object
+        await axios.post(`${API}/api/internal-tasks/bulk-delete`, selectedTasks, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
