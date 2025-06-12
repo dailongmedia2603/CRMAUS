@@ -4327,6 +4327,406 @@ const TaskCostTypeModal = ({ isOpen, onClose, onSubmit, editingData }) => {
   );
 };
 
+// TaskCostReport Component
+const TaskCostReport = () => {
+  const { user, token } = useContext(AuthContext);
+  const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [taskTypes, setTaskTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedTaskType, setSelectedTaskType] = useState('');
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState('all');
+  
+  // Detail modal
+  const [viewingTask, setViewingTask] = useState(null);
+
+  const timeFilters = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'today', label: 'Hôm nay' },
+    { value: 'yesterday', label: 'Hôm qua' },
+    { value: 'week', label: 'Tuần này' },
+    { value: 'month', label: 'Tháng này' }
+  ];
+
+  // Load data when component mounts
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Filter tasks when filters change
+  useEffect(() => {
+    applyFilters();
+  }, [tasks, searchTerm, selectedUser, selectedTaskType, selectedTimeFilter]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load completed tasks only
+      const tasksResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/internal-tasks/?status=completed`);
+      setTasks(tasksResponse.data);
+      
+      // Load users
+      const usersResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/`);
+      setUsers(usersResponse.data);
+      
+      // Load task types
+      const taskTypesResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/task-cost-types/?is_active=true`);
+      setTaskTypes(taskTypesResponse.data);
+      
+    } catch (error) {
+      console.error('Error loading task cost report data:', error);
+      toast.error('Lỗi khi tải dữ liệu báo cáo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...tasks];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(task =>
+        task.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // User filter
+    if (selectedUser) {
+      filtered = filtered.filter(task => task.assigned_to === selectedUser);
+    }
+
+    // Task type filter
+    if (selectedTaskType) {
+      filtered = filtered.filter(task => task.task_type_id === selectedTaskType);
+    }
+
+    // Time filter
+    if (selectedTimeFilter !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      filtered = filtered.filter(task => {
+        if (!task.completion_time) return false;
+        
+        const completionDate = new Date(task.completion_time);
+        
+        switch (selectedTimeFilter) {
+          case 'today':
+            return completionDate >= today;
+          case 'yesterday':
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return completionDate >= yesterday && completionDate < today;
+          case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            return completionDate >= weekStart;
+          case 'month':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            return completionDate >= monthStart;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredTasks(filtered);
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return '0';
+    return new Intl.NumberFormat('vi-VN').format(amount);
+  };
+
+  const getTotalCost = () => {
+    return filteredTasks.reduce((total, task) => total + (task.total_cost || 0), 0);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="modern-card p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Tổng công việc</p>
+              <p className="text-2xl font-semibold text-gray-900">{filteredTasks.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="modern-card p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Tổng chi phí</p>
+              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(getTotalCost())}đ</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="modern-card p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Tổng giờ làm</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {filteredTasks.reduce((total, task) => total + (task.actual_hours || 0), 0).toFixed(1)}h
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="modern-card p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Chi phí TB/giờ</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {filteredTasks.length > 0 
+                  ? formatCurrency(Math.round(getTotalCost() / filteredTasks.reduce((total, task) => total + (task.actual_hours || 0), 0)))
+                  : '0'
+                }đ
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="modern-card p-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {/* Search */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Tìm kiếm công việc..."
+              />
+            </div>
+          </div>
+
+          {/* User Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nhân sự</label>
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Tất cả nhân sự</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Task Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Loại Task</label>
+            <select
+              value={selectedTaskType}
+              onChange={(e) => setSelectedTaskType(e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Tất cả loại task</option>
+              {taskTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Time Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Thời gian</label>
+            <select
+              value={selectedTimeFilter}
+              onChange={(e) => setSelectedTimeFilter(e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {timeFilters.map((filter) => (
+                <option key={filter.value} value={filter.value}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reset Filters */}
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedUser('');
+                setSelectedTaskType('');
+                setSelectedTimeFilter('all');
+              }}
+              className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm font-medium"
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tasks Table */}
+      <div className="modern-card">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Công việc
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Nhân sự
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Deadline
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Report
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Chi phí
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+                      Đang tải...
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredTasks.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                    {searchTerm || selectedUser || selectedTaskType || selectedTimeFilter !== 'all' 
+                      ? 'Không tìm thấy công việc nào' 
+                      : 'Chưa có công việc hoàn thành nào'
+                    }
+                  </td>
+                </tr>
+              ) : (
+                filteredTasks.map((task) => (
+                  <tr key={task.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => setViewingTask(task)}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {task.name}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                          <span className="text-xs font-semibold text-white">
+                            {task.assigned_to_name ? task.assigned_to_name.charAt(0).toUpperCase() : 'N/A'}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-900">
+                          {task.assigned_to_name || 'Chưa giao'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(task.deadline).toLocaleString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh'
+                      })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        Hoàn thành
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {task.report_link ? (
+                        <a
+                          href={task.report_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Xem báo cáo
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-sm">Chưa có</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatCurrency(task.total_cost || 0)}đ
+                      </span>
+                      {task.actual_hours && (
+                        <div className="text-xs text-gray-500">
+                          ({task.actual_hours.toFixed(1)}h)
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Task Detail Modal */}
+      {viewingTask && (
+        <TaskDetailModal
+          task={viewingTask}
+          onClose={() => setViewingTask(null)}
+        />
+      )}
+    </div>
+  );
+};
+
 // LeadsComponent - Simple placeholder for Lead management
 const LeadsComponent = ({ user }) => (
   <div className="space-y-6">
