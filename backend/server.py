@@ -1882,17 +1882,31 @@ async def update_internal_task_status(
             actual_hours = time_diff.total_seconds() / 3600  # Convert to hours
             update_data["actual_hours"] = round(actual_hours, 2)
             
-            # Lấy cost settings và tính chi phí
+            # Lấy cost rate từ task cost rates dựa trên assigned_to user và task type
+            # Tìm cost rate phù hợp - có thể cần thêm task_type_id vào InternalTask model sau
+            # Hiện tại sử dụng cost rate mặc định hoặc từ settings
+            cost_per_hour = 0.0
+            
+            # Tìm cost rate từ task cost settings (fallback)
             cost_settings = await db.task_cost_settings.find_one({}, sort=[("created_at", -1)])
             if cost_settings and cost_settings.get("is_enabled", True):
                 cost_per_hour = cost_settings.get("cost_per_hour", 0.0)
+            
+            # TODO: Có thể thêm logic để link với task_cost_rates dựa trên task type
+            # cost_rate = await db.task_cost_rates.find_one({
+            #     "task_type_id": task.get("task_type_id"), 
+            #     "is_active": True
+            # })
+            # if cost_rate:
+            #     cost_per_hour = cost_rate.get("cost_per_hour", 0.0)
+            
+            if cost_per_hour > 0:
                 total_cost = actual_hours * cost_per_hour
                 update_data["total_cost"] = round(total_cost, 0)  # Round to nearest VND
-                
                 print(f"Task {task_id} completed: {actual_hours:.2f} hours, cost: {total_cost:,.0f} VND")
             else:
                 update_data["total_cost"] = 0.0
-                print(f"Task {task_id} completed: {actual_hours:.2f} hours, cost calculation disabled")
+                print(f"Task {task_id} completed: {actual_hours:.2f} hours, no cost rate configured")
         else:
             print(f"Warning: Task {task_id} completed but no start_time found")
     
