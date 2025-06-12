@@ -2291,7 +2291,7 @@ const TaskRow = React.memo(({
             Chi tiết
           </button>
         </td>
-        <td className="w-32 px-4 py-4 whitespace-nowrap">
+        <td className="w-40 px-4 py-4 whitespace-nowrap">
           <div className="text-xs text-gray-700 space-y-1">
             <div className="flex">
               <span className="font-medium text-gray-600 mr-1">Người giao:</span>
