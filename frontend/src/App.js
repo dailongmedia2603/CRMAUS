@@ -2695,7 +2695,9 @@ const TaskDetailModal = ({ task, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
-            <p className="text-gray-900">{new Date(task.deadline).toLocaleString('vi-VN')}</p>
+            <p className="text-gray-900">{new Date(task.deadline).toLocaleString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh'
+            })}</p>
           </div>
 
           <div>
