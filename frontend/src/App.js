@@ -2283,7 +2283,7 @@ const TaskRow = React.memo(({
             </span>
           </div>
         </td>
-        <td className="w-32 px-4 py-4 whitespace-nowrap">
+        <td className="w-40 px-4 py-4 whitespace-nowrap">
           <button
             onClick={() => onView(task)}
             className="text-sm text-blue-600 hover:text-blue-800"
