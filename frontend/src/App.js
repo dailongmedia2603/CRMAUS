@@ -2499,6 +2499,33 @@ const TaskModal = ({ task, users, onClose, onSubmit }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Loại Task
+              </label>
+              <select
+                value={formData.task_type_id}
+                onChange={(e) => setFormData(prev => ({...prev, task_type_id: e.target.value}))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Chọn loại task (tùy chọn)</option>
+                {loadingTaskTypes ? (
+                  <option disabled>Đang tải...</option>
+                ) : (
+                  taskTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              {formData.task_type_id && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Loại task này sẽ được sử dụng để tính chi phí tự động khi hoàn thành công việc
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Link tài liệu
               </label>
               <div className="flex gap-3 mb-3">
