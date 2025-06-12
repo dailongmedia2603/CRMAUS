@@ -170,8 +170,8 @@ class PerformanceMetric(BaseModel):
     overall_performance_score: float = 0.0
     productivity_rank: Optional[int] = None
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=vietnam_now)
+    updated_at: datetime = Field(default_factory=vietnam_now)
 
 class PerformanceSummary(BaseModel):
     user_id: str
