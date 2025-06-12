@@ -186,6 +186,8 @@ const Contracts = () => {
       }
     }
   };
+
+  const resetForm = () => {
     setFormData({
       title: '',
       client_id: '',
