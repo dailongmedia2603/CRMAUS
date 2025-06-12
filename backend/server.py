@@ -661,6 +661,24 @@ class TaskCostRate(TaskCostRateBase):
     task_type_name: Optional[str] = None
     created_by_name: Optional[str] = None
 
+# ================= CLIENT CHAT MODELS =================
+
+# Client Chat Message Models
+class ClientChatMessageBase(BaseModel):
+    client_id: str
+    user_id: str
+    message: str
+
+class ClientChatMessageCreate(BaseModel):
+    message: str
+
+class ClientChatMessage(ClientChatMessageBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=vietnam_now)
+    # Enriched fields
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+
 # ================= EXPENSE MANAGEMENT MODELS =================
 
 # Expense Category Models
