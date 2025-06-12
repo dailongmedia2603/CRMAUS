@@ -639,11 +639,216 @@ def test_contracts_api():
     print("\n=== Contracts API Tests Completed Successfully ===")
     return True
 
+def test_client_chat_api():
+    """Test Client Chat API endpoints for ClientDetail page"""
+    print("\n=== Testing Client Chat API Endpoints ===")
+    
+    # Get authentication token
+    if not token:
+        get_token()
+    
+    headers = get_headers()
+    
+    # 1. First, get a list of clients to use a valid client_id
+    print("\n--- Getting clients list ---")
+    response = requests.get(
+        f"{BACKEND_URL}/clients/",
+        headers=headers
+    )
+    
+    clients_success = print_test_result("Get Clients List", response)
+    if not clients_success:
+        print(f"Failed to get clients list: {response.text}")
+        return False
+    
+    clients = response.json()
+    if not clients:
+        print("No clients found in the database. Cannot test client chat API.")
+        return False
+    
+    # Use the first client for testing
+    test_client = clients[0]
+    client_id = test_client["id"]
+    print(f"Using client: {test_client['name']} (ID: {client_id}) for testing")
+    
+    # 2. Test GET /api/clients/{client_id}/chat/ endpoint (initial state)
+    print(f"\n--- Testing GET /api/clients/{client_id}/chat/ (initial state) ---")
+    response = requests.get(
+        f"{BACKEND_URL}/clients/{client_id}/chat/",
+        headers=headers
+    )
+    
+    get_chat_success = print_test_result("Get Client Chat Messages (Initial)", response)
+    if not get_chat_success:
+        print(f"Failed to get client chat messages: {response.text}")
+        return False
+    
+    initial_messages = response.json()
+    print(f"Found {len(initial_messages)} initial chat messages for client {test_client['name']}")
+    
+    # 3. Test POST /api/clients/{client_id}/chat/ endpoint
+    print(f"\n--- Testing POST /api/clients/{client_id}/chat/ ---")
+    
+    # Create a test message
+    test_message = {
+        "message": f"Test message from API test at {datetime.now().isoformat()}"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/clients/{client_id}/chat/",
+        headers=headers,
+        json=test_message
+    )
+    
+    send_message_success = print_test_result("Send Client Chat Message", response)
+    if not send_message_success:
+        print(f"Failed to send client chat message: {response.text}")
+        return False
+    
+    sent_message = response.json()
+    print(f"Successfully sent chat message: {sent_message['message']}")
+    
+    # Verify the message data structure
+    print("\n--- Verifying chat message data structure ---")
+    required_fields = ["id", "client_id", "user_id", "message", "created_at", "user_name", "user_email"]
+    
+    missing_fields = [field for field in required_fields if field not in sent_message]
+    if missing_fields:
+        print(f"❌ Chat message is missing required fields: {', '.join(missing_fields)}")
+        return False
+    else:
+        print("✅ Chat message includes all required fields")
+        
+    # Print all fields in the message for verification
+    print("\nChat Message Fields:")
+    for key, value in sent_message.items():
+        print(f"  {key}: {value}")
+    
+    # 4. Test GET /api/clients/{client_id}/chat/ endpoint (after sending message)
+    print(f"\n--- Testing GET /api/clients/{client_id}/chat/ (after sending message) ---")
+    response = requests.get(
+        f"{BACKEND_URL}/clients/{client_id}/chat/",
+        headers=headers
+    )
+    
+    get_updated_chat_success = print_test_result("Get Client Chat Messages (Updated)", response)
+    if not get_updated_chat_success:
+        print(f"Failed to get updated client chat messages: {response.text}")
+        return False
+    
+    updated_messages = response.json()
+    print(f"Found {len(updated_messages)} chat messages after sending new message")
+    
+    # Verify that the number of messages has increased
+    if len(updated_messages) <= len(initial_messages):
+        print(f"❌ Number of messages did not increase after sending a new message")
+        return False
+    else:
+        print(f"✅ Number of messages increased from {len(initial_messages)} to {len(updated_messages)}")
+    
+    # Verify that the sent message is in the list
+    message_found = False
+    for message in updated_messages:
+        if message.get("id") == sent_message["id"]:
+            message_found = True
+            break
+    
+    if not message_found:
+        print(f"❌ Sent message not found in the updated messages list")
+        return False
+    else:
+        print(f"✅ Sent message found in the updated messages list")
+    
+    # 5. Send a second message to verify persistence
+    print(f"\n--- Sending a second test message ---")
+    
+    # Create another test message
+    second_test_message = {
+        "message": f"Second test message from API test at {datetime.now().isoformat()}"
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/clients/{client_id}/chat/",
+        headers=headers,
+        json=second_test_message
+    )
+    
+    send_second_message_success = print_test_result("Send Second Client Chat Message", response)
+    if not send_second_message_success:
+        print(f"Failed to send second client chat message: {response.text}")
+        return False
+    
+    second_sent_message = response.json()
+    print(f"Successfully sent second chat message: {second_sent_message['message']}")
+    
+    # 6. Verify that both messages are in the list
+    print(f"\n--- Verifying both messages are in the list ---")
+    response = requests.get(
+        f"{BACKEND_URL}/clients/{client_id}/chat/",
+        headers=headers
+    )
+    
+    get_final_chat_success = print_test_result("Get Client Chat Messages (Final)", response)
+    if not get_final_chat_success:
+        print(f"Failed to get final client chat messages: {response.text}")
+        return False
+    
+    final_messages = response.json()
+    print(f"Found {len(final_messages)} chat messages in final check")
+    
+    # Verify that both sent messages are in the list
+    first_message_found = False
+    second_message_found = False
+    
+    for message in final_messages:
+        if message.get("id") == sent_message["id"]:
+            first_message_found = True
+        if message.get("id") == second_sent_message["id"]:
+            second_message_found = True
+    
+    if not first_message_found:
+        print(f"❌ First sent message not found in the final messages list")
+        return False
+    else:
+        print(f"✅ First sent message found in the final messages list")
+    
+    if not second_message_found:
+        print(f"❌ Second sent message not found in the final messages list")
+        return False
+    else:
+        print(f"✅ Second sent message found in the final messages list")
+    
+    # 7. Verify chronological ordering (oldest first)
+    print(f"\n--- Verifying chronological ordering of messages ---")
+    
+    # Check if messages are sorted by created_at in ascending order
+    is_chronological = True
+    prev_created_at = None
+    
+    for message in final_messages:
+        current_created_at = datetime.fromisoformat(message["created_at"].replace("Z", "+00:00"))
+        if prev_created_at and current_created_at < prev_created_at:
+            is_chronological = False
+            break
+        prev_created_at = current_created_at
+    
+    if not is_chronological:
+        print(f"❌ Messages are not in chronological order (oldest first)")
+        return False
+    else:
+        print(f"✅ Messages are correctly ordered chronologically (oldest first)")
+    
+    print("\n=== Client Chat API Tests Completed Successfully ===")
+    return True
+
 if __name__ == "__main__":
     print("Starting backend API tests...")
     
+    # Test Client Chat API endpoints
+    test_client_chat_api()
+    
     # Test Contracts API endpoints
-    test_contracts_api()
+    # test_contracts_api()
     
     # Test Task Cost Management APIs
     # test_task_cost_management()
