@@ -561,6 +561,62 @@ const Contracts = () => {
               {viewArchived ? 'Ẩn lưu trữ' : 'Xem lưu trữ'}
             </button>
           </div>
+
+          {/* Bulk Actions - Only show when contracts are selected */}
+          {selectedContracts.length > 0 && (
+            <div className="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+              <span className="text-sm font-medium text-blue-700">
+                Đã chọn {selectedContracts.length} hợp đồng
+              </span>
+              
+              {!viewArchived ? (
+                <>
+                  <button
+                    onClick={handleBulkArchive}
+                    className="px-3 py-1 bg-orange-100 text-orange-700 rounded text-sm font-medium hover:bg-orange-200 transition-colors"
+                    title="Lưu trữ các hợp đồng đã chọn"
+                  >
+                    <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l4 0V6a2 2 0 114 0v2h4l-1 12H6L5 8z" />
+                    </svg>
+                    Lưu trữ
+                  </button>
+                  
+                  <button
+                    onClick={handleBulkDelete}
+                    className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200 transition-colors"
+                    title="Xóa vĩnh viễn các hợp đồng đã chọn"
+                  >
+                    <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Xóa
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleBulkRestore}
+                  className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm font-medium hover:bg-green-200 transition-colors"
+                  title="Khôi phục các hợp đồng đã chọn"
+                >
+                  <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Khôi phục
+                </button>
+              )}
+              
+              <button
+                onClick={() => setSelectedContracts([])}
+                className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm hover:bg-gray-200 transition-colors"
+                title="Bỏ chọn tất cả"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
