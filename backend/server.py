@@ -549,6 +549,7 @@ class InternalTaskBase(BaseModel):
     priority: str = "normal"  # high, normal, low
     status: str = "not_started"  # not_started, in_progress, completed
     report_link: Optional[str] = None  # Report link when completed
+    task_type_id: Optional[str] = None  # Link to TaskCostType for cost calculation
 
 class InternalTaskCreate(InternalTaskBase):
     pass
