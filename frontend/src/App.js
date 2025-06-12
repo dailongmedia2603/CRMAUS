@@ -1545,10 +1545,15 @@ const Task = () => {
 
     if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedTasks.length} công việc đã chọn?`)) {
       try {
+        console.log('Bulk deleting tasks:', selectedTasks);
+        console.log('API URL:', `${API}/api/internal-tasks/bulk-delete`);
+        
         // Backend expects a list of task_ids directly, not wrapped in an object
-        await axios.post(`${API}/api/internal-tasks/bulk-delete`, selectedTasks, {
+        const response = await axios.post(`${API}/api/internal-tasks/bulk-delete`, selectedTasks, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        console.log('Bulk delete response:', response.data);
         
         setSelectedTasks([]);
         toast.success(`Xóa ${selectedTasks.length} công việc thành công!`);
@@ -1556,7 +1561,8 @@ const Task = () => {
         fetchStatistics();
       } catch (error) {
         console.error('Error bulk deleting tasks:', error);
-        toast.error('Lỗi khi xóa công việc');
+        console.error('Error response:', error.response?.data);
+        toast.error(error.response?.data?.detail || 'Lỗi khi xóa công việc');
       }
     }
   };
