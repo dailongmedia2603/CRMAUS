@@ -55,6 +55,20 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the contracts API endpoints for the ClientDetail page. The GET /api/contracts/client/{client_id} endpoint correctly returns all contracts associated with a specific client. The GET /api/contracts/{contract_id} endpoint successfully retrieves detailed information for a specific contract. Both endpoints return properly structured data that includes all required fields: title, status, value, start_date, and end_date. Additional fields like client_id, project_id, terms, created_at, updated_at, created_by, and document_url are also included in the response. The API correctly handles cases where a client has no contracts by returning an empty array. The contract creation functionality was also tested and works correctly, allowing new contracts to be created with all required fields. The implementation fully meets the requirements for the ClientDetail page's contracts tab."
+  - task: "Client Chat API Endpoints for ClientDetail"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new Client Chat API endpoints to support the chat functionality in the ClientDetail page."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Client Chat API endpoints for the ClientDetail page. The POST /api/clients/{client_id}/chat/ endpoint correctly allows sending new chat messages for a specific client. The GET /api/clients/{client_id}/chat/ endpoint successfully retrieves all chat messages for a client in chronological order (oldest first). Both endpoints work with proper authentication. The chat messages are properly structured with all required fields: id, client_id, user_id, message, created_at, user_name, and user_email. The API correctly enriches the messages with user information (user_name, user_email) from the authenticated user. Messages are saved persistently to the database and can be retrieved after sending, as verified by sending multiple test messages and confirming they all appear in the retrieved message list. The implementation fully meets the requirements for the chat functionality in the ClientDetail page."
 
 frontend:
   - task: "Reports Module with Chi phí Task Tab"
