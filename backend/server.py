@@ -487,8 +487,8 @@ class WorkItem(WorkItemBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: str                   # Will be set by endpoint
     assigned_by: str                  # Will be set by endpoint
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=vietnam_now)
+    updated_at: datetime = Field(default_factory=vietnam_now)
     created_by: Optional[str] = None
 
 # Feedback Models (feedback cho work items)
