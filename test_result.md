@@ -43,6 +43,21 @@ backend:
         comment: "Successfully tested all Task Cost Management APIs. The Task Cost Types APIs work correctly: GET /api/task-cost-types/ returns the list of task cost types, POST /api/task-cost-types/ creates a new task cost type (admin only), PUT /api/task-cost-types/{id} updates a task cost type (admin only), and DELETE /api/task-cost-types/{id} deletes a task cost type (admin only). The Task Cost Rates APIs also work as expected: GET /api/task-cost-rates/ returns the list of task cost rates, POST /api/task-cost-rates/ creates a new task cost rate (admin only), PUT /api/task-cost-rates/{id} updates a task cost rate (admin only), and DELETE /api/task-cost-rates/{id} deletes a task cost rate (admin only). The Task Cost Settings APIs function properly: GET /api/task-cost-settings/ returns the current task cost settings and PUT /api/task-cost-settings/ updates the settings (admin only). All endpoints correctly enforce admin-only permissions for create/update/delete operations, returning 403 errors for non-admin users. The search functionality in the task cost rates endpoint works correctly. The system properly prevents deleting task types that are used in rates. All data validation and error handling work as expected."
 
 frontend:
+  - task: "Reports Module with Chi phí Task Tab"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new Reports module with 'Chi phí Task' tab functionality to verify that it works correctly showing completed tasks with cost information and proper filtering capabilities."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Reports module with 'Chi phí Task' tab functionality. The Reports page correctly shows the 'Báo cáo' title with two tabs: 'Chi phí Task' (💰) and 'Báo cáo tổng hợp' (📊), with 'Chi phí Task' tab active by default. The 'Chi phí Task' tab displays all required summary statistics cards: Tổng công việc (Total tasks), Tổng chi phí (Total cost in VND), Tổng giờ làm (Total hours), and Chi phí TB/giờ (Average cost per hour). The filter section includes all five required filters: Tìm kiếm (Search input), Nhân sự (User dropdown), Loại Task (Task type dropdown), Thời gian (Time filter dropdown with options: Tất cả, Hôm nay, Hôm qua, Tuần này, Tháng này), and Xóa bộ lọc (Reset filters button). The task table correctly displays all required columns: Công việc, Nhân sự, Deadline, Trạng thái, Report, and Chi phí. The 'Báo cáo tổng hợp' tab shows the original simple reports content as expected. The implementation fully meets the requirements specified in the test objectives."
+  
   - task: "Task Time Tracking Functionality"
     implemented: true
     working: true
