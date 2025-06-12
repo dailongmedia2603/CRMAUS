@@ -3098,18 +3098,53 @@ const SalesReports = () => (
   </div>
 );
 
-const Reports = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900">Báo cáo tổng hợp</h1>
-      <p className="text-gray-600 mt-1">Dashboard và analytics tổng hợp</p>
+const Reports = () => {
+  const { user, token } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('task-cost');
+
+  const tabs = [
+    { id: 'task-cost', name: 'Chi phí Task', icon: '💰' },
+    { id: 'general', name: 'Báo cáo tổng hợp', icon: '📊' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Báo cáo</h1>
+        <p className="text-gray-600 mt-1">Báo cáo chi tiết và analytics</p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center space-x-2 ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.name}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'task-cost' && <TaskCostReport />}
+      {activeTab === 'general' && (
+        <div className="modern-card p-6">
+          <h2 className="text-lg font-medium mb-4">Dashboard analytics</h2>
+          <p className="text-gray-600">Real-time charts và KPI tracking.</p>
+        </div>
+      )}
     </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Dashboard analytics</h2>
-      <p className="text-gray-600">Real-time charts và KPI tracking.</p>
-    </div>
-  </div>
-);
+  );
+};
 
 // ==================== MODULE-TAI-KHOAN START ====================
 // Account Management Module - Simple & Reliable User Management
