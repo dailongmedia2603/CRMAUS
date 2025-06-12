@@ -88,6 +88,9 @@ const ClientDetail = () => {
       // Fetch chat messages
       await fetchChatMessages();
       
+      // Fetch chat messages
+      await fetchChatMessages();
+      
       // Set form data for editing
       setFormData({
         name: clientRes.data.name || "",
