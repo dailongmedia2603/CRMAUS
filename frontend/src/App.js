@@ -2732,6 +2732,7 @@ const TaskDetailModal = ({ task, onClose }) => {
                     <span className="font-medium text-gray-600 mr-2">Bắt đầu:</span>
                     <span className="text-gray-900">
                       {new Date(task.start_time).toLocaleString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh',
                         day: '2-digit',
                         month: '2-digit', 
                         year: 'numeric',
@@ -2746,6 +2747,7 @@ const TaskDetailModal = ({ task, onClose }) => {
                     <span className="font-medium text-gray-600 mr-2">Hoàn thành:</span>
                     <span className="text-gray-900">
                       {new Date(task.completion_time).toLocaleString('vi-VN', {
+                        timeZone: 'Asia/Ho_Chi_Minh',
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric', 
