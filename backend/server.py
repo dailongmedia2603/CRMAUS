@@ -131,7 +131,7 @@ class TeamMemberCreate(TeamMemberBase):
 
 class TeamMember(TeamMemberBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=vietnam_now)
     created_by: str
     # Enriched fields
     user_name: Optional[str] = None
