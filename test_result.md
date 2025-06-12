@@ -41,6 +41,20 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested all Task Cost Management APIs. The Task Cost Types APIs work correctly: GET /api/task-cost-types/ returns the list of task cost types, POST /api/task-cost-types/ creates a new task cost type (admin only), PUT /api/task-cost-types/{id} updates a task cost type (admin only), and DELETE /api/task-cost-types/{id} deletes a task cost type (admin only). The Task Cost Rates APIs also work as expected: GET /api/task-cost-rates/ returns the list of task cost rates, POST /api/task-cost-rates/ creates a new task cost rate (admin only), PUT /api/task-cost-rates/{id} updates a task cost rate (admin only), and DELETE /api/task-cost-rates/{id} deletes a task cost rate (admin only). The Task Cost Settings APIs function properly: GET /api/task-cost-settings/ returns the current task cost settings and PUT /api/task-cost-settings/ updates the settings (admin only). All endpoints correctly enforce admin-only permissions for create/update/delete operations, returning 403 errors for non-admin users. The search functionality in the task cost rates endpoint works correctly. The system properly prevents deleting task types that are used in rates. All data validation and error handling work as expected."
+  - task: "Contracts API Endpoints for ClientDetail"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the contracts API endpoints to ensure they are working correctly for the ClientDetail page."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the contracts API endpoints for the ClientDetail page. The GET /api/contracts/client/{client_id} endpoint correctly returns all contracts associated with a specific client. The GET /api/contracts/{contract_id} endpoint successfully retrieves detailed information for a specific contract. Both endpoints return properly structured data that includes all required fields: title, status, value, start_date, and end_date. Additional fields like client_id, project_id, terms, created_at, updated_at, created_by, and document_url are also included in the response. The API correctly handles cases where a client has no contracts by returning an empty array. The contract creation functionality was also tested and works correctly, allowing new contracts to be created with all required fields. The implementation fully meets the requirements for the ClientDetail page's contracts tab."
 
 frontend:
   - task: "Reports Module with Chi phí Task Tab"
