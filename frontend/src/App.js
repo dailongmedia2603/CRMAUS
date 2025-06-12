@@ -3012,27 +3012,6 @@ const FeedbackModal = ({ task, feedbacks, newFeedback, setNewFeedback, onClose, 
 
 // Component placeholders with proper Vietnamese interface
 
-const Contracts = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Quản lý hợp đồng</h1>
-        <p className="text-gray-600 mt-1">Theo dõi hợp đồng và thỏa thuận</p>
-      </div>
-      <button className="btn-primary">
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Tạo hợp đồng
-      </button>
-    </div>
-    <div className="modern-card p-6">
-      <h2 className="text-lg font-medium mb-4">Danh sách hợp đồng</h2>
-      <p className="text-gray-600">Quản lý lifecycle hợp đồng với khách hàng.</p>
-    </div>
-  </div>
-);
-
 const Invoices = () => (
   <div className="space-y-6">
     <div className="flex items-center justify-between">
