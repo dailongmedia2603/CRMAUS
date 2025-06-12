@@ -469,12 +469,12 @@ const Contracts = () => {
       </div>
 
       {/* Contract List */}
-      <div className="modern-card">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+      <div className="modern-card overflow-hidden">
+        <div className="min-w-full overflow-x-auto">
+          <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1200px' }}>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                   <input
                     type="checkbox"
                     checked={selectedContracts.length === contracts.length && contracts.length > 0}
@@ -488,34 +488,34 @@ const Contracts = () => {
                     className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tiêu đề
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Link hợp đồng
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Client
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Dự án
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Đợt thanh toán
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Giá trị hợp đồng
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Đã thanh toán
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Công nợ
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Trạng thái
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Hành động
                 </th>
               </tr>
@@ -536,7 +536,7 @@ const Contracts = () => {
               ) : (
                 contracts.map((contract) => (
                   <tr key={contract.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedContracts.includes(contract.id)}
@@ -550,10 +550,10 @@ const Contracts = () => {
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{contract.title}</div>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 max-w-32 truncate">{contract.title}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       {contract.contract_link ? (
                         <a 
                           href={contract.contract_link} 
@@ -567,17 +567,17 @@ const Contracts = () => {
                         <span className="text-gray-500 text-sm">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 max-w-32 truncate">
                       {contract.client_name || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 max-w-32 truncate">
                       {contract.project_name || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="space-y-1">
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <div className="space-y-1 max-w-40">
                         {contract.payment_schedules?.map((schedule, index) => (
                           <div key={index} className="flex items-center space-x-2">
-                            <span className="text-sm">{formatCurrency(schedule.amount)}</span>
+                            <span className="text-xs">{formatCurrency(schedule.amount)}</span>
                             <button
                               onClick={() => markPaymentPaid(schedule.id, !schedule.is_paid)}
                               className={`p-1 rounded-full ${
@@ -587,44 +587,44 @@ const Contracts = () => {
                               }`}
                               title={schedule.is_paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                             </button>
                           </div>
-                        )) || <span className="text-gray-500 text-sm">Chưa có đợt thanh toán</span>}
+                        )) || <span className="text-gray-500 text-xs">Chưa có đợt thanh toán</span>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(contract.value)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-green-600">
                       {formatCurrency(contract.total_paid || 0)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-red-600">
                       {formatCurrency(contract.remaining_debt || 0)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       {getStatusBadge(contract.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-1">
                         <button
                           onClick={() => openEditModal(contract)}
-                          className="text-green-600 hover:text-green-800 transition-colors p-2 hover:bg-green-50 rounded-full"
+                          className="text-green-600 hover:text-green-800 transition-colors p-1 hover:bg-green-50 rounded-full"
                           title="Chỉnh sửa"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
 
                         <button
                           onClick={() => handleDelete(contract.id)}
-                          className="text-red-600 hover:text-red-800 transition-colors p-2 hover:bg-red-50 rounded-full"
+                          className="text-red-600 hover:text-red-800 transition-colors p-1 hover:bg-red-50 rounded-full"
                           title="Xóa"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
