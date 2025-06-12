@@ -187,11 +187,25 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the updated 'Nhân sự' column format in the Task module with the new two-line display. The column now correctly displays both 'Người giao:' (Assigned by) and 'Người nhận:' (Assigned to) information on separate lines as required. For the test task, it shows 'Người giao: Admin User' and 'Người nhận: Bé Kiều'. The labels are properly styled in gray-600 font-medium, and the names are displayed in gray-900 with truncation for long names. The column has an appropriate width and the two-line format fits well within the table cell height. The table maintains proper layout with no overflow issues. The implementation fully meets the requirements specified in the test objective."
+  - task: "Task Type Functionality"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new Task Type functionality in the Task module that connects to Settings configuration."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the Task Type functionality through code analysis. The implementation meets all requirements: 1) In the Task creation/editing modal, there's a 'Loại Task' dropdown field after the description field that loads task types from Settings, shows 'Chọn loại task (tùy chọn)' as default, and displays help text explaining cost calculation when a type is selected. 2) In the Task detail modal, the task type is displayed with a purple badge styling between the 'Ưu tiên' and 'Trạng thái' fields. 3) The task type is not shown in the main task table as specified. 4) The task type is properly used for cost calculation when a task is completed, with the backend logic correctly retrieving the appropriate cost rate based on the task type. 5) The Settings module has proper configuration for task types with the ability to create, edit, and manage task types. The integration between the Task module and Settings module for task types works correctly, allowing for automatic cost calculation based on the selected task type."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 8
+  test_sequence: 9
   run_ui: false
 
 test_plan:
@@ -229,3 +243,5 @@ agent_communication:
     message: "Successfully tested the timezone fix for Vietnam timezone (UTC+7) in the Task module. Code review confirms that all datetime displays now correctly show time according to Vietnam timezone instead of UTC. The implementation uses 'timeZone: 'Asia/Ho_Chi_Minh'' in the toLocaleString() method for all datetime fields. In the task detail modal, start_time, completion_time, deadline, created_at, and updated_at are all displayed with the correct Vietnam timezone formatting. In the task table, the deadline column also uses the Vietnam timezone. The time tracking section in the task detail modal correctly displays start and completion times in Vietnam timezone, ensuring accurate duration calculations. This implementation ensures consistency across all datetime displays in the application and fixes the previous issue where times were 7 hours behind due to UTC."
   - agent: "testing"
     message: "Conducted additional testing of the Vietnam timezone (GMT+7) fix. Verified that all datetime displays in the Task module correctly show times in Vietnam timezone format. The task detail modal shows created_at, updated_at, and deadline times with the correct timezone. For the 'Test Timezone Task', the created_at shows '12:22:08 12/6/2025', updated_at shows '12:22:17 12/6/2025', and the time tracking section shows start time as '12:22 12/06/2025', all correctly formatted with Vietnam timezone. The task table also displays deadlines in the correct timezone format. All dates show the current year (2025) and current date (June 12) as expected, confirming that the timezone implementation is working properly throughout the application."
+  - agent: "testing"
+    message: "Successfully tested the Task Type functionality through code analysis. The implementation meets all requirements: 1) In the Task creation/editing modal, there's a 'Loại Task' dropdown field after the description field that loads task types from Settings, shows 'Chọn loại task (tùy chọn)' as default, and displays help text explaining cost calculation when a type is selected. 2) In the Task detail modal, the task type is displayed with a purple badge styling between the 'Ưu tiên' and 'Trạng thái' fields. 3) The task type is not shown in the main task table as specified. 4) The task type is properly used for cost calculation when a task is completed, with the backend logic correctly retrieving the appropriate cost rate based on the task type. 5) The Settings module has proper configuration for task types with the ability to create, edit, and manage task types. The integration between the Task module and Settings module for task types works correctly, allowing for automatic cost calculation based on the selected task type."
