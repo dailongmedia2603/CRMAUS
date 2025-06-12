@@ -2790,12 +2790,16 @@ const TaskDetailModal = ({ task, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ngày tạo</label>
-            <p className="text-gray-900">{new Date(task.created_at).toLocaleString('vi-VN')}</p>
+            <p className="text-gray-900">{new Date(task.created_at).toLocaleString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh'
+            })}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cập nhật lần cuối</label>
-            <p className="text-gray-900">{new Date(task.updated_at).toLocaleString('vi-VN')}</p>
+            <p className="text-gray-900">{new Date(task.updated_at).toLocaleString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh'
+            })}</p>
           </div>
         </div>
 
