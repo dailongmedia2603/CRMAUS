@@ -205,7 +205,7 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the updated 'Nhân sự' column format in the Task module with the new two-line display. The column now correctly displays both 'Người giao:' (Assigned by) and 'Người nhận:' (Assigned to) information on separate lines as required. For the test task, it shows 'Người giao: Admin User' and 'Người nhận: Bé Kiều'. The labels are properly styled in gray-600 font-medium, and the names are displayed in gray-900 with truncation for long names. The column has an appropriate width and the two-line format fits well within the table cell height. The table maintains proper layout with no overflow issues. The implementation fully meets the requirements specified in the test objective."
-  - task: "Task Type Functionality"
+  - task: "Reports Module Chi phí Task Tab with Loại task Column"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
@@ -215,10 +215,10 @@ frontend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Need to test the new Task Type functionality in the Task module that connects to Settings configuration."
+        comment: "Need to test the updated Reports module 'Chi phí Task' tab with the new 'Loại task' column to verify that it displays correctly."
       - working: true
         agent: "testing"
-        comment: "Successfully tested the Task Type functionality through code analysis. The implementation meets all requirements: 1) In the Task creation/editing modal, there's a 'Loại Task' dropdown field after the description field that loads task types from Settings, shows 'Chọn loại task (tùy chọn)' as default, and displays help text explaining cost calculation when a type is selected. 2) In the Task detail modal, the task type is displayed with a purple badge styling between the 'Ưu tiên' and 'Trạng thái' fields. 3) The task type is not shown in the main task table as specified. 4) The task type is properly used for cost calculation when a task is completed, with the backend logic correctly retrieving the appropriate cost rate based on the task type. 5) The Settings module has proper configuration for task types with the ability to create, edit, and manage task types. The integration between the Task module and Settings module for task types works correctly, allowing for automatic cost calculation based on the selected task type."
+        comment: "Successfully tested the updated Reports module 'Chi phí Task' tab with the new 'Loại task' column. The table structure has been correctly updated with the 'Loại task' column positioned between 'Công việc' and 'Nhân sự' columns as required. The column headers are displayed in uppercase (LOẠI TASK). For tasks with a task type, the column displays a purple badge with the task type name (e.g., 'Fanpage', 'Content Writing Test') using the correct styling (bg-purple-100 text-purple-800). The task detail modal correctly shows the task type information. All existing functionality remains intact, including the filter section with the 'Loại Task' filter, summary statistics cards, and tab switching between 'Chi phí Task' and 'Báo cáo tổng hợp'. The implementation fully meets all the requirements specified in the test objectives."
 
 metadata:
   created_by: "testing_agent"
