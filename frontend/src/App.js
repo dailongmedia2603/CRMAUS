@@ -1550,7 +1550,10 @@ const Task = () => {
         
         // Backend expects a list of task_ids directly, not wrapped in an object
         const response = await axios.post(`${API}/api/internal-tasks/bulk-delete`, selectedTasks, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
         
         console.log('Bulk delete response:', response.data);
