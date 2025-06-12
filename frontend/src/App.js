@@ -2733,6 +2733,15 @@ const TaskDetailModal = ({ task, onClose }) => {
             </div>
           )}
 
+          {task.task_type_name && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Loại Task</label>
+              <span className="inline-flex px-3 py-1 text-sm font-medium rounded-full bg-purple-100 text-purple-800">
+                {task.task_type_name}
+              </span>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Người giao</label>
             <p className="text-gray-900">{task.assigned_by_name}</p>
