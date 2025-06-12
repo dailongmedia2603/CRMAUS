@@ -139,6 +139,53 @@ const Contracts = () => {
     }
   };
 
+  const handleBulkArchive = async () => {
+    if (selectedContracts.length === 0) return;
+    
+    if (window.confirm(`Bạn có chắc chắn muốn lưu trữ ${selectedContracts.length} hợp đồng đã chọn?`)) {
+      try {
+        await axios.post(`${API}/contracts/bulk-archive`, selectedContracts);
+        toast.success(`Đã lưu trữ ${selectedContracts.length} hợp đồng!`);
+        setSelectedContracts([]);
+        fetchData();
+      } catch (error) {
+        console.error('Error archiving contracts:', error);
+        toast.error('Có lỗi xảy ra khi lưu trữ hợp đồng');
+      }
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    if (selectedContracts.length === 0) return;
+    
+    if (window.confirm(`Bạn có chắc chắn muốn khôi phục ${selectedContracts.length} hợp đồng đã chọn?`)) {
+      try {
+        await axios.post(`${API}/contracts/bulk-restore`, selectedContracts);
+        toast.success(`Đã khôi phục ${selectedContracts.length} hợp đồng!`);
+        setSelectedContracts([]);
+        fetchData();
+      } catch (error) {
+        console.error('Error restoring contracts:', error);
+        toast.error('Có lỗi xảy ra khi khôi phục hợp đồng');
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedContracts.length === 0) return;
+    
+    if (window.confirm(`⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN ${selectedContracts.length} hợp đồng đã chọn? Thao tác này không thể hoàn tác!`)) {
+      try {
+        await axios.post(`${API}/contracts/bulk-delete`, selectedContracts);
+        toast.success(`Đã xóa ${selectedContracts.length} hợp đồng!`);
+        setSelectedContracts([]);
+        fetchData();
+      } catch (error) {
+        console.error('Error deleting contracts:', error);
+        toast.error('Có lỗi xảy ra khi xóa hợp đồng');
+      }
+    }
+  };
 
 
   const resetForm = () => {
