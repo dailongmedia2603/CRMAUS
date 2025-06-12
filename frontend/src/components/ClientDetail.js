@@ -50,6 +50,9 @@ const ClientDetail = () => {
       setInvoices(invoicesRes.data);
       setContracts(contractsRes.data);
       
+      // Fetch chat messages
+      await fetchChatMessages();
+      
       // Set form data for editing
       setFormData({
         name: clientRes.data.name || "",
