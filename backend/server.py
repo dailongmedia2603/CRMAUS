@@ -1382,7 +1382,7 @@ async def bulk_delete_projects(project_ids: List[str], current_user: User = Depe
     
     return {"detail": f"{result.deleted_count} projects deleted"}
 
-# Contract routes
+# Contract routes - Enhanced for Payment Management
 @api_router.post("/contracts/", response_model=Contract)
 async def create_contract(contract: ContractCreate, current_user: User = Depends(get_current_active_user)):
     # Kiểm tra client tồn tại
@@ -1396,15 +1396,193 @@ async def create_contract(contract: ContractCreate, current_user: User = Depends
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
     
-    contract_data = contract.dict()
+    contract_data = contract.dict(exclude={"payment_schedules"})
     contract_obj = Contract(**contract_data, created_by=current_user.id)
+    
+    # Create payment schedules if provided
+    payment_schedules = []
+    if contract.payment_schedules:
+        for schedule_data in contract.payment_schedules:
+            schedule_obj = PaymentSchedule(
+                contract_id=contract_obj.id,
+                amount=schedule_data["amount"],
+                due_date=datetime.fromisoformat(schedule_data["due_date"].replace('Z', '+00:00')),
+                description=schedule_data.get("description", ""),
+                created_by=current_user.id
+            )
+            await db.payment_schedules.insert_one(schedule_obj.dict())
+            payment_schedules.append(schedule_obj.dict())
+    
+    contract_obj.payment_schedules = payment_schedules
+    contract_obj.total_paid = 0.0
+    contract_obj.remaining_debt = contract_obj.value
+    
     result = await db.contracts.insert_one(contract_obj.dict())
     return contract_obj
 
 @api_router.get("/contracts/", response_model=List[Contract])
-async def read_contracts(skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_active_user)):
-    contracts = await db.contracts.find().skip(skip).limit(limit).to_list(length=limit)
-    return contracts
+async def read_contracts(
+    skip: int = 0, 
+    limit: int = 100,
+    status: Optional[str] = None,
+    has_debt: Optional[bool] = None,
+    archived: Optional[bool] = False,
+    search: Optional[str] = None,
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    week: Optional[int] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Build query filter
+    query_filter = {"archived": archived}
+    
+    # Status filter
+    if status:
+        query_filter["status"] = status
+    
+    # Time filters
+    if year:
+        start_date = datetime(year, 1, 1)
+        if quarter:
+            # Quarter filter
+            quarter_months = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
+            start_month, end_month = quarter_months[quarter]
+            start_date = datetime(year, start_month, 1)
+            end_date = datetime(year, end_month + 1, 1) if end_month < 12 else datetime(year + 1, 1, 1)
+        elif month:
+            # Month filter
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+        elif week:
+            # Week filter (ISO week)
+            import calendar
+            first_day_of_year = datetime(year, 1, 1)
+            first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()) % 7)
+            start_date = first_monday + timedelta(weeks=week - 1)
+            end_date = start_date + timedelta(days=7)
+        else:
+            # Year filter
+            end_date = datetime(year + 1, 1, 1)
+        
+        query_filter["created_at"] = {"$gte": start_date, "$lt": end_date}
+    
+    contracts = await db.contracts.find(query_filter).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich contracts with payment schedules and calculations
+    enriched_contracts = []
+    for contract in contracts:
+        # Get payment schedules for this contract
+        payment_schedules = await db.payment_schedules.find({"contract_id": contract["id"]}).to_list(length=100)
+        
+        # Calculate total paid and remaining debt
+        total_paid = sum(schedule["amount"] for schedule in payment_schedules if schedule.get("is_paid", False))
+        remaining_debt = contract["value"] - total_paid
+        
+        # Get client name
+        if contract.get("client_id"):
+            client = await db.clients.find_one({"id": contract["client_id"]})
+            contract["client_name"] = client["name"] if client else "Unknown Client"
+        
+        # Get project name
+        if contract.get("project_id"):
+            project = await db.projects.find_one({"id": contract["project_id"]})
+            contract["project_name"] = project["name"] if project else "Unknown Project"
+        
+        contract["payment_schedules"] = payment_schedules
+        contract["total_paid"] = total_paid
+        contract["remaining_debt"] = remaining_debt
+        
+        # Apply debt filter after calculation
+        if has_debt is not None:
+            if has_debt and remaining_debt <= 0:
+                continue
+            if not has_debt and remaining_debt > 0:
+                continue
+        
+        # Search filter
+        if search:
+            search_fields = [
+                contract.get("title", ""),
+                contract.get("client_name", ""),
+                contract.get("project_name", ""),
+                contract.get("terms", "")
+            ]
+            if not any(search.lower() in field.lower() for field in search_fields if field):
+                continue
+        
+        enriched_contracts.append(contract)
+    
+    return enriched_contracts
+
+@api_router.get("/contracts/statistics")
+async def get_contracts_statistics(
+    year: Optional[int] = None,
+    quarter: Optional[int] = None,
+    month: Optional[int] = None,
+    week: Optional[int] = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    # Build time filter
+    time_filter = {}
+    if year:
+        start_date = datetime(year, 1, 1)
+        if quarter:
+            quarter_months = {1: (1, 3), 2: (4, 6), 3: (7, 9), 4: (10, 12)}
+            start_month, end_month = quarter_months[quarter]
+            start_date = datetime(year, start_month, 1)
+            end_date = datetime(year, end_month + 1, 1) if end_month < 12 else datetime(year + 1, 1, 1)
+        elif month:
+            start_date = datetime(year, month, 1)
+            end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+        elif week:
+            import calendar
+            first_day_of_year = datetime(year, 1, 1)
+            first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()) % 7)
+            start_date = first_monday + timedelta(weeks=week - 1)
+            end_date = start_date + timedelta(days=7)
+        else:
+            end_date = datetime(year + 1, 1, 1)
+        
+        time_filter["created_at"] = {"$gte": start_date, "$lt": end_date}
+    
+    # Get contracts within time filter
+    base_filter = {"archived": False, **time_filter}
+    contracts = await db.contracts.find(base_filter).to_list(length=None)
+    
+    # Calculate statistics
+    total_value = 0.0
+    active_value = 0.0
+    total_paid = 0.0
+    total_debt = 0.0
+    
+    for contract in contracts:
+        contract_value = contract.get("value", 0)
+        total_value += contract_value
+        
+        # Active contracts (status = active or signed)
+        if contract.get("status") in ["active", "signed"]:
+            active_value += contract_value
+        
+        # Get payment schedules for this contract
+        payment_schedules = await db.payment_schedules.find({"contract_id": contract["id"]}).to_list(length=100)
+        
+        # Calculate paid amount for this contract
+        contract_paid = sum(schedule["amount"] for schedule in payment_schedules if schedule.get("is_paid", False))
+        total_paid += contract_paid
+        
+        # Calculate debt for this contract
+        contract_debt = contract_value - contract_paid
+        if contract_debt > 0:
+            total_debt += contract_debt
+    
+    return {
+        "total_value": total_value,
+        "active_value": active_value,
+        "total_paid": total_paid,
+        "total_debt": total_debt,
+        "total_contracts": len(contracts)
+    }
 
 @api_router.get("/contracts/client/{client_id}", response_model=List[Contract])
 async def read_client_contracts(client_id: str, current_user: User = Depends(get_current_active_user)):
