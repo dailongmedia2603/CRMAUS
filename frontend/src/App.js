@@ -2391,9 +2391,12 @@ const TaskModal = ({ task, users, onClose, onSubmit }) => {
     assigned_to: task?.assigned_to || '',
     deadline: task?.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : '',
     priority: task?.priority || 'normal',
-    document_links: task?.document_links || []
+    document_links: task?.document_links || [],
+    task_type_id: task?.task_type_id || ''
   });
   const [newLink, setNewLink] = useState('');
+  const [taskTypes, setTaskTypes] = useState([]);
+  const [loadingTaskTypes, setLoadingTaskTypes] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
