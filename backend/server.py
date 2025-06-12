@@ -1871,8 +1871,8 @@ async def update_internal_task_status(
     if not current_task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    update_data = {"status": status, "updated_at": datetime.utcnow()}
-    current_time = datetime.utcnow()
+    update_data = {"status": status, "updated_at": vietnam_now()}
+    current_time = vietnam_now()
     
     # ✅ NEW: Track time và calculate cost
     if status == "in_progress" and current_task.get("status") == "not_started":
@@ -1890,12 +1890,13 @@ async def update_internal_task_status(
         # Tính toán thời gian và chi phí
         start_time = current_task.get("start_time")
         if start_time:
-            # Convert string to datetime nếu cần
+            # Convert to Vietnam timezone if needed
             if isinstance(start_time, str):
                 start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            start_time_vn = to_vietnam_time(start_time)
             
             # Tính số giờ thực tế
-            time_diff = current_time - start_time
+            time_diff = current_time - start_time_vn
             actual_hours = time_diff.total_seconds() / 3600  # Convert to hours
             update_data["actual_hours"] = round(actual_hours, 2)
             
