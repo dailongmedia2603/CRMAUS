@@ -1488,8 +1488,14 @@ async def read_contracts(
     # Enrich contracts with payment schedules and calculations
     enriched_contracts = []
     for contract in contracts:
+        # Serialize MongoDB ObjectId to string
+        contract = serialize_mongodb_id(contract)
+        
         # Get payment schedules for this contract
         payment_schedules = await db.payment_schedules.find({"contract_id": contract["id"]}).to_list(length=100)
+        
+        # Serialize MongoDB ObjectId in payment schedules
+        payment_schedules = [serialize_mongodb_id(schedule) for schedule in payment_schedules]
         
         # Calculate total paid and remaining debt
         total_paid = sum(schedule["amount"] for schedule in payment_schedules if schedule.get("is_paid", False))
@@ -1498,12 +1504,20 @@ async def read_contracts(
         # Get client name
         if contract.get("client_id"):
             client = await db.clients.find_one({"id": contract["client_id"]})
-            contract["client_name"] = client.get("name", "Unknown Client") if client else "Unknown Client"
+            if client:
+                client = serialize_mongodb_id(client)
+                contract["client_name"] = client.get("name", "Unknown Client")
+            else:
+                contract["client_name"] = "Unknown Client"
         
         # Get project name  
         if contract.get("project_id"):
             project = await db.projects.find_one({"id": contract["project_id"]})
-            contract["project_name"] = project.get("name", "Unknown Project") if project else "Unknown Project"
+            if project:
+                project = serialize_mongodb_id(project)
+                contract["project_name"] = project.get("name", "Unknown Project")
+            else:
+                contract["project_name"] = "Unknown Project"
         
         contract["payment_schedules"] = payment_schedules
         contract["total_paid"] = total_paid
