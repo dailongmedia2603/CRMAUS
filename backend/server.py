@@ -573,7 +573,7 @@ class InternalTaskFeedbackBase(BaseModel):
     task_id: str
     user_id: str
     message: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=vietnam_now)
 
 class InternalTaskFeedbackCreate(BaseModel):
     message: str
