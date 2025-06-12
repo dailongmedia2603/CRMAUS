@@ -15,7 +15,7 @@ const ClientDetail = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
   const [contracts, setContracts] = useState([]);
-    name: "",
+  const [formData, setFormData] = useState({
     company: "",
     industry: "",
     size: "",
