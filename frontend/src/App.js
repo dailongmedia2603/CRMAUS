@@ -4638,7 +4638,7 @@ const TaskCostReport = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center">
+                  <td colSpan="7" className="px-6 py-8 text-center">
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
                       Đang tải...
@@ -4647,7 +4647,7 @@ const TaskCostReport = () => {
                 </tr>
               ) : filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                     {searchTerm || selectedUser || selectedTaskType || selectedTimeFilter !== 'all' 
                       ? 'Không tìm thấy công việc nào' 
                       : 'Chưa có công việc hoàn thành nào'
@@ -4664,6 +4664,15 @@ const TaskCostReport = () => {
                       >
                         {task.name}
                       </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {task.task_type_name ? (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                          {task.task_type_name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">Chưa phân loại</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
