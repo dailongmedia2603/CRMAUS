@@ -1796,6 +1796,12 @@ async def get_internal_task(
         assigned_by_user = await db.users.find_one({"id": task["assigned_by"]})
         task["assigned_by_name"] = assigned_by_user["full_name"] if assigned_by_user else "Unknown"
     
+    # Convert datetime fields to Vietnam timezone with ISO format
+    datetime_fields = ['created_at', 'updated_at', 'deadline', 'start_time', 'completion_time']
+    for field in datetime_fields:
+        if task.get(field):
+            task[field] = serialize_datetime(task[field])
+    
     return task
 
 @api_router.put("/internal-tasks/{task_id}", response_model=InternalTask)
