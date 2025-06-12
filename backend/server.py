@@ -361,8 +361,8 @@ class FolderCreate(FolderBase):
 
 class Folder(FolderBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=vietnam_now)
+    updated_at: datetime = Field(default_factory=vietnam_now)
     created_by: Optional[str] = None
 
 class DocumentBase(BaseModel):
