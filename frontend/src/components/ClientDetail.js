@@ -11,10 +11,10 @@ const ClientDetail = () => {
   const [client, setClient] = useState(null);
   const [projects, setProjects] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
-  const [contracts, setContracts] = useState([]);
   const [formData, setFormData] = useState({
     company: "",
     industry: "",
