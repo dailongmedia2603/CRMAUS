@@ -2034,13 +2034,13 @@ const Task = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center">
+                  <td colSpan="11" className="px-6 py-4 text-center">
                     <div className="spinner mx-auto"></div>
                   </td>
                 </tr>
               ) : filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="11" className="px-6 py-4 text-center text-gray-500">
                     Không có công việc nào
                   </td>
                 </tr>
