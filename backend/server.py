@@ -1482,12 +1482,12 @@ async def read_contracts(
         # Get client name
         if contract.get("client_id"):
             client = await db.clients.find_one({"id": contract["client_id"]})
-            contract["client_name"] = client["name"] if client else "Unknown Client"
+            contract["client_name"] = client.get("name", "Unknown Client") if client else "Unknown Client"
         
-        # Get project name
+        # Get project name  
         if contract.get("project_id"):
             project = await db.projects.find_one({"id": contract["project_id"]})
-            contract["project_name"] = project["name"] if project else "Unknown Project"
+            contract["project_name"] = project.get("name", "Unknown Project") if project else "Unknown Project"
         
         contract["payment_schedules"] = payment_schedules
         contract["total_paid"] = total_paid
