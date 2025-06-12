@@ -2291,6 +2291,18 @@ const TaskRow = React.memo(({
             Chi tiết
           </button>
         </td>
+        <td className="w-32 px-4 py-4 whitespace-nowrap">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+              <span className="text-xs font-semibold text-white">
+                {task.assigned_to_name ? task.assigned_to_name.charAt(0).toUpperCase() : 'N/A'}
+              </span>
+            </div>
+            <span className="text-sm text-gray-900 truncate">
+              {task.assigned_to_name || 'Chưa giao'}
+            </span>
+          </div>
+        </td>
         <td className="w-28 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
           {new Date(task.deadline).toLocaleString('vi-VN')}
         </td>
