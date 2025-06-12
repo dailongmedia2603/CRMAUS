@@ -641,18 +641,23 @@ const Contracts = () => {
       {/* Create/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-lg">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 rounded-t-lg">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">
-                  {isEditing ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới'}
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {isEditing ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới'}
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    {isEditing ? 'Cập nhật thông tin hợp đồng và đợt thanh toán' : 'Tạo hợp đồng mới với các đợt thanh toán'}
+                  </p>
+                </div>
                 <button
                   onClick={() => {
                     setIsModalOpen(false);
                     resetForm();
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -661,197 +666,239 @@ const Contracts = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tiêu đề hợp đồng *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="modern-input"
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="p-8 space-y-8">
+              {/* Basic Information Section */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
+                  Thông tin cơ bản
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tiêu đề hợp đồng *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.title}
+                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      className="modern-input"
+                      placeholder="Nhập tiêu đề hợp đồng"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Client *
-                  </label>
-                  <select
-                    required
-                    value={formData.client_id}
-                    onChange={(e) => setFormData({...formData, client_id: e.target.value})}
-                    className="modern-input"
-                  >
-                    <option value="">Chọn client</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>{client.name}</option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Giá trị hợp đồng *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={formData.value}
+                      onChange={(e) => setFormData({...formData, value: e.target.value})}
+                      className="modern-input"
+                      min="0"
+                      step="1000"
+                      placeholder="0"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dự án
-                  </label>
-                  <select
-                    value={formData.project_id}
-                    onChange={(e) => setFormData({...formData, project_id: e.target.value})}
-                    className="modern-input"
-                  >
-                    <option value="">Chọn dự án</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>{project.name}</option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Client *
+                    </label>
+                    <select
+                      required
+                      value={formData.client_id}
+                      onChange={(e) => setFormData({...formData, client_id: e.target.value})}
+                      className="modern-input"
+                    >
+                      <option value="">Chọn client</option>
+                      {clients.map(client => (
+                        <option key={client.id} value={client.id}>{client.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Link hợp đồng
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.contract_link}
-                    onChange={(e) => setFormData({...formData, contract_link: e.target.value})}
-                    className="modern-input"
-                    placeholder="https://..."
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dự án
+                    </label>
+                    <select
+                      value={formData.project_id}
+                      onChange={(e) => setFormData({...formData, project_id: e.target.value})}
+                      className="modern-input"
+                    >
+                      <option value="">Chọn dự án</option>
+                      {projects.map(project => (
+                        <option key={project.id} value={project.id}>{project.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Giá trị hợp đồng *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.value}
-                    onChange={(e) => setFormData({...formData, value: e.target.value})}
-                    className="modern-input"
-                    min="0"
-                    step="1000"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tình trạng
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      className="modern-input"
+                    >
+                      <option value="draft">Chưa chạy</option>
+                      <option value="active">Đang chạy</option>
+                      <option value="completed">Hoàn thành</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tình trạng
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="modern-input"
-                  >
-                    <option value="draft">Chưa chạy</option>
-                    <option value="active">Đang chạy</option>
-                    <option value="completed">Hoàn thành</option>
-                  </select>
-                </div>
+                  <div className="lg:col-span-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Link hợp đồng
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.contract_link}
+                      onChange={(e) => setFormData({...formData, contract_link: e.target.value})}
+                      className="modern-input"
+                      placeholder="https://drive.google.com/..."
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngày bắt đầu
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-                    className="modern-input"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ngày bắt đầu
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.start_date}
+                      onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                      className="modern-input"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ngày kết thúc
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({...formData, end_date: e.target.value})}
-                    className="modern-input"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ngày kết thúc
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.end_date}
+                      onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                      className="modern-input"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Payment Schedules */}
+              {/* Payment Schedules Section */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Đợt thanh toán
-                  </label>
+                <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Đợt thanh toán</h3>
+                    <p className="text-sm text-gray-600">Thiết lập các đợt thanh toán cho hợp đồng</p>
+                  </div>
                   <button
                     type="button"
                     onClick={addPaymentSchedule}
-                    className="btn-primary text-sm"
+                    className="btn-primary flex items-center gap-2"
                   >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                     Thêm đợt thanh toán
                   </button>
                 </div>
 
-                <div className="space-y-3">
-                  {formData.payment_schedules.map((schedule, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <input
-                          type="number"
-                          placeholder="Số tiền"
-                          value={schedule.amount}
-                          onChange={(e) => updatePaymentSchedule(index, 'amount', e.target.value)}
-                          className="modern-input"
-                          min="0"
-                        />
+                {formData.payment_schedules.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-500">Chưa có đợt thanh toán nào</p>
+                    <p className="text-gray-400 text-sm">Bấm "Thêm đợt thanh toán" để thêm đợt thanh toán đầu tiên</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {formData.payment_schedules.map((schedule, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg border">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-gray-900">Đợt thanh toán #{index + 1}</h4>
+                          <button
+                            type="button"
+                            onClick={() => removePaymentSchedule(index)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1 rounded transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Số tiền *
+                            </label>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={schedule.amount}
+                              onChange={(e) => updatePaymentSchedule(index, 'amount', e.target.value)}
+                              className="modern-input"
+                              min="0"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Ngày đến hạn *
+                            </label>
+                            <input
+                              type="date"
+                              value={schedule.due_date}
+                              onChange={(e) => updatePaymentSchedule(index, 'due_date', e.target.value)}
+                              className="modern-input"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Mô tả
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ví dụ: Thanh toán đợt 1"
+                              value={schedule.description}
+                              onChange={(e) => updatePaymentSchedule(index, 'description', e.target.value)}
+                              className="modern-input"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <input
-                          type="date"
-                          value={schedule.due_date}
-                          onChange={(e) => updatePaymentSchedule(index, 'due_date', e.target.value)}
-                          className="modern-input"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="Mô tả (tùy chọn)"
-                          value={schedule.description}
-                          onChange={(e) => updatePaymentSchedule(index, 'description', e.target.value)}
-                          className="modern-input"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removePaymentSchedule(index)}
-                        className="text-red-600 hover:text-red-800 p-2"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex justify-end space-x-4 pt-6 border-t">
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     resetForm();
                   }}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
                 >
-                  Hủy
+                  Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center gap-2"
                 >
-                  {isEditing ? 'Cập nhật' : 'Thêm mới'}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {isEditing ? 'Cập nhật hợp đồng' : 'Tạo hợp đồng'}
                 </button>
               </div>
             </form>
