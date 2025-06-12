@@ -1613,10 +1613,174 @@ async def delete_contract(contract_id: str, current_user: User = Depends(get_cur
     if current_user.role not in ["admin", "account"]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
+    # Delete payment schedules first
+    await db.payment_schedules.delete_many({"contract_id": contract_id})
+    
     result = await db.contracts.delete_one({"id": contract_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Contract not found")
     return {"detail": "Contract deleted successfully"}
+
+# ================= PAYMENT SCHEDULE ENDPOINTS =================
+
+@api_router.post("/contracts/{contract_id}/payment-schedules/", response_model=PaymentSchedule)
+async def create_payment_schedule(
+    contract_id: str,
+    schedule: PaymentScheduleCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Thêm đợt thanh toán mới cho hợp đồng"""
+    # Kiểm tra contract tồn tại
+    contract = await db.contracts.find_one({"id": contract_id})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    schedule_data = schedule.dict()
+    schedule_obj = PaymentSchedule(**schedule_data, contract_id=contract_id, created_by=current_user.id)
+    
+    await db.payment_schedules.insert_one(schedule_obj.dict())
+    return schedule_obj
+
+@api_router.get("/contracts/{contract_id}/payment-schedules/", response_model=List[PaymentSchedule])
+async def get_contract_payment_schedules(
+    contract_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách đợt thanh toán của hợp đồng"""
+    contract = await db.contracts.find_one({"id": contract_id})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    schedules = await db.payment_schedules.find({"contract_id": contract_id}).sort("due_date", 1).to_list(length=100)
+    return schedules
+
+@api_router.patch("/payment-schedules/{schedule_id}/mark-paid")
+async def mark_payment_schedule_paid(
+    schedule_id: str,
+    is_paid: bool,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Đánh dấu đợt thanh toán đã thanh toán/chưa thanh toán"""
+    schedule = await db.payment_schedules.find_one({"id": schedule_id})
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Payment schedule not found")
+    
+    update_data = {
+        "is_paid": is_paid,
+        "updated_at": vietnam_now()
+    }
+    
+    if is_paid:
+        update_data["paid_date"] = vietnam_now()
+    else:
+        update_data["paid_date"] = None
+    
+    await db.payment_schedules.update_one({"id": schedule_id}, {"$set": update_data})
+    
+    # Update contract status if all payments are completed
+    contract_id = schedule["contract_id"]
+    all_schedules = await db.payment_schedules.find({"contract_id": contract_id}).to_list(length=100)
+    all_paid = all(s.get("is_paid", False) for s in all_schedules) if all_schedules else False
+    
+    if all_paid and len(all_schedules) > 0:
+        await db.contracts.update_one(
+            {"id": contract_id},
+            {"$set": {"status": "completed", "updated_at": vietnam_now()}}
+        )
+    
+    return {"detail": "Payment schedule updated successfully", "all_payments_completed": all_paid}
+
+@api_router.put("/payment-schedules/{schedule_id}", response_model=PaymentSchedule)
+async def update_payment_schedule(
+    schedule_id: str,
+    schedule_update: PaymentScheduleUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cập nhật thông tin đợt thanh toán"""
+    db_schedule = await db.payment_schedules.find_one({"id": schedule_id})
+    if not db_schedule:
+        raise HTTPException(status_code=404, detail="Payment schedule not found")
+    
+    update_data = schedule_update.dict(exclude_unset=True)
+    if update_data:
+        update_data["updated_at"] = vietnam_now()
+        
+        # Handle payment status change
+        if "is_paid" in update_data:
+            if update_data["is_paid"]:
+                update_data["paid_date"] = vietnam_now()
+            else:
+                update_data["paid_date"] = None
+        
+        await db.payment_schedules.update_one({"id": schedule_id}, {"$set": update_data})
+        
+        # Check if all payments are completed
+        contract_id = db_schedule["contract_id"]
+        all_schedules = await db.payment_schedules.find({"contract_id": contract_id}).to_list(length=100)
+        all_paid = all(s.get("is_paid", False) for s in all_schedules) if all_schedules else False
+        
+        if all_paid and len(all_schedules) > 0:
+            await db.contracts.update_one(
+                {"id": contract_id},
+                {"$set": {"status": "completed", "updated_at": vietnam_now()}}
+            )
+        
+        updated_schedule = await db.payment_schedules.find_one({"id": schedule_id})
+        return updated_schedule
+    
+    return db_schedule
+
+@api_router.delete("/payment-schedules/{schedule_id}")
+async def delete_payment_schedule(
+    schedule_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Xóa đợt thanh toán"""
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.payment_schedules.delete_one({"id": schedule_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Payment schedule not found")
+    
+    return {"detail": "Payment schedule deleted successfully"}
+
+# Contract bulk operations
+@api_router.post("/contracts/bulk-archive")
+async def bulk_archive_contracts(contract_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.contracts.update_many(
+        {"id": {"$in": contract_ids}},
+        {"$set": {"archived": True, "updated_at": vietnam_now()}}
+    )
+    
+    return {"detail": f"{result.modified_count} contracts archived"}
+
+@api_router.post("/contracts/bulk-restore")
+async def bulk_restore_contracts(contract_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin", "account"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    result = await db.contracts.update_many(
+        {"id": {"$in": contract_ids}},
+        {"$set": {"archived": False, "updated_at": vietnam_now()}}
+    )
+    
+    return {"detail": f"{result.modified_count} contracts restored"}
+
+@api_router.post("/contracts/bulk-delete")
+async def bulk_delete_contracts(contract_ids: List[str], current_user: User = Depends(get_current_active_user)):
+    if current_user.role not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    # Delete payment schedules first
+    await db.payment_schedules.delete_many({"contract_id": {"$in": contract_ids}})
+    
+    result = await db.contracts.delete_many({"id": {"$in": contract_ids}})
+    
+    return {"detail": f"{result.deleted_count} contracts deleted"}
 
 # Invoice routes
 @api_router.post("/invoices/", response_model=Invoice)
