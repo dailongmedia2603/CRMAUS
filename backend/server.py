@@ -579,6 +579,7 @@ class InternalTask(InternalTaskBase):
     # Enriched fields
     assigned_to_name: Optional[str] = None
     assigned_by_name: Optional[str] = None
+    task_type_name: Optional[str] = None
 
 # Internal Task Feedback Models
 class InternalTaskFeedbackBase(BaseModel):
