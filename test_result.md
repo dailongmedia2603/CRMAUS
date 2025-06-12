@@ -43,6 +43,20 @@ backend:
         comment: "Successfully tested all Task Cost Management APIs. The Task Cost Types APIs work correctly: GET /api/task-cost-types/ returns the list of task cost types, POST /api/task-cost-types/ creates a new task cost type (admin only), PUT /api/task-cost-types/{id} updates a task cost type (admin only), and DELETE /api/task-cost-types/{id} deletes a task cost type (admin only). The Task Cost Rates APIs also work as expected: GET /api/task-cost-rates/ returns the list of task cost rates, POST /api/task-cost-rates/ creates a new task cost rate (admin only), PUT /api/task-cost-rates/{id} updates a task cost rate (admin only), and DELETE /api/task-cost-rates/{id} deletes a task cost rate (admin only). The Task Cost Settings APIs function properly: GET /api/task-cost-settings/ returns the current task cost settings and PUT /api/task-cost-settings/ updates the settings (admin only). All endpoints correctly enforce admin-only permissions for create/update/delete operations, returning 403 errors for non-admin users. The search functionality in the task cost rates endpoint works correctly. The system properly prevents deleting task types that are used in rates. All data validation and error handling work as expected."
 
 frontend:
+  - task: "Task Time Tracking Functionality"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the new time tracking functionality in the Task module to verify that it works correctly when changing task status from 'not_started' → 'in_progress' → 'completed'."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the time tracking functionality in the Task module. The system correctly records start_time when a task status is changed from 'not_started' to 'in_progress' by clicking the 'Bắt đầu' button. The time tracking information is displayed in the task detail modal with a blue background section labeled 'Thời gian thực hiện'. For tasks in progress, the start time is displayed in the format 'Bắt đầu: dd/mm/yyyy - HH:MM' as required. When a task is completed by clicking the 'Hoàn thành' button and providing a report link, the system records the completion_time and calculates the actual_hours. For completed tasks, the detail modal shows both start and completion times, as well as the duration in the appropriate format (minutes for durations less than 1 hour, and hours with decimal for durations of 1 hour or more). The implementation fully meets the requirements specified in the test objectives."
   - task: "Task Cost Settings Frontend"
     implemented: true
     working: true
