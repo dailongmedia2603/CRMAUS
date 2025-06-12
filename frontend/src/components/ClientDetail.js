@@ -35,6 +35,41 @@ const ClientDetail = () => {
     fetchClientData();
   }, [id]);
 
+  const fetchChatMessages = async () => {
+    try {
+      const response = await axios.get(`${API}/clients/${id}/chat/`);
+      setChatMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+      // Don't show error toast for chat messages as it's not critical
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+    
+    try {
+      const response = await axios.post(`${API}/clients/${id}/chat/`, {
+        message: newMessage.trim()
+      });
+      
+      // Add new message to the chat
+      setChatMessages(prev => [...prev, response.data]);
+      setNewMessage('');
+      toast.success('Tin nhắn đã được gửi!');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Có lỗi xảy ra khi gửi tin nhắn');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   const fetchClientData = async () => {
     try {
       setLoading(true);
