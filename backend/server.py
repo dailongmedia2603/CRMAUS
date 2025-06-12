@@ -1715,7 +1715,7 @@ async def get_internal_tasks(
     
     tasks = await db.internal_tasks.find(query_filter).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
     
-    # Enrich với thông tin user và convert datetime
+    # Enrich với thông tin user, task type và convert datetime
     for task in tasks:
         if task.get("assigned_to"):
             assigned_user = await db.users.find_one({"id": task["assigned_to"]})
@@ -1724,6 +1724,10 @@ async def get_internal_tasks(
         if task.get("assigned_by"):
             assigned_by_user = await db.users.find_one({"id": task["assigned_by"]})
             task["assigned_by_name"] = assigned_by_user["full_name"] if assigned_by_user else "Unknown"
+        
+        if task.get("task_type_id"):
+            task_type = await db.task_cost_types.find_one({"id": task["task_type_id"]})
+            task["task_type_name"] = task_type["name"] if task_type else "Unknown"
         
         # Convert datetime fields to Vietnam timezone
         datetime_fields = ['created_at', 'updated_at', 'deadline', 'start_time', 'completion_time']
