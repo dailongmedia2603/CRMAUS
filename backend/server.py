@@ -63,6 +63,22 @@ def serialize_datetime(dt):
     vn_dt = to_vietnam_time(dt)
     return vn_dt.isoformat()
 
+def serialize_mongodb_id(obj):
+    """Serialize MongoDB ObjectId to string"""
+    from bson import ObjectId
+    
+    if isinstance(obj, dict):
+        for key, value in list(obj.items()):
+            if isinstance(value, ObjectId):
+                obj[key] = str(value)
+            elif isinstance(value, dict):
+                obj[key] = serialize_mongodb_id(value)
+            elif isinstance(value, list):
+                obj[key] = [serialize_mongodb_id(item) if isinstance(item, dict) else 
+                           str(item) if isinstance(item, ObjectId) else item 
+                           for item in value]
+    return obj
+
 # Khởi tạo ứng dụng
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
