@@ -1059,6 +1059,65 @@ async def delete_client(client_id: str, current_user: User = Depends(get_current
         raise HTTPException(status_code=404, detail="Client not found")
     return {"detail": "Client deleted successfully"}
 
+# ================= CLIENT CHAT ENDPOINTS =================
+
+@api_router.post("/clients/{client_id}/chat/", response_model=ClientChatMessage)
+async def send_client_chat_message(
+    client_id: str,
+    message: ClientChatMessageCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Gửi tin nhắn mới trong chat client"""
+    # Kiểm tra client tồn tại
+    client = await db.clients.find_one({"id": client_id})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Tạo tin nhắn mới
+    chat_message_data = message.dict()
+    chat_message_obj = ClientChatMessage(
+        **chat_message_data,
+        client_id=client_id,
+        user_id=current_user.id,
+        user_name=current_user.full_name,
+        user_email=current_user.email
+    )
+    
+    await db.client_chat_messages.insert_one(chat_message_obj.dict())
+    return chat_message_obj
+
+@api_router.get("/clients/{client_id}/chat/", response_model=List[ClientChatMessage])
+async def get_client_chat_messages(
+    client_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Lấy danh sách tin nhắn chat của client"""
+    # Kiểm tra client tồn tại
+    client = await db.clients.find_one({"id": client_id})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Lấy tin nhắn chat, sắp xếp theo thời gian tạo (cũ nhất trước)
+    messages = await db.client_chat_messages.find(
+        {"client_id": client_id}
+    ).sort("created_at", 1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich với thông tin user (trong trường hợp user bị xóa hoặc thay đổi tên)
+    for message in messages:
+        if message.get("user_id"):
+            user = await db.users.find_one({"id": message["user_id"]})
+            if user:
+                message["user_name"] = user["full_name"]
+                message["user_email"] = user["email"]
+            else:
+                # User đã bị xóa, giữ nguyên tên cũ hoặc hiển thị "Unknown User"
+                if not message.get("user_name"):
+                    message["user_name"] = "Unknown User"
+    
+    return messages
+
 # Project routes
 @api_router.post("/projects/", response_model=Project)
 async def create_project(project: ProjectCreate, current_user: User = Depends(get_current_active_user)):
