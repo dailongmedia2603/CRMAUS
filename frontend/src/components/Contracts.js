@@ -51,7 +51,7 @@ const Contracts = () => {
 
   useEffect(() => {
     fetchData();
-  }, [timeFilter, customYear, customQuarter, customMonth, customWeek]);
+  }, [timeFilter, customYear, customQuarter, customMonth, customWeek, searchTerm, statusFilter, hasDebtFilter, viewArchived]);
 
   const fetchData = async () => {
     try {
