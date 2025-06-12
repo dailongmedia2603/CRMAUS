@@ -36,15 +36,17 @@ const ClientDetail = () => {
   const fetchClientData = async () => {
     try {
       setLoading(true);
-      const [clientRes, projectsRes, invoicesRes] = await Promise.all([
+      const [clientRes, projectsRes, invoicesRes, contractsRes] = await Promise.all([
         axios.get(`${API}/clients/${id}`),
         axios.get(`${API}/projects/client/${id}`),
-        axios.get(`${API}/invoices/client/${id}`)
+        axios.get(`${API}/invoices/client/${id}`),
+        axios.get(`${API}/contracts/client/${id}`)
       ]);
 
       setClient(clientRes.data);
       setProjects(projectsRes.data);
       setInvoices(invoicesRes.data);
+      setContracts(contractsRes.data);
       
       // Set form data for editing
       setFormData({
