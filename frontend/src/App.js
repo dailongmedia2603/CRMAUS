@@ -2722,6 +2722,54 @@ const TaskDetailModal = ({ task, onClose }) => {
             </span>
           </div>
 
+          {/* Time Tracking Section */}
+          {(task.start_time || task.completion_time) && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Thời gian thực hiện</label>
+              <div className="space-y-2 text-sm">
+                {task.start_time && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-600 mr-2">Bắt đầu:</span>
+                    <span className="text-gray-900">
+                      {new Date(task.start_time).toLocaleString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                )}
+                {task.completion_time && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-600 mr-2">Hoàn thành:</span>
+                    <span className="text-gray-900">
+                      {new Date(task.completion_time).toLocaleString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric', 
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                )}
+                {task.actual_hours && (
+                  <div className="flex items-center pt-1 border-t border-blue-200">
+                    <span className="font-medium text-blue-700 mr-2">Thời gian thực hiện:</span>
+                    <span className="text-blue-900 font-semibold">
+                      {task.actual_hours < 1 
+                        ? `${Math.round(task.actual_hours * 60)} phút`
+                        : `${task.actual_hours.toFixed(1)} giờ`
+                      }
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {task.report_link && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Báo cáo</label>
