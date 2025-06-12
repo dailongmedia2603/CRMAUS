@@ -150,6 +150,20 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the table layout in the Task module. The table no longer overlaps with the sidebar menu. The table is now properly contained within its container with a fixed layout and appropriate column widths. The table has proper horizontal scrolling when needed, which is contained within the table area. The sidebar remains fully visible at all times, even when the table has a lot of content. All columns have appropriate widths, and the table looks good on different screen sizes. The fix to add proper width constraints and table-fixed layout with column widths has successfully resolved the overflow issue."
+  - task: "Task Module Personnel Column"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the restored 'Nhân sự' (Personnel/Assigned Person) column in the Task module to ensure it displays correctly."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the 'Nhân sự' column in the Task module. The column is present in the table header between 'Mô tả' and 'Deadline' columns as required. The column displays assigned person information correctly with a circular avatar showing the user's initials and the user's name. For the test task, it shows 'Bé Kiều' with the initial 'B' in the avatar. The column has an appropriate width (w-32 = 8rem) and fits well within the table layout. The table layout is clean and doesn't overflow the sidebar. The implementation matches the requirements specified in the test objective."
 
 metadata:
   created_by: "testing_agent"
