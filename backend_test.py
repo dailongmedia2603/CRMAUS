@@ -841,11 +841,612 @@ def test_client_chat_api():
     print("\n=== Client Chat API Tests Completed Successfully ===")
     return True
 
+def test_contracts_module():
+    """Test the complete Contracts module backend API"""
+    print("\n=== Testing Contracts Module Backend API ===")
+    
+    # Get authentication token
+    if not token:
+        get_token()
+    
+    headers = get_headers()
+    
+    # 1. First, get a list of clients to use a valid client_id
+    print("\n--- Getting clients list ---")
+    response = requests.get(
+        f"{BACKEND_URL}/clients/",
+        headers=headers
+    )
+    
+    clients_success = print_test_result("Get Clients List", response)
+    if not clients_success:
+        print(f"Failed to get clients list: {response.text}")
+        return False
+    
+    clients = response.json()
+    if not clients:
+        print("No clients found in the database. Creating a test client...")
+        
+        # Create a test client
+        test_client_data = {
+            "name": f"Test Client {int(time.time())}",
+            "company": "Test Company Ltd.",
+            "industry": "Technology",
+            "contact_name": "John Doe",
+            "contact_email": "john.doe@example.com",
+            "contact_phone": "+84 123 456 789"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/clients/",
+            headers=headers,
+            json=test_client_data
+        )
+        
+        create_client_success = print_test_result("Create Test Client", response)
+        if not create_client_success:
+            print(f"Failed to create test client: {response.text}")
+            return False
+        
+        test_client = response.json()
+        client_id = test_client["id"]
+        print(f"Created test client: {test_client['name']} (ID: {client_id})")
+    else:
+        # Use the first client for testing
+        test_client = clients[0]
+        client_id = test_client["id"]
+        print(f"Using client: {test_client['name']} (ID: {client_id}) for testing")
+    
+    # 2. Test Contract CRUD Operations
+    print("\n=== Testing Contract CRUD Operations ===")
+    
+    # 2.1 Test POST /api/contracts/ - Create new contract with payment schedules
+    print("\n--- Testing POST /api/contracts/ ---")
+    
+    # Create a test contract with payment schedules
+    new_contract = {
+        "client_id": client_id,
+        "title": f"Test Contract {int(time.time())}",
+        "start_date": (datetime.now() - timedelta(days=30)).isoformat(),
+        "end_date": (datetime.now() + timedelta(days=335)).isoformat(),
+        "value": 100000000,  # 100 million VND
+        "status": "active",
+        "terms": "Test contract terms for API testing",
+        "payment_schedules": [
+            {
+                "amount": 30000000,  # 30 million VND
+                "due_date": (datetime.now() + timedelta(days=30)).isoformat(),
+                "description": "First payment"
+            },
+            {
+                "amount": 40000000,  # 40 million VND
+                "due_date": (datetime.now() + timedelta(days=120)).isoformat(),
+                "description": "Second payment"
+            },
+            {
+                "amount": 30000000,  # 30 million VND
+                "due_date": (datetime.now() + timedelta(days=300)).isoformat(),
+                "description": "Final payment"
+            }
+        ]
+    }
+    
+    response = requests.post(
+        f"{BACKEND_URL}/contracts/",
+        headers=headers,
+        json=new_contract
+    )
+    
+    create_contract_success = print_test_result("Create Contract with Payment Schedules", response)
+    if not create_contract_success:
+        print(f"Failed to create contract: {response.text}")
+        return False
+    
+    created_contract = response.json()
+    contract_id = created_contract["id"]
+    print(f"Created contract: {created_contract['title']} (ID: {contract_id})")
+    print(f"Payment schedules: {len(created_contract['payment_schedules'])}")
+    
+    # 2.2 Test GET /api/contracts/ - List contracts with filters
+    print("\n--- Testing GET /api/contracts/ ---")
+    
+    # Test basic listing
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/",
+        headers=headers
+    )
+    
+    list_contracts_success = print_test_result("List Contracts", response)
+    if not list_contracts_success:
+        print(f"Failed to list contracts: {response.text}")
+        return False
+    
+    contracts = response.json()
+    print(f"Found {len(contracts)} contracts")
+    
+    # Test with status filter
+    print("\n--- Testing GET /api/contracts/ with status filter ---")
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?status=active",
+        headers=headers
+    )
+    
+    status_filter_success = print_test_result("List Contracts with Status Filter", response)
+    if not status_filter_success:
+        print(f"Failed to list contracts with status filter: {response.text}")
+        return False
+    
+    active_contracts = response.json()
+    print(f"Found {len(active_contracts)} active contracts")
+    
+    # Test with search filter
+    print("\n--- Testing GET /api/contracts/ with search filter ---")
+    search_term = "Test Contract"
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?search={search_term}",
+        headers=headers
+    )
+    
+    search_filter_success = print_test_result("List Contracts with Search Filter", response)
+    if not search_filter_success:
+        print(f"Failed to list contracts with search filter: {response.text}")
+        return False
+    
+    search_contracts = response.json()
+    print(f"Found {len(search_contracts)} contracts matching search term '{search_term}'")
+    
+    # Test with time filter (current year)
+    print("\n--- Testing GET /api/contracts/ with time filter (year) ---")
+    current_year = datetime.now().year
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?year={current_year}",
+        headers=headers
+    )
+    
+    year_filter_success = print_test_result("List Contracts with Year Filter", response)
+    if not year_filter_success:
+        print(f"Failed to list contracts with year filter: {response.text}")
+        return False
+    
+    year_contracts = response.json()
+    print(f"Found {len(year_contracts)} contracts for year {current_year}")
+    
+    # 2.3 Test GET /api/contracts/{contract_id} - Get specific contract
+    print(f"\n--- Testing GET /api/contracts/{contract_id} ---")
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/{contract_id}",
+        headers=headers
+    )
+    
+    get_contract_success = print_test_result("Get Contract Detail", response)
+    if not get_contract_success:
+        print(f"Failed to get contract detail: {response.text}")
+        return False
+    
+    contract_detail = response.json()
+    print(f"Successfully retrieved contract detail: {contract_detail['title']}")
+    
+    # 2.4 Test PUT /api/contracts/{contract_id} - Update contract
+    print(f"\n--- Testing PUT /api/contracts/{contract_id} ---")
+    
+    update_contract = {
+        "client_id": client_id,
+        "title": f"Updated Contract {int(time.time())}",
+        "start_date": created_contract["start_date"],
+        "end_date": created_contract["end_date"],
+        "value": 120000000,  # Increased value to 120 million VND
+        "status": "active",
+        "terms": "Updated contract terms for API testing"
+    }
+    
+    response = requests.put(
+        f"{BACKEND_URL}/contracts/{contract_id}",
+        headers=headers,
+        json=update_contract
+    )
+    
+    update_contract_success = print_test_result("Update Contract", response)
+    if not update_contract_success:
+        print(f"Failed to update contract: {response.text}")
+        return False
+    
+    updated_contract = response.json()
+    print(f"Updated contract: {updated_contract['title']} (Value: {updated_contract['value']})")
+    
+    # 3. Test Contract Statistics API
+    print("\n=== Testing Contract Statistics API ===")
+    
+    # 3.1 Test GET /api/contracts/statistics - Get contract statistics
+    print("\n--- Testing GET /api/contracts/statistics ---")
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/statistics",
+        headers=headers
+    )
+    
+    statistics_success = print_test_result("Get Contract Statistics", response)
+    if not statistics_success:
+        print(f"Failed to get contract statistics: {response.text}")
+        return False
+    
+    statistics = response.json()
+    print("Contract Statistics:")
+    for key, value in statistics.items():
+        print(f"  {key}: {value}")
+    
+    # 3.2 Test with time filters
+    print("\n--- Testing GET /api/contracts/statistics with time filters ---")
+    
+    # Year filter
+    current_year = datetime.now().year
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/statistics?year={current_year}",
+        headers=headers
+    )
+    
+    year_statistics_success = print_test_result("Get Contract Statistics with Year Filter", response)
+    if not year_statistics_success:
+        print(f"Failed to get contract statistics with year filter: {response.text}")
+        return False
+    
+    year_statistics = response.json()
+    print(f"Contract Statistics for year {current_year}:")
+    for key, value in year_statistics.items():
+        print(f"  {key}: {value}")
+    
+    # Quarter filter
+    current_quarter = (datetime.now().month - 1) // 3 + 1
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/statistics?year={current_year}&quarter={current_quarter}",
+        headers=headers
+    )
+    
+    quarter_statistics_success = print_test_result("Get Contract Statistics with Quarter Filter", response)
+    if not quarter_statistics_success:
+        print(f"Failed to get contract statistics with quarter filter: {response.text}")
+        return False
+    
+    quarter_statistics = response.json()
+    print(f"Contract Statistics for Q{current_quarter} {current_year}:")
+    for key, value in quarter_statistics.items():
+        print(f"  {key}: {value}")
+    
+    # 4. Test Payment Schedule Management
+    print("\n=== Testing Payment Schedule Management ===")
+    
+    # 4.1 Test GET /api/contracts/{contract_id}/payment-schedules/ - Get contract payment schedules
+    print(f"\n--- Testing GET /api/contracts/{contract_id}/payment-schedules/ ---")
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/{contract_id}/payment-schedules/",
+        headers=headers
+    )
+    
+    get_schedules_success = print_test_result("Get Contract Payment Schedules", response)
+    if not get_schedules_success:
+        print(f"Failed to get contract payment schedules: {response.text}")
+        return False
+    
+    payment_schedules = response.json()
+    print(f"Found {len(payment_schedules)} payment schedules for contract {contract_id}")
+    
+    if payment_schedules:
+        schedule_id = payment_schedules[0]["id"]
+        
+        # 4.2 Test POST /api/contracts/{contract_id}/payment-schedules/ - Add payment schedule
+        print(f"\n--- Testing POST /api/contracts/{contract_id}/payment-schedules/ ---")
+        
+        new_schedule = {
+            "amount": 10000000,  # 10 million VND
+            "due_date": (datetime.now() + timedelta(days=200)).isoformat(),
+            "description": "Additional payment"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/contracts/{contract_id}/payment-schedules/",
+            headers=headers,
+            json=new_schedule
+        )
+        
+        add_schedule_success = print_test_result("Add Payment Schedule", response)
+        if not add_schedule_success:
+            print(f"Failed to add payment schedule: {response.text}")
+            return False
+        
+        added_schedule = response.json()
+        new_schedule_id = added_schedule["id"]
+        print(f"Added payment schedule: {added_schedule['description']} (ID: {new_schedule_id})")
+        
+        # 4.3 Test PATCH /api/payment-schedules/{schedule_id}/mark-paid - Mark payment as paid
+        print(f"\n--- Testing PATCH /api/payment-schedules/{schedule_id}/mark-paid ---")
+        
+        response = requests.patch(
+            f"{BACKEND_URL}/payment-schedules/{schedule_id}/mark-paid",
+            headers=headers,
+            json={"is_paid": True}
+        )
+        
+        mark_paid_success = print_test_result("Mark Payment as Paid", response)
+        if not mark_paid_success:
+            print(f"Failed to mark payment as paid: {response.text}")
+            return False
+        
+        mark_paid_result = response.json()
+        print(f"Mark paid result: {mark_paid_result}")
+        
+        # 4.4 Test PUT /api/payment-schedules/{schedule_id} - Update payment schedule
+        print(f"\n--- Testing PUT /api/payment-schedules/{new_schedule_id} ---")
+        
+        update_schedule = {
+            "amount": 15000000,  # Increased to 15 million VND
+            "description": "Updated additional payment"
+        }
+        
+        response = requests.put(
+            f"{BACKEND_URL}/payment-schedules/{new_schedule_id}",
+            headers=headers,
+            json=update_schedule
+        )
+        
+        update_schedule_success = print_test_result("Update Payment Schedule", response)
+        if not update_schedule_success:
+            print(f"Failed to update payment schedule: {response.text}")
+            return False
+        
+        updated_schedule = response.json()
+        print(f"Updated payment schedule: {updated_schedule['description']} (Amount: {updated_schedule['amount']})")
+        
+        # 4.5 Test DELETE /api/payment-schedules/{schedule_id} - Delete payment schedule
+        print(f"\n--- Testing DELETE /api/payment-schedules/{new_schedule_id} ---")
+        
+        response = requests.delete(
+            f"{BACKEND_URL}/payment-schedules/{new_schedule_id}",
+            headers=headers
+        )
+        
+        delete_schedule_success = print_test_result("Delete Payment Schedule", response)
+        if not delete_schedule_success:
+            print(f"Failed to delete payment schedule: {response.text}")
+            return False
+        
+        print(f"Successfully deleted payment schedule with ID: {new_schedule_id}")
+    
+    # 5. Test Bulk Operations
+    print("\n=== Testing Bulk Operations ===")
+    
+    # Create additional test contracts for bulk operations
+    bulk_contract_ids = []
+    
+    for i in range(3):
+        bulk_contract = {
+            "client_id": client_id,
+            "title": f"Bulk Test Contract {i+1} - {int(time.time())}",
+            "start_date": (datetime.now() - timedelta(days=30)).isoformat(),
+            "end_date": (datetime.now() + timedelta(days=335)).isoformat(),
+            "value": 50000000,  # 50 million VND
+            "status": "draft",
+            "terms": f"Bulk test contract {i+1} for API testing"
+        }
+        
+        response = requests.post(
+            f"{BACKEND_URL}/contracts/",
+            headers=headers,
+            json=bulk_contract
+        )
+        
+        if response.status_code == 200:
+            bulk_contract_id = response.json()["id"]
+            bulk_contract_ids.append(bulk_contract_id)
+            print(f"Created bulk test contract {i+1} with ID: {bulk_contract_id}")
+    
+    if bulk_contract_ids:
+        # 5.1 Test POST /api/contracts/bulk-archive - Archive multiple contracts
+        print("\n--- Testing POST /api/contracts/bulk-archive ---")
+        
+        response = requests.post(
+            f"{BACKEND_URL}/contracts/bulk-archive",
+            headers=headers,
+            json=bulk_contract_ids
+        )
+        
+        bulk_archive_success = print_test_result("Bulk Archive Contracts", response)
+        if not bulk_archive_success:
+            print(f"Failed to bulk archive contracts: {response.text}")
+            return False
+        
+        bulk_archive_result = response.json()
+        print(f"Bulk archive result: {bulk_archive_result}")
+        
+        # 5.2 Test POST /api/contracts/bulk-restore - Restore multiple contracts
+        print("\n--- Testing POST /api/contracts/bulk-restore ---")
+        
+        response = requests.post(
+            f"{BACKEND_URL}/contracts/bulk-restore",
+            headers=headers,
+            json=bulk_contract_ids
+        )
+        
+        bulk_restore_success = print_test_result("Bulk Restore Contracts", response)
+        if not bulk_restore_success:
+            print(f"Failed to bulk restore contracts: {response.text}")
+            return False
+        
+        bulk_restore_result = response.json()
+        print(f"Bulk restore result: {bulk_restore_result}")
+        
+        # 5.3 Test POST /api/contracts/bulk-delete - Delete multiple contracts
+        print("\n--- Testing POST /api/contracts/bulk-delete ---")
+        
+        response = requests.post(
+            f"{BACKEND_URL}/contracts/bulk-delete",
+            headers=headers,
+            json=bulk_contract_ids
+        )
+        
+        bulk_delete_success = print_test_result("Bulk Delete Contracts", response)
+        if not bulk_delete_success:
+            print(f"Failed to bulk delete contracts: {response.text}")
+            return False
+        
+        bulk_delete_result = response.json()
+        print(f"Bulk delete result: {bulk_delete_result}")
+    
+    # 6. Test Advanced Filtering
+    print("\n=== Testing Advanced Filtering ===")
+    
+    # 6.1 Test contract listing with search terms
+    print("\n--- Testing contract listing with search terms ---")
+    search_term = "Contract"
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?search={search_term}",
+        headers=headers
+    )
+    
+    search_filter_success = print_test_result("Contract Listing with Search Terms", response)
+    if not search_filter_success:
+        print(f"Failed to list contracts with search terms: {response.text}")
+        return False
+    
+    search_results = response.json()
+    print(f"Found {len(search_results)} contracts matching search term '{search_term}'")
+    
+    # 6.2 Test status filters
+    print("\n--- Testing contract listing with status filters ---")
+    for status in ["active", "draft", "completed"]:
+        response = requests.get(
+            f"{BACKEND_URL}/contracts/?status={status}",
+            headers=headers
+        )
+        
+        status_filter_success = print_test_result(f"Contract Listing with Status Filter '{status}'", response)
+        if not status_filter_success:
+            print(f"Failed to list contracts with status filter '{status}': {response.text}")
+            return False
+        
+        status_results = response.json()
+        print(f"Found {len(status_results)} contracts with status '{status}'")
+    
+    # 6.3 Test debt filter
+    print("\n--- Testing contract listing with debt filter ---")
+    for has_debt in [True, False]:
+        response = requests.get(
+            f"{BACKEND_URL}/contracts/?has_debt={str(has_debt).lower()}",
+            headers=headers
+        )
+        
+        debt_filter_success = print_test_result(f"Contract Listing with Debt Filter '{has_debt}'", response)
+        if not debt_filter_success:
+            print(f"Failed to list contracts with debt filter '{has_debt}': {response.text}")
+            return False
+        
+        debt_results = response.json()
+        print(f"Found {len(debt_results)} contracts with has_debt={has_debt}")
+    
+    # 6.4 Test time-based filters
+    print("\n--- Testing contract listing with time-based filters ---")
+    
+    # Year filter
+    current_year = datetime.now().year
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?year={current_year}",
+        headers=headers
+    )
+    
+    year_filter_success = print_test_result("Contract Listing with Year Filter", response)
+    if not year_filter_success:
+        print(f"Failed to list contracts with year filter: {response.text}")
+        return False
+    
+    year_results = response.json()
+    print(f"Found {len(year_results)} contracts for year {current_year}")
+    
+    # Quarter filter
+    current_quarter = (datetime.now().month - 1) // 3 + 1
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?year={current_year}&quarter={current_quarter}",
+        headers=headers
+    )
+    
+    quarter_filter_success = print_test_result("Contract Listing with Quarter Filter", response)
+    if not quarter_filter_success:
+        print(f"Failed to list contracts with quarter filter: {response.text}")
+        return False
+    
+    quarter_results = response.json()
+    print(f"Found {len(quarter_results)} contracts for Q{current_quarter} {current_year}")
+    
+    # Month filter
+    current_month = datetime.now().month
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?year={current_year}&month={current_month}",
+        headers=headers
+    )
+    
+    month_filter_success = print_test_result("Contract Listing with Month Filter", response)
+    if not month_filter_success:
+        print(f"Failed to list contracts with month filter: {response.text}")
+        return False
+    
+    month_results = response.json()
+    print(f"Found {len(month_results)} contracts for month {current_month}/{current_year}")
+    
+    # Week filter
+    current_week = datetime.now().isocalendar()[1]  # ISO week number
+    response = requests.get(
+        f"{BACKEND_URL}/contracts/?year={current_year}&week={current_week}",
+        headers=headers
+    )
+    
+    week_filter_success = print_test_result("Contract Listing with Week Filter", response)
+    if not week_filter_success:
+        print(f"Failed to list contracts with week filter: {response.text}")
+        return False
+    
+    week_results = response.json()
+    print(f"Found {len(week_results)} contracts for week {current_week}/{current_year}")
+    
+    # 6.5 Test archived/active toggle
+    print("\n--- Testing contract listing with archived/active toggle ---")
+    for archived in [True, False]:
+        response = requests.get(
+            f"{BACKEND_URL}/contracts/?archived={str(archived).lower()}",
+            headers=headers
+        )
+        
+        archived_filter_success = print_test_result(f"Contract Listing with Archived Filter '{archived}'", response)
+        if not archived_filter_success:
+            print(f"Failed to list contracts with archived filter '{archived}': {response.text}")
+            return False
+        
+        archived_results = response.json()
+        print(f"Found {len(archived_results)} {'archived' if archived else 'active'} contracts")
+    
+    # 7. Clean up - Delete the test contract
+    print("\n=== Cleaning up test data ===")
+    
+    # Delete the main test contract
+    print(f"\n--- Deleting test contract {contract_id} ---")
+    response = requests.delete(
+        f"{BACKEND_URL}/contracts/{contract_id}",
+        headers=headers
+    )
+    
+    delete_contract_success = print_test_result("Delete Test Contract", response)
+    if not delete_contract_success:
+        print(f"Failed to delete test contract: {response.text}")
+        print("Continuing with tests...")
+    else:
+        print(f"Successfully deleted test contract with ID: {contract_id}")
+    
+    print("\n=== Contracts Module API Tests Completed Successfully ===")
+    return True
+
 if __name__ == "__main__":
     print("Starting backend API tests...")
     
+    # Test Contracts Module API
+    test_contracts_module()
+    
     # Test Client Chat API endpoints
-    test_client_chat_api()
+    # test_client_chat_api()
     
     # Test Contracts API endpoints
     # test_contracts_api()
