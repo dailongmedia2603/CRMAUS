@@ -1925,23 +1925,26 @@ async def update_internal_task_status(
             actual_hours = time_diff.total_seconds() / 3600  # Convert to hours
             update_data["actual_hours"] = round(actual_hours, 2)
             
-            # Lấy cost rate từ task cost rates dựa trên assigned_to user và task type
-            # Tìm cost rate phù hợp - có thể cần thêm task_type_id vào InternalTask model sau
-            # Hiện tại sử dụng cost rate mặc định hoặc từ settings
+            # Lấy cost rate từ task cost rates dựa trên task_type_id
             cost_per_hour = 0.0
             
-            # Tìm cost rate từ task cost settings (fallback)
-            cost_settings = await db.task_cost_settings.find_one({}, sort=[("created_at", -1)])
-            if cost_settings and cost_settings.get("is_enabled", True):
-                cost_per_hour = cost_settings.get("cost_per_hour", 0.0)
+            # Ưu tiên: Tìm cost rate từ task_cost_rates theo task_type_id
+            task_type_id = current_task.get("task_type_id")
+            if task_type_id:
+                cost_rate = await db.task_cost_rates.find_one({
+                    "task_type_id": task_type_id, 
+                    "is_active": True
+                })
+                if cost_rate:
+                    cost_per_hour = cost_rate.get("cost_per_hour", 0.0)
+                    print(f"Using task type cost rate: {cost_per_hour:,.0f} VND/hour for task type {task_type_id}")
             
-            # TODO: Có thể thêm logic để link với task_cost_rates dựa trên task type
-            # cost_rate = await db.task_cost_rates.find_one({
-            #     "task_type_id": task.get("task_type_id"), 
-            #     "is_active": True
-            # })
-            # if cost_rate:
-            #     cost_per_hour = cost_rate.get("cost_per_hour", 0.0)
+            # Fallback: Tìm cost rate từ task cost settings nếu không có task type specific
+            if cost_per_hour == 0.0:
+                cost_settings = await db.task_cost_settings.find_one({}, sort=[("created_at", -1)])
+                if cost_settings and cost_settings.get("is_enabled", True):
+                    cost_per_hour = cost_settings.get("cost_per_hour", 0.0)
+                    print(f"Using default cost rate: {cost_per_hour:,.0f} VND/hour from settings")
             
             if cost_per_hour > 0:
                 total_cost = actual_hours * cost_per_hour
