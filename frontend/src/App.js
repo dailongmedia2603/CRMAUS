@@ -2432,6 +2432,24 @@ const TaskModal = ({ task, users, onClose, onSubmit }) => {
     }));
   };
 
+  // Load task types when modal opens
+  useEffect(() => {
+    const loadTaskTypes = async () => {
+      try {
+        setLoadingTaskTypes(true);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/task-cost-types/?is_active=true`);
+        setTaskTypes(response.data);
+      } catch (error) {
+        console.error('Error loading task types:', error);
+        toast.error('Lỗi khi tải danh sách loại task');
+      } finally {
+        setLoadingTaskTypes(false);
+      }
+    };
+
+    loadTaskTypes();
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
