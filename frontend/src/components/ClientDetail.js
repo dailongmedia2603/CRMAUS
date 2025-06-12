@@ -123,7 +123,11 @@ const ClientDetail = () => {
       'planning': 'Lên kế hoạch',
       'in_progress': 'Đang thực hiện',
       'on_hold': 'Tạm dừng',
-      'completed': 'Hoàn thành'
+      'completed': 'Hoàn thành',
+      'signed': 'Đã ký',
+      'active': 'Đang hiệu lực',
+      'expired': 'Hết hạn',
+      'terminated': 'Đã chấm dứt'
     };
     return labels[status] || status;
   };
