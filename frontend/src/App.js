@@ -2308,7 +2308,9 @@ const TaskRow = React.memo(({
           </div>
         </td>
         <td className="w-28 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-          {new Date(task.deadline).toLocaleString('vi-VN')}
+          {new Date(task.deadline).toLocaleString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh'
+          })}
         </td>
         <td className="w-24 px-4 py-4 whitespace-nowrap">
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
