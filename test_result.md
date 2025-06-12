@@ -121,7 +121,7 @@ frontend:
         comment: "Final test of the Task Cost Management Delete functionality with all fixes applied. The backend deletion is working correctly - when a task cost rate is deleted, the API call is successful and the backend correctly removes the item (confirmed by console logs showing 'Deleting rate with ID: ...' and 'Rate deleted successfully, reloading data...'). The loadTaskCostData() function is called after deletion and correctly fetches the updated data from the server (confirmed by console logs showing 'Fetching task cost rates with URL: ...' and 'Task cost rates response: []'). The API response shows an empty array, indicating the rate was successfully deleted on the backend. However, there's still an issue with the UI not updating immediately after deletion - the deleted rate remains visible in the table until page refresh. After refreshing the page, the table shows 'Chưa có chi phí task nào' (No task costs yet), confirming the deletion was successful on the backend. The toast notification for successful deletion is not appearing. Despite these minor UI issues, the core functionality is working - rates are being deleted from the database, and the cache busting with timestamp parameter is working correctly to prevent browser caching issues."
   - task: "Task Module Bulk Delete Functionality"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
@@ -133,6 +133,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "Tested the bulk delete functionality in the Task module. The UI part works correctly - when selecting tasks using checkboxes, the 'Xóa (X)' button appears with the correct count of selected tasks. However, when clicking the delete button, the tasks are not actually deleted from the database. The issue appears to be with the API call - the code was changed to send the task_ids array directly instead of wrapping it in an object, but the backend might still be expecting the old format. The confirmation dialog appears correctly, but after confirming, the tasks remain in the table and no success toast appears."
+      - working: true
+        agent: "testing"
+        comment: "Final test of the Task Module bulk delete functionality with the added debugging and Content-Type fix. The UI part works correctly - when selecting tasks using checkboxes, the 'Xóa (X)' button appears with the correct count of selected tasks. The API call is now correctly configured with the 'Content-Type: application/json' header, and the payload is sent as a direct array of task IDs. The console logs show proper debugging information including 'Bulk deleting tasks: [array of task IDs]' and 'API URL: ...'. When clicking the delete button and confirming in the dialog, the selected tasks are successfully deleted from the database and disappear from the table. The success toast message appears correctly. The fix to add the explicit Content-Type header and maintain the direct array payload format has resolved the issue."
   - task: "Task Module Table Layout"
     implemented: true
     working: true
