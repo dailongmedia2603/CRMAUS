@@ -331,13 +331,6 @@ const ClientDetail = () => {
             </div>
           </div>
 
-          {/* Notes Card */}
-          {client.notes && (
-            <div className="modern-card p-6">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Ghi chú</h4>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{client.notes}</p>
-            </div>
-          )}
         </div>
 
         {/* Right Column - Tabs Content */}
