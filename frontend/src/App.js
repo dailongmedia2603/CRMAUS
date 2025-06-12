@@ -19,6 +19,7 @@ import ProjectDetailComponent from "./components/ProjectDetail.js";
 import HumanResources from "./components/HumanResources.js";
 import Contracts from "./components/Contracts.js";
 import Contracts from "./components/Contracts.js";
+import Contracts from "./components/Contracts.js";
 
 // Auth context
 // Create AuthContext for user authentication and permissions
