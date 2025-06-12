@@ -318,6 +318,7 @@ class Project(ProjectBase):
     updated_at: datetime = Field(default_factory=vietnam_now)
     created_by: Optional[str] = None
 
+# Contract Models - Enhanced for Payment Management
 class ContractBase(BaseModel):
     client_id: str
     project_id: Optional[str] = None
@@ -327,9 +328,11 @@ class ContractBase(BaseModel):
     value: float
     status: str = "draft"  # draft, sent, signed, active, expired, terminated
     terms: Optional[str] = None
+    contract_link: Optional[str] = None  # Link to contract document
+    archived: bool = False
 
 class ContractCreate(ContractBase):
-    pass
+    payment_schedules: Optional[List[dict]] = []  # List of payment schedules
 
 class Contract(ContractBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -337,6 +340,39 @@ class Contract(ContractBase):
     updated_at: datetime = Field(default_factory=vietnam_now)
     created_by: Optional[str] = None
     document_url: Optional[str] = None
+    # Enhanced fields for payment management
+    total_paid: float = 0.0  # Calculated field
+    remaining_debt: float = 0.0  # Calculated field
+    payment_schedules: List[dict] = []  # Array of payment schedules
+    # Enriched fields
+    client_name: Optional[str] = None
+    project_name: Optional[str] = None
+
+# Payment Schedule Models
+class PaymentScheduleBase(BaseModel):
+    contract_id: str
+    amount: float
+    due_date: datetime
+    description: Optional[str] = None
+    is_paid: bool = False
+
+class PaymentScheduleCreate(BaseModel):
+    amount: float
+    due_date: datetime
+    description: Optional[str] = None
+
+class PaymentScheduleUpdate(BaseModel):
+    amount: Optional[float] = None
+    due_date: Optional[datetime] = None
+    description: Optional[str] = None
+    is_paid: Optional[bool] = None
+
+class PaymentSchedule(PaymentScheduleBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=vietnam_now)
+    updated_at: datetime = Field(default_factory=vietnam_now)
+    paid_date: Optional[datetime] = None
+    created_by: Optional[str] = None
 
 class InvoiceBase(BaseModel):
     client_id: str
