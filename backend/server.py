@@ -1796,7 +1796,7 @@ async def get_internal_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # Enrich với thông tin user
+    # Enrich với thông tin user và task type
     if task.get("assigned_to"):
         assigned_user = await db.users.find_one({"id": task["assigned_to"]})
         task["assigned_to_name"] = assigned_user["full_name"] if assigned_user else "Unknown"
@@ -1804,6 +1804,10 @@ async def get_internal_task(
     if task.get("assigned_by"):
         assigned_by_user = await db.users.find_one({"id": task["assigned_by"]})
         task["assigned_by_name"] = assigned_by_user["full_name"] if assigned_by_user else "Unknown"
+    
+    if task.get("task_type_id"):
+        task_type = await db.task_cost_types.find_one({"id": task["task_type_id"]})
+        task["task_type_name"] = task_type["name"] if task_type else "Unknown"
     
     # Convert datetime fields to Vietnam timezone with ISO format
     datetime_fields = ['created_at', 'updated_at', 'deadline', 'start_time', 'completion_time']
