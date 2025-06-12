@@ -2287,7 +2287,7 @@ const TaskRow = React.memo(({
             {getPriorityLabel(task.priority)}
           </span>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-20 px-4 py-4 whitespace-nowrap">
           <button
             onClick={() => onFeedback(task)}
             className={`text-sm px-3 py-1 rounded hover:bg-gray-200 transition-colors ${
@@ -2299,10 +2299,10 @@ const TaskRow = React.memo(({
             Feedback ({feedbackCounts[task.id] || 0})
           </button>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <td className="w-24 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
           {getStatusLabel(task.status)}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-20 px-4 py-4 whitespace-nowrap">
           {task.report_link ? (
             <a
               href={task.report_link}
@@ -2316,7 +2316,7 @@ const TaskRow = React.memo(({
             <span className="text-sm text-gray-400">Chưa có</span>
           )}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-20 px-4 py-4 whitespace-nowrap">
           {getActionButton()}
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
