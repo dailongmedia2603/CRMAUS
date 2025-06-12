@@ -344,8 +344,8 @@ class InvoiceCreate(InvoiceBase):
 class Invoice(InvoiceBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     invoice_number: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=vietnam_now)
+    updated_at: datetime = Field(default_factory=vietnam_now)
     created_by: Optional[str] = None
     paid_date: Optional[datetime] = None
 
