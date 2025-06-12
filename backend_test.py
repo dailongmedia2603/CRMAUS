@@ -303,10 +303,10 @@ def test_contracts_module():
         # 4.3 Test PATCH /api/payment-schedules/{schedule_id}/mark-paid - Mark payment as paid
         print(f"\n--- Testing PATCH /api/payment-schedules/{schedule_id}/mark-paid ---")
         
+        # The is_paid parameter should be in the query string, not in the request body
         response = requests.patch(
-            f"{BACKEND_URL}/payment-schedules/{schedule_id}/mark-paid",
-            headers=headers,
-            json={"is_paid": True}
+            f"{BACKEND_URL}/payment-schedules/{schedule_id}/mark-paid?is_paid=true",
+            headers=headers
         )
         
         mark_paid_success = print_test_result("Mark Payment as Paid", response)
