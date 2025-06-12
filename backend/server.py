@@ -883,7 +883,7 @@ async def update_current_user(user_update: dict, current_user: User = Depends(ge
             raise HTTPException(status_code=400, detail="Email already exists")
     
     update_data = {k: v for k, v in user_update.items() if v is not None}
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = vietnam_now()
     
     await db.users.update_one({"id": current_user.id}, {"$set": update_data})
     
@@ -911,7 +911,7 @@ async def update_current_user_password(
     hashed_new_password = get_password_hash(new_password)
     await db.users.update_one(
         {"id": current_user.id}, 
-        {"$set": {"hashed_password": hashed_new_password, "updated_at": datetime.utcnow()}}
+        {"$set": {"hashed_password": hashed_new_password, "updated_at": vietnam_now()}}
     )
     
     return {"detail": "Password updated successfully"}
@@ -939,7 +939,7 @@ async def reset_user_password(
     hashed_new_password = get_password_hash(new_password)
     await db.users.update_one(
         {"id": user_id}, 
-        {"$set": {"hashed_password": hashed_new_password, "updated_at": datetime.utcnow()}}
+        {"$set": {"hashed_password": hashed_new_password, "updated_at": vietnam_now()}}
     )
     
     return {"detail": "Password reset successfully"}
@@ -978,7 +978,7 @@ async def update_user_status(
     
     result = await db.users.update_one(
         {"id": user_id}, 
-        {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}}
+        {"$set": {"is_active": is_active, "updated_at": vietnam_now()}}
     )
     
     if result.matched_count == 0:
@@ -1013,7 +1013,7 @@ async def update_client(client_id: str, client: ClientCreate, current_user: User
         raise HTTPException(status_code=404, detail="Client not found")
     
     client_data = client.dict()
-    updated_client = {**db_client, **client_data, "updated_at": datetime.utcnow()}
+    updated_client = {**db_client, **client_data, "updated_at": vietnam_now()}
     
     await db.clients.update_one({"id": client_id}, {"$set": updated_client})
     return updated_client
@@ -1199,7 +1199,7 @@ async def update_project(project_id: str, project: ProjectCreate, current_user: 
             raise HTTPException(status_code=404, detail="Campaign not found")
     
     project_data = project.dict()
-    updated_project = {**db_project, **project_data, "updated_at": datetime.utcnow()}
+    updated_project = {**db_project, **project_data, "updated_at": vietnam_now()}
     
     await db.projects.update_one({"id": project_id}, {"$set": updated_project})
     return updated_project
@@ -1227,7 +1227,7 @@ async def bulk_archive_projects(project_ids: List[str], current_user: User = Dep
     
     result = await db.projects.update_many(
         {"id": {"$in": project_ids}},
-        {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+        {"$set": {"archived": True, "updated_at": vietnam_now()}}
     )
     
     return {"detail": f"{result.modified_count} projects archived"}
@@ -1239,7 +1239,7 @@ async def bulk_restore_projects(project_ids: List[str], current_user: User = Dep
     
     result = await db.projects.update_many(
         {"id": {"$in": project_ids}},
-        {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+        {"$set": {"archived": False, "updated_at": vietnam_now()}}
     )
     
     return {"detail": f"{result.modified_count} projects restored"}
@@ -1299,7 +1299,7 @@ async def update_contract(contract_id: str, contract: ContractCreate, current_us
         raise HTTPException(status_code=404, detail="Contract not found")
     
     contract_data = contract.dict()
-    updated_contract = {**db_contract, **contract_data, "updated_at": datetime.utcnow()}
+    updated_contract = {**db_contract, **contract_data, "updated_at": vietnam_now()}
     
     await db.contracts.update_one({"id": contract_id}, {"$set": updated_contract})
     return updated_contract
@@ -1336,7 +1336,7 @@ async def create_invoice(invoice: InvoiceCreate, current_user: User = Depends(ge
     
     # Tạo số hóa đơn duy nhất (theo định dạng: INV-YYYYMM-XXXX)
     invoice_count = await db.invoices.count_documents({})
-    invoice_number = f"INV-{datetime.utcnow().strftime('%Y%m')}-{invoice_count + 1:04d}"
+    invoice_number = f"INV-{vietnam_now().strftime('%Y%m')}-{invoice_count + 1:04d}"
     
     invoice_data = invoice.dict()
     invoice_obj = Invoice(**invoice_data, invoice_number=invoice_number, created_by=current_user.id)
@@ -1432,11 +1432,11 @@ async def update_invoice(invoice_id: str, invoice: InvoiceCreate, current_user: 
         raise HTTPException(status_code=404, detail="Invoice not found")
     
     invoice_data = invoice.dict()
-    updated_invoice = {**db_invoice, **invoice_data, "updated_at": datetime.utcnow()}
+    updated_invoice = {**db_invoice, **invoice_data, "updated_at": vietnam_now()}
     
     # Nếu đang chuyển trạng thái sang paid, cập nhật paid_date
     if invoice.status == "paid" and db_invoice.get("status") != "paid":
-        updated_invoice["paid_date"] = datetime.utcnow()
+        updated_invoice["paid_date"] = vietnam_now()
     
     await db.invoices.update_one({"id": invoice_id}, {"$set": updated_invoice})
     return updated_invoice
@@ -1536,7 +1536,7 @@ async def update_work_item(
     
     update_data = work_item_update.dict(exclude_unset=True)
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.work_items.update_one({"id": work_item_id}, {"$set": update_data})
         
         # Fetch updated work item
@@ -1568,7 +1568,7 @@ async def update_work_item_status(
     
     result = await db.work_items.update_one(
         {"id": work_item_id},
-        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+        {"$set": {"status": status, "updated_at": vietnam_now()}}
     )
     
     if result.modified_count == 0:
@@ -1808,7 +1808,7 @@ async def update_internal_task(
             raise HTTPException(status_code=404, detail="Assigned user not found")
     
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.internal_tasks.update_one({"id": task_id}, {"$set": update_data})
     
     # Get updated task
@@ -2030,7 +2030,7 @@ async def get_dashboard_data(current_user: User = Depends(get_current_active_use
     total_overdue = sum(invoice["amount"] for invoice in overdue_invoices)
     
     # Các task gần đến hạn (trong vòng 7 ngày)
-    today = datetime.utcnow()
+    today = vietnam_now()
     next_week = today + timedelta(days=7)
     upcoming_tasks = await db.tasks.find({
         "due_date": {"$gte": today, "$lte": next_week},
@@ -2155,7 +2155,7 @@ async def update_folder(folder_id: str, folder: FolderCreate, current_user: User
         raise HTTPException(status_code=404, detail="Folder not found")
     
     folder_data = folder.dict()
-    updated_folder = {**db_folder, **folder_data, "updated_at": datetime.utcnow()}
+    updated_folder = {**db_folder, **folder_data, "updated_at": vietnam_now()}
     
     await db.folders.update_one({"id": folder_id}, {"$set": updated_folder})
     return updated_folder
@@ -2281,7 +2281,7 @@ async def update_document(document_id: str, document: DocumentCreate, current_us
             raise HTTPException(status_code=403, detail="Not enough permissions")
     
     document_data = document.dict()
-    updated_document = {**db_document, **document_data, "updated_at": datetime.utcnow()}
+    updated_document = {**db_document, **document_data, "updated_at": vietnam_now()}
     
     await db.documents.update_one({"id": document_id}, {"$set": updated_document})
     return updated_document
@@ -2316,7 +2316,7 @@ async def bulk_archive_documents(document_ids: List[str], current_user: User = D
     
     result = await db.documents.update_many(
         {"id": {"$in": document_ids}},
-        {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+        {"$set": {"archived": True, "updated_at": vietnam_now()}}
     )
     
     return {"detail": f"{result.modified_count} documents archived"}
@@ -2333,7 +2333,7 @@ async def bulk_restore_documents(document_ids: List[str], current_user: User = D
     
     result = await db.documents.update_many(
         {"id": {"$in": document_ids}},
-        {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+        {"$set": {"archived": False, "updated_at": vietnam_now()}}
     )
     
     return {"detail": f"{result.modified_count} documents restored"}
@@ -2365,8 +2365,8 @@ async def create_campaign(
     """Tạo chiến dịch mới"""
     campaign_dict = campaign.dict()
     campaign_dict["id"] = str(uuid.uuid4())
-    campaign_dict["created_at"] = datetime.utcnow()
-    campaign_dict["updated_at"] = datetime.utcnow()
+    campaign_dict["created_at"] = vietnam_now()
+    campaign_dict["updated_at"] = vietnam_now()
     campaign_dict["created_by"] = current_user.id
     
     await db.campaigns.insert_one(campaign_dict)
@@ -2429,7 +2429,7 @@ async def update_campaign(
     
     update_data = {k: v for k, v in campaign_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.campaigns.update_one({"id": campaign_id}, {"$set": update_data})
     
     updated_campaign = await db.campaigns.find_one({"id": campaign_id})
@@ -2474,14 +2474,14 @@ async def bulk_campaign_action(
     if action == "archive":
         result = await db.campaigns.update_many(
             {"id": {"$in": campaign_ids}},
-            {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+            {"$set": {"archived": True, "updated_at": vietnam_now()}}
         )
         return {"detail": f"{result.modified_count} campaigns archived"}
     
     elif action == "restore":
         result = await db.campaigns.update_many(
             {"id": {"$in": campaign_ids}},
-            {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+            {"$set": {"archived": False, "updated_at": vietnam_now()}}
         )
         return {"detail": f"{result.modified_count} campaigns restored"}
     
@@ -2515,8 +2515,8 @@ async def create_service(
     service_dict = service.dict()
     service_dict["id"] = str(uuid.uuid4())
     service_dict["campaign_id"] = campaign_id
-    service_dict["created_at"] = datetime.utcnow()
-    service_dict["updated_at"] = datetime.utcnow()
+    service_dict["created_at"] = vietnam_now()
+    service_dict["updated_at"] = vietnam_now()
     service_dict["created_by"] = current_user.id
     
     await db.services.insert_one(service_dict)
@@ -2544,7 +2544,7 @@ async def update_service(
     
     update_data = {k: v for k, v in service_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.services.update_one({"id": service_id}, {"$set": update_data})
     
     updated_service = await db.services.find_one({"id": service_id})
@@ -2589,8 +2589,8 @@ async def create_task(
     task_dict = task.dict()
     task_dict["id"] = str(uuid.uuid4())
     task_dict["service_id"] = service_id
-    task_dict["created_at"] = datetime.utcnow()
-    task_dict["updated_at"] = datetime.utcnow()
+    task_dict["created_at"] = vietnam_now()
+    task_dict["updated_at"] = vietnam_now()
     task_dict["created_by"] = current_user.id
     
     await db.tasks.insert_one(task_dict)
@@ -2645,7 +2645,7 @@ async def update_task(
     
     update_data = {k: v for k, v in task_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.tasks.update_one({"id": task_id}, {"$set": update_data})
     
     updated_task = await db.tasks.find_one({"id": task_id})
@@ -2729,8 +2729,8 @@ async def copy_task(
         task_dict = original_task.copy()
         task_dict["id"] = str(uuid.uuid4())
         task_dict["name"] = f"{original_task['name']} (Copy {i+1})"
-        task_dict["created_at"] = datetime.utcnow()
-        task_dict["updated_at"] = datetime.utcnow()
+        task_dict["created_at"] = vietnam_now()
+        task_dict["updated_at"] = vietnam_now()
         task_dict["created_by"] = current_user.id
         task_dict["status"] = "not_started"  # Reset status for copies
         
@@ -2785,7 +2785,7 @@ async def update_expense_category(
     
     update_data = {k: v for k, v in category_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.expense_categories.update_one({"id": category_id}, {"$set": update_data})
     
     updated_category = await db.expense_categories.find_one({"id": category_id})
@@ -2855,7 +2855,7 @@ async def update_expense_folder(
     
     update_data = {k: v for k, v in folder_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.expense_folders.update_one({"id": folder_id}, {"$set": update_data})
     
     updated_folder = await db.expense_folders.find_one({"id": folder_id})
@@ -2913,7 +2913,7 @@ async def create_expense(
     
     # Generate expense number
     expense_count = await db.expenses.count_documents({})
-    expense_number = f"EXP-{datetime.utcnow().strftime('%Y%m')}-{expense_count + 1:04d}"
+    expense_number = f"EXP-{vietnam_now().strftime('%Y%m')}-{expense_count + 1:04d}"
     
     expense_data = expense.dict()
     expense_obj = Expense(**expense_data, expense_number=expense_number, created_by=current_user.id)
@@ -3174,7 +3174,7 @@ async def update_expense(
     
     update_data = {k: v for k, v in expense_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.expenses.update_one({"id": expense_id}, {"$set": update_data})
     
     # Get updated expense with enriched data
@@ -3221,7 +3221,7 @@ async def bulk_update_expense_status(
     
     result = await db.expenses.update_many(
         {"id": {"$in": expense_ids}},
-        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+        {"$set": {"status": status, "updated_at": vietnam_now()}}
     )
     
     return {"detail": f"{result.modified_count} expenses updated"}
@@ -3237,8 +3237,8 @@ async def create_template(
     """Tạo template mới"""
     template_dict = template.dict()
     template_dict["id"] = str(uuid.uuid4())
-    template_dict["created_at"] = datetime.utcnow()
-    template_dict["updated_at"] = datetime.utcnow()
+    template_dict["created_at"] = vietnam_now()
+    template_dict["updated_at"] = vietnam_now()
     template_dict["created_by"] = current_user.id
     
     await db.templates.insert_one(template_dict)
@@ -3302,7 +3302,7 @@ async def update_template(
     
     update_data = {k: v for k, v in template_update.dict().items() if v is not None}
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.templates.update_one(
             {"id": template_id},
             {"$set": update_data}
@@ -3348,7 +3348,7 @@ async def bulk_archive_templates(
     """Lưu trữ templates hàng loạt"""
     result = await db.templates.update_many(
         {"id": {"$in": template_ids}},
-        {"$set": {"archived": True, "updated_at": datetime.utcnow()}}
+        {"$set": {"archived": True, "updated_at": vietnam_now()}}
     )
     return {"message": f"Archived {result.modified_count} templates"}
 
@@ -3360,7 +3360,7 @@ async def bulk_restore_templates(
     """Khôi phục templates hàng loạt"""
     result = await db.templates.update_many(
         {"id": {"$in": template_ids}},
-        {"$set": {"archived": False, "updated_at": datetime.utcnow()}}
+        {"$set": {"archived": False, "updated_at": vietnam_now()}}
     )
     return {"message": f"Restored {result.modified_count} templates"}
 
@@ -3395,8 +3395,8 @@ async def duplicate_template(
         "content": original_template.get("content"),
         "template_type": original_template.get("template_type", "service"),
         "archived": False,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
+        "created_at": vietnam_now(),
+        "updated_at": vietnam_now(),
         "created_by": current_user.id
     }
     
@@ -3476,7 +3476,7 @@ async def update_team(
     
     update_data = team_update.dict(exclude_unset=True)
     if update_data:
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         await db.teams.update_one({"id": team_id}, {"$set": update_data})
     
     # Return updated team
@@ -3618,7 +3618,7 @@ async def get_user_performance(
     
     # Calculate date range
     if not start_date or not end_date:
-        end_dt = datetime.utcnow()
+        end_dt = vietnam_now()
         if period_type == "daily":
             start_dt = end_dt - timedelta(days=1)
         elif period_type == "weekly":
@@ -3662,7 +3662,7 @@ async def get_team_performance(
     
     # Calculate date range
     if not start_date or not end_date:
-        end_dt = datetime.utcnow()
+        end_dt = vietnam_now()
         if period_type == "daily":
             start_dt = end_dt - timedelta(days=1)
         elif period_type == "weekly":
@@ -3732,7 +3732,7 @@ async def get_performance_summary(
     
     # Calculate performance summary for each user
     summaries = []
-    end_dt = datetime.utcnow()
+    end_dt = vietnam_now()
     
     if period_type == "daily":
         start_dt = end_dt - timedelta(days=1)
@@ -3823,7 +3823,7 @@ async def calculate_user_performance(user_id: str, start_date: datetime, end_dat
     completed_tasks = await db.internal_tasks.count_documents({**task_query, "status": "completed"})
     overdue_tasks = await db.internal_tasks.count_documents({
         **task_query, 
-        "deadline": {"$lt": datetime.utcnow()},
+        "deadline": {"$lt": vietnam_now()},
         "status": {"$ne": "completed"}
     })
     
@@ -4506,7 +4506,7 @@ async def update_task_cost_type(
             raise HTTPException(status_code=400, detail="Task cost type name already exists")
     
     update_data = {k: v for k, v in task_type_update.dict().items() if v is not None}
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = vietnam_now()
     
     await db.task_cost_types.update_one({"id": type_id}, {"$set": update_data})
     
@@ -4542,7 +4542,7 @@ async def delete_task_cost_type(
     # Soft delete
     await db.task_cost_types.update_one(
         {"id": type_id},
-        {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        {"$set": {"is_active": False, "updated_at": vietnam_now()}}
     )
     
     return {"detail": "Task cost type deleted successfully"}
@@ -4648,7 +4648,7 @@ async def update_task_cost_rate(
             raise HTTPException(status_code=400, detail="Task cost type not found or inactive")
     
     update_data = {k: v for k, v in rate_update.dict().items() if v is not None}
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = vietnam_now()
     
     await db.task_cost_rates.update_one({"id": rate_id}, {"$set": update_data})
     
@@ -4683,7 +4683,7 @@ async def delete_task_cost_rate(
     # Soft delete
     await db.task_cost_rates.update_one(
         {"id": rate_id},
-        {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        {"$set": {"is_active": False, "updated_at": vietnam_now()}}
     )
     
     return {"detail": "Task cost rate deleted successfully"}
@@ -4732,7 +4732,7 @@ async def update_task_cost_settings(
     if current_settings:
         # Update existing settings
         update_data = {k: v for k, v in settings_update.dict().items() if v is not None}
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = vietnam_now()
         update_data["updated_by"] = current_user.id
         
         await db.task_cost_settings.update_one(
@@ -4770,7 +4770,7 @@ async def read_root():
 # Health check
 @api_router.get("/health")
 async def health_check():
-    return {"status": "ok", "timestamp": datetime.utcnow()}
+    return {"status": "ok", "timestamp": vietnam_now()}
 
 # Include router
 app.include_router(api_router)
