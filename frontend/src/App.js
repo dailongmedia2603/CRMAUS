@@ -2249,7 +2249,7 @@ const TaskRow = React.memo(({
   return (
     <>
       <tr key={task.id} className="hover:bg-gray-50">
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-12 px-3 py-4 whitespace-nowrap">
           <input
             type="checkbox"
             checked={selectedTasks.includes(task.id)}
@@ -2263,7 +2263,7 @@ const TaskRow = React.memo(({
             className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
           />
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-48 px-4 py-4 whitespace-nowrap">
           <div className="flex items-center">
             {getStatusIcon(task.status)}
             <span className="ml-2 text-sm font-medium text-gray-900 truncate max-w-xs">
@@ -2271,7 +2271,7 @@ const TaskRow = React.memo(({
             </span>
           </div>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-32 px-4 py-4 whitespace-nowrap">
           <button
             onClick={() => onView(task)}
             className="text-sm text-blue-600 hover:text-blue-800"
@@ -2279,10 +2279,10 @@ const TaskRow = React.memo(({
             Chi tiết
           </button>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <td className="w-28 px-4 py-4 whitespace-nowrap text-sm text-gray-900">
           {new Date(task.deadline).toLocaleString('vi-VN')}
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">
+        <td className="w-24 px-4 py-4 whitespace-nowrap">
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
             {getPriorityLabel(task.priority)}
           </span>
