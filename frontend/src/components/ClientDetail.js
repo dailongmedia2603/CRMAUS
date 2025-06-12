@@ -12,6 +12,8 @@ const ClientDetail = () => {
   const [projects, setProjects] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [contracts, setContracts] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
