@@ -103,7 +103,10 @@ const ClientDetail = () => {
       'in_progress': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Đang thực hiện' },
       'on_hold': { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Tạm dừng' },
       'completed': { bg: 'bg-green-100', text: 'text-green-800', label: 'Hoàn thành' },
-      'cancelled': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Đã hủy' }
+      'signed': { bg: 'bg-green-100', text: 'text-green-800', label: 'Đã ký' },
+      'active': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đang hiệu lực' },
+      'expired': { bg: 'bg-red-100', text: 'text-red-800', label: 'Hết hạn' },
+      'terminated': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Đã chấm dứt' }
     };
     
     const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status };
