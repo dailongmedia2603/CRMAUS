@@ -53,6 +53,16 @@ def to_vietnam_time(dt):
         dt = pytz.UTC.localize(dt)
     return dt.astimezone(VN_TIMEZONE)
 
+def serialize_datetime(dt):
+    """Serialize datetime to Vietnam timezone ISO format"""
+    if dt is None:
+        return None
+    if isinstance(dt, str):
+        return dt
+    # Convert to Vietnam timezone first
+    vn_dt = to_vietnam_time(dt)
+    return vn_dt.isoformat()
+
 # Khởi tạo ứng dụng
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
