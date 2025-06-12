@@ -55,6 +55,27 @@ backend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the contracts API endpoints for the ClientDetail page. The GET /api/contracts/client/{client_id} endpoint correctly returns all contracts associated with a specific client. The GET /api/contracts/{contract_id} endpoint successfully retrieves detailed information for a specific contract. Both endpoints return properly structured data that includes all required fields: title, status, value, start_date, and end_date. Additional fields like client_id, project_id, terms, created_at, updated_at, created_by, and document_url are also included in the response. The API correctly handles cases where a client has no contracts by returning an empty array. The contract creation functionality was also tested and works correctly, allowing new contracts to be created with all required fields. The implementation fully meets the requirements for the ClientDetail page's contracts tab."
+  - task: "Contracts Module Backend API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the complete Contracts module backend API with payment schedules and all related functionality."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the complete Contracts module backend API. The contract CRUD operations work correctly: POST /api/contracts/ creates new contracts with payment schedules, GET /api/contracts/{contract_id} retrieves specific contracts, PUT /api/contracts/{contract_id} updates contracts, and DELETE /api/contracts/{contract_id} deletes contracts. The Contract Statistics API (GET /api/contracts/statistics) works correctly and supports time filters (year, quarter, month, week). Payment Schedule Management works as expected: POST /api/contracts/{contract_id}/payment-schedules/ adds payment schedules, GET /api/contracts/{contract_id}/payment-schedules/ retrieves payment schedules, PATCH /api/payment-schedules/{schedule_id}/mark-paid marks payments as paid/unpaid, PUT /api/payment-schedules/{schedule_id} updates payment schedules, and DELETE /api/payment-schedules/{schedule_id} deletes payment schedules. Bulk operations also work correctly: POST /api/contracts/bulk-archive archives multiple contracts, POST /api/contracts/bulk-restore restores multiple contracts, and POST /api/contracts/bulk-delete deletes multiple contracts. The API correctly calculates total_paid and remaining_debt for contracts based on payment schedules. The only issue found was with the GET /api/contracts/ endpoint, which returns a 500 error due to a serialization issue with MongoDB's ObjectId type. This endpoint needs to be fixed to properly serialize MongoDB objects."
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test the contracts API endpoints to ensure they are working correctly for the ClientDetail page."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the contracts API endpoints for the ClientDetail page. The GET /api/contracts/client/{client_id} endpoint correctly returns all contracts associated with a specific client. The GET /api/contracts/{contract_id} endpoint successfully retrieves detailed information for a specific contract. Both endpoints return properly structured data that includes all required fields: title, status, value, start_date, and end_date. Additional fields like client_id, project_id, terms, created_at, updated_at, created_by, and document_url are also included in the response. The API correctly handles cases where a client has no contracts by returning an empty array. The contract creation functionality was also tested and works correctly, allowing new contracts to be created with all required fields. The implementation fully meets the requirements for the ClientDetail page's contracts tab."
   - task: "Client Chat API Endpoints for ClientDetail"
     implemented: true
     working: true
