@@ -172,7 +172,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: ["Task Module Bulk Delete Functionality", "Task Module Table Layout"]
+  current_focus: ["Task Module Personnel Column"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
