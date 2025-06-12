@@ -37,6 +37,22 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Vietnam timezone
+VN_TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
+
+def vietnam_now():
+    """Get current time in Vietnam timezone"""
+    return datetime.now(VN_TIMEZONE)
+
+def to_vietnam_time(dt):
+    """Convert datetime to Vietnam timezone"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        # Assume UTC if no timezone info
+        dt = pytz.UTC.localize(dt)
+    return dt.astimezone(VN_TIMEZONE)
+
 # Khởi tạo ứng dụng
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
