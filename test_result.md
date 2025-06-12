@@ -164,6 +164,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Successfully tested the 'Nhân sự' column in the Task module. The column is present in the table header between 'Mô tả' and 'Deadline' columns as required. The column displays assigned person information correctly with a circular avatar showing the user's initials and the user's name. For the test task, it shows 'Bé Kiều' with the initial 'B' in the avatar. The column has an appropriate width (w-32 = 8rem) and fits well within the table layout. The table layout is clean and doesn't overflow the sidebar. The implementation matches the requirements specified in the test objective."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the updated 'Nhân sự' column format in the Task module with the new two-line display. The column now correctly displays both 'Người giao:' (Assigned by) and 'Người nhận:' (Assigned to) information on separate lines as required. For the test task, it shows 'Người giao: Admin User' and 'Người nhận: Bé Kiều'. The labels are properly styled in gray-600 font-medium, and the names are displayed in gray-900 with truncation for long names. The column has an appropriate width and the two-line format fits well within the table cell height. The table maintains proper layout with no overflow issues. The implementation fully meets the requirements specified in the test objective."
 
 metadata:
   created_by: "testing_agent"
